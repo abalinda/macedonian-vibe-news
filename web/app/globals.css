@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 253, 251, 247; /* #FDFBF7 */
+  --background-end-rgb: 253, 251, 247;
+}
+
+body {
+  /* Apply the Serif font by default to headers via utility classes later, 
+     but setting base here helps */
+}
+
+/* Utilities for fonts */
+.font-serif {
+  font-family: var(--font-playfair), serif;
+}
+
+.font-sans {
+  font-family: var(--font-inter), sans-serif;
+}

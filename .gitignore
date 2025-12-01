@@ -1,0 +1,28 @@
+# Environment variables (NEVER commit secrets)
+.env
+.env.local
+.env.*.local
+scraper/.env
+
+# Python
+scraper/venv/
+scraper/.venv/
+scraper/__pycache__/
+scraper/*.pyc
+scraper/logs/
+
+# Node.js / Next.js (from web/.gitignore)
+web/node_modules/
+web/.pnp
+web/.next/
+web/out/
+web/.DS_Store
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

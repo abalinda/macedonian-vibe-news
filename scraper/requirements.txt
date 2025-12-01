@@ -1,0 +1,6 @@
+feedparser
+supabase
+python-dotenv
+google-generativeai
+cloudscraper
+beautifulsoup4
