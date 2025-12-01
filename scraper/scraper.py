@@ -1,7 +1,7 @@
 import os
 import time
 import feedparser
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from time import mktime
 from urllib.parse import urljoin
 from dotenv import load_dotenv
@@ -139,7 +139,7 @@ def scrape_image_from_page(article_url: str, scraper) -> str | None:
         ]
 
         for tag_name, attrs in meta_props:
-            tag = soup.find(tag_name, attrs=attrs)
+            tag = soup.find(tag_name, attrs=attrs) # if attrs: dict[str, Any]
             if tag and tag.get('content'):
                 return normalize_image_url(tag['content'], article_url)
 
@@ -216,7 +216,10 @@ def can_rotate_feature_slot(state: dict | None):
     locked_until = _parse_iso(state.get("locked_until"))
     if not locked_until:
         return True
-    return datetime.utcnow() >= locked_until.replace(tzinfo=None)
+    # Ensure locked_until is timezone-aware in UTC so we can compare reliably
+    if locked_until.tzinfo is None:
+        locked_until = locked_until.replace(tzinfo=timezone.utc)
+    return datetime.now(timezone.utc) >= locked_until
 
 
 def lock_feature_story(slot: str, article):
@@ -227,13 +230,13 @@ def lock_feature_story(slot: str, article):
         if not row:
             return
         post_id = row[0]["id"]
-        locked_until_dt = datetime.utcnow() + timedelta(hours=FEATURE_ROTATION_HOURS)
+        locked_until_dt = datetime.now(tz=timezone.utc) + timedelta(hours=FEATURE_ROTATION_HOURS)
         payload = {
             "slot": slot,
             "post_id": post_id,
-            "locked_until": locked_until_dt.isoformat() + "Z",
+            "locked_until": locked_until_dt.isoformat(),
             "manual_override": False,
-            "updated_at": datetime.utcnow().isoformat() + "Z",
+            "updated_at": datetime.now(tz=timezone.utc).isoformat(),
             "notes": article.get("teaser"),
         }
         supabase.table("featured_story").upsert(payload, on_conflict="slot").execute()
@@ -323,6 +326,11 @@ def fetch_and_save_feed(feed_config):
         log_event("feed_raw_articles", {"source": source, "articles": raw_articles})
 
         curated_articles = analyze_news_batch(raw_articles)
+        
+        # Add scraped_at timestamp to all articles
+        scraped_at = datetime.now(tz=timezone.utc).isoformat()
+        for article in curated_articles:
+            article["scraped_at"] = scraped_at
 
         if not curated_articles:
             print("⚠️ Brain rejected everything for this feed.")
@@ -350,7 +358,11 @@ def fetch_and_save_feed(feed_config):
             on_conflict="link"
         ).execute()
         print(f"✅ Upserted {len(curated_articles)} curated articles from {source}.")
-        log_event("supabase_upsert", {"source": source, "count": len(curated_articles)})
+        log_event("supabase_upsert", {
+            "source": source,
+            "count": len(curated_articles),
+            "scraped_at": scraped_at
+        })
         for slot, article in pending_feature_articles.items():
             lock_feature_story(slot, article)
 

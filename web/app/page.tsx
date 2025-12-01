@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { CategoryNav, NavBar } from "./_components/navigation";
 
 // Revalidate every 60 seconds
 export const revalidate = 60;
@@ -23,74 +24,7 @@ const CATEGORY_SLOT_MAP = {
 
 // -- HELPER COMPONENTS --
 
-// 1. The Menu (Non-invasive, creative)
-const NavBar = () => (
-  <nav className="sticky top-0 z-50 border-b border-black bg-[#FDFBF7] py-3 px-4 md:px-8 flex justify-between items-center">
-    <div className="flex items-center gap-4">
-      <button className="p-2 hover:bg-black hover:text-white transition-colors rounded-full">
-        {/* Hamburger Icon */}
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
-        </svg>
-      </button>
-      <span className="text-xs font-bold tracking-widest uppercase font-sans hidden md:block">
-        Macedonia / Curated
-      </span>
-    </div>
-
-    {/* The Logo */}
-    <h1 className="font-serif text-3xl md:text-5xl font-black tracking-tighter absolute left-1/2 -translate-x-1/2">
-      VIBE.
-    </h1>
-
-    <div className="text-xs font-mono">
-      {new Date().toLocaleDateString('mk-MK')}
-    </div>
-  </nav>
-);
-
-// 2. Category Navigation
-const CategoryNav = ({ activeCategory }: { activeCategory: string | null }) => {
-  const categories = [
-    { name: "All", value: null },
-    { name: "Tech", value: "Tech" },
-    { name: "Culture", value: "Culture" },
-    { name: "Lifestyle", value: "Lifestyle" },
-    { name: "Business", value: "Business" },
-  ];
-
-  return (
-    <div className="border-b border-neutral-300 bg-[#FDFBF7]">
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-        <nav className="flex gap-6 py-4 overflow-x-auto scrollbar-hide">
-          {categories.map((cat) => {
-            const isActive = activeCategory === cat.value;
-            const href = cat.value ? `/?category=${cat.value}` : "/";
-            
-            return (
-              <Link
-                key={cat.name}
-                href={href}
-                className={`
-                  text-xs font-bold uppercase tracking-widest whitespace-nowrap
-                  transition-colors hover:text-black
-                  ${isActive 
-                    ? "text-black border-b-2 border-black pb-1" 
-                    : "text-neutral-500"
-                  }
-                `}
-              >
-                {cat.name}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
-    </div>
-  );
-};
-
-// 3. Small Card (Sidebars)
+// 1. Small Card (Sidebars)
 const SideStory = ({ post }: { post: any }) => {
   const teaserText = getTeaserText(post);
 
@@ -109,7 +43,7 @@ const SideStory = ({ post }: { post: any }) => {
   );
 };
 
-// 4. Hero Card (Center)
+// 2. Hero Card (Center)
 const HeroStory = ({ post }: { post: any }) => {
   const teaserText = getTeaserText(post);
   const heroImage = post?.image_url;
@@ -150,7 +84,7 @@ const HeroStory = ({ post }: { post: any }) => {
   );
 };
 
-// 5. Empty State Component
+// 3. Empty State Component
 const EmptyState = ({ category }: { category: string | null }) => (
   <div className="flex flex-col items-center justify-center py-20 px-4">
     <div className="text-center max-w-md">
@@ -220,7 +154,7 @@ export default async function Home({
   }
 
   const featuredSlots = Array.from(desiredSlots);
-  let featuredMap = new Map<string, number>();
+  const featuredMap = new Map<string, number>();
 
   if (featuredSlots.length > 0) {
     const { data: featuredRows } = await supabase
