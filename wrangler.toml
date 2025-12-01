@@ -1,0 +1,49 @@
+name = "macedonian-vibe-news"
+type = "javascript"
+account_id = ""
+workers_dev = true
+route = ""
+zone_id = ""
+
+# Compatibility settings for Cloudflare Workers
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Environment-specific configuration
+[env.production]
+name = "macedonian-vibe-news-prod"
+route = ""
+zone_id = ""
+
+[env.staging]
+name = "macedonian-vibe-news-staging"
+
+# KV Namespace bindings for caching (optional future use)
+# [[kv_namespaces]]
+# binding = "CACHE"
+# id = ""
+
+# Durable Objects for state management (optional future use)
+# [[durable_objects.bindings]]
+# name = "COUNTER"
+# class_name = "Counter"
+
+# D1 Database binding (optional future use for serverless database)
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "news-cache"
+# database_id = ""
+
+# Triggers for scheduled tasks
+[[triggers.crons]]
+crons = ["0 */4 * * *"]
+
+# Environment variables
+[env.production.vars]
+ENVIRONMENT = "production"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+
+# Note: Secrets are configured in Cloudflare dashboard, not here
+# To add secrets, use: wrangler secret put SECRET_NAME --env production

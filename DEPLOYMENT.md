@@ -1,120 +1,295 @@
-# Deployment Guide: Vibe News
+# Deployment Guide: Macedonian Vibe News
 
-A guide to deploying the macedonian-vibe-news project with autonomous scraping and frontend hosting.
+Complete guide to deploying this project with GitHub, Cloudflare Pages, and GitHub Actions automation.
+
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    GitHub Repository                         │
+│  • Next.js frontend (web/)                                  │
+│  • Python scraper (scraper/)                                │
+│  • GitHub Actions CI/CD workflows                           │
+└────────────────┬──────────────────────┬────────────────────┘
+                 │                      │
+        ┌────────▼───────┐      ┌──────▼────────┐
+        │ Cloudflare     │      │ GitHub        │
+        │ Pages          │      │ Actions       │
+        │ (Frontend)     │      │ (Scraper)     │
+        └────────┬───────┘      └──────┬────────┘
+                 │                      │
+        ┌────────▼──────────────────────▼────────┐
+        │    Supabase PostgreSQL Database        │
+        │  (Stores news posts, categories)      │
+        └───────────────────────────────────────┘
+```
 
 ## Prerequisites
 
-- GitHub account with SSH key configured
-- Supabase project (already set up)
+- ✅ GitHub account (repo created at [github.com/abalinda/macedonian-vibe-news](https://github.com/abalinda/macedonian-vibe-news))
+- ✅ Code pushed to `main` branch
+- Supabase project configured (URL and API keys)
 - Gemini API key from [Google AI Studio](https://aistudio.google.com)
-- Cloudflare account (or Vercel/Render for alternatives)
+- Cloudflare account (free tier available)
 
-## Environment Variables
+## Environment Variables Reference
 
-### Frontend (web/.env.local)
-Never commit these. Set in deployment platform:
-```
-NEXT_PUBLIC_SUPABASE_URL=https://knvkyfafnnqbmgqeogpb.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_secret_...
-```
-
-### Scraper (scraper/.env)
-Never commit these. Set in CI/cron environment:
-```
-GEMINI_API_KEY=...
-SUPABASE_URL=...
-SUPABASE_KEY=...
+### Frontend Environment (`web/.env.local`)
+These are public variables (marked `NEXT_PUBLIC_*`) and safe to expose:
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
-## Step 1: Push to GitHub
+Get these from:
+1. [Supabase Dashboard](https://app.supabase.com) → Select your project
+2. Settings → API
+3. Copy `Project URL` and `anon public` key
 
-```bash
-# Create a new repository on GitHub.com (macedonian-vibe-news)
-
-cd /Users/abalinda/Documents/programming/macedonian-vibe-news
-git remote add origin git@github.com:<YOUR_USERNAME>/macedonian-vibe-news.git
-git branch -M main
-git push -u origin main
+### Scraper Environment (`scraper/.env`)
+These are private secrets stored only in GitHub Actions:
+```env
+GEMINI_API_KEY=your-gemini-api-key-here
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your-service-role-secret-key
 ```
 
-## Step 2: Deploy Frontend to Cloudflare Pages
+---
 
-1. Go to [Cloudflare Pages](https://pages.cloudflare.com)
-2. Click "Create project" → "Connect to Git" → Select your GitHub repo
-3. Configure:
-   - **Framework preset**: Next.js
-   - **Build command**: `npm run build`
-   - **Build output directory**: `.next`
-   - **Root directory**: `web`
-4. Set environment variables under **Settings → Environment variables**:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-5. Deploy
+## Step 1: Configure GitHub Actions Secrets ⚙️
 
-**Alternative**: Use **Vercel** for native Next.js support and simpler setup.
+All workflows are already in `.github/workflows/` and ready to use. You just need to configure secrets.
 
-## Step 3: Schedule the Scraper
+### Configure Secrets
 
-Choose one option:
+1. Go to your GitHub repo: [github.com/abalinda/macedonian-vibe-news/settings](https://github.com/abalinda/macedonian-vibe-news/settings)
+2. Click **Secrets and variables → Actions** in left sidebar
+3. Click **New repository secret** for each:
 
-### Option A: GitHub Actions (Free, Recommended)
+**Required Secrets:**
 
-1. The workflow file `.github/workflows/scraper.yml` is already configured
-2. Go to your GitHub repo → **Settings → Secrets and variables → Actions**
-3. Add secrets:
-   - `GEMINI_API_KEY`
-   - `SUPABASE_URL`
-   - `SUPABASE_KEY`
-4. Runs automatically every 4 hours; adjust cron in workflow file if needed
+| Secret Name | Value | Where to Get |
+|---|---|---|
+| `GEMINI_API_KEY` | Your Google Gemini API key | [Google AI Studio](https://aistudio.google.com) → Copy API Key |
+| `SUPABASE_URL` | Your Supabase project URL | Supabase Dashboard → Settings → API → Project URL |
+| `SUPABASE_KEY` | Service role secret key | Supabase Dashboard → Settings → API → Service role (SECRET) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Same as SUPABASE_URL | Supabase Dashboard → Settings → API → Project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon public key | Supabase Dashboard → Settings → API → anon public |
 
-### Option B: Render Cron Jobs
+### Verify Workflows Are Active
 
-1. Go to [Render](https://render.com)
-2. Create a new **Cron Job**
-3. Connect your GitHub repo, select `main` branch
-4. **Build command**: `pip install -r scraper/requirements.txt`
-5. **Run command**: `cd scraper && python3 scraper.py`
-6. **Schedule**: `0 */4 * * *` (every 4 hours)
-7. Add environment variables (same as above)
+After adding secrets, workflows will activate:
 
-### Option C: Fly.io
+- **Frontend CI** (`.github/workflows/lint-build.yml`): Runs on every push to `web/` folder
+  - Lints TypeScript/ESLint
+  - Builds Next.js
+  - Runs in ~2-3 minutes
+  
+- **Scraper Automation** (`.github/workflows/scraper.yml`): Runs every 4 hours automatically
+  - Triggers via cron: `0 */4 * * *`
+  - Can also manually trigger via "Actions" tab → "Run workflow"
+  - Logs uploaded as artifacts (7-day retention)
 
-1. Install `flyctl`: `brew install flyctl`
-2. Run `fly launch` in project root
-3. Configure `fly.toml` with scraper command and Python buildpack
-4. Use `fly machine run` with cron scheduling
+Check status at: [github.com/abalinda/macedonian-vibe-news/actions](https://github.com/abalinda/macedonian-vibe-news/actions)
 
-## Step 4: Monitor Logs
+---
 
-- **GitHub Actions**: View workflow runs at **Actions** tab
-- **Render**: Check **Job Logs** dashboard
-- **Cloudflare Pages**: View build logs in deployment history
+## Step 2: Deploy Frontend to Cloudflare Pages 🚀
+
+### Initial Setup
+
+1. Go to [Cloudflare Pages](https://pages.cloudflare.com/)
+2. Click **Create a project** → **Connect to Git**
+3. Authorize GitHub (or log in if needed)
+4. Select repository: `macedonian-vibe-news`
+5. **Deployment settings**:
+   - **Production branch**: `main`
+   - **Build command**: `cd web && npm run build`
+   - **Build output directory**: `web/.next`
+   - **Root directory**: (leave blank)
+
+### Configure Environment Variables
+
+After creating the project:
+
+1. Go to **Settings** → **Environment variables**
+2. Add the following for **Production** environment:
+
+| Variable | Value |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon public key |
+
+3. Click **Save** to redeploy with variables
+
+### Result
+
+✅ Your frontend is now live at: `https://macedonian-vibe-news.pages.dev`
+
+Auto-redeployment happens automatically on:
+- Every push to `main` branch
+- You can see build logs in Cloudflare Pages dashboard
+- Preview deployments for pull requests (optional setting)
+
+### Custom Domain (Optional)
+
+If you own a domain:
+1. In Cloudflare Pages → **Custom domains**
+2. Add your domain (must be managed by Cloudflare DNS)
+3. Update DNS records if needed
+
+---
+
+## Step 3: Verify Scraper Execution ✓
+
+The scraper is configured to run automatically every 4 hours via GitHub Actions.
+
+### Check Scraper Status
+
+1. Go to [github.com/abalinda/macedonian-vibe-news/actions](https://github.com/abalinda/macedonian-vibe-news/actions)
+2. Click **scraper** workflow
+3. You'll see scheduled runs:
+   - ✅ Green checkmark = successful run
+   - ❌ Red X = failed (check error logs)
+
+### Manual Trigger (Testing)
+
+1. Go to Actions tab → **scraper** workflow
+2. Click **"Run workflow"** dropdown
+3. Select `main` branch, click **"Run workflow"**
+4. Workflow starts immediately (watch live logs)
+
+### What the Scraper Does
+
+Each run:
+1. Fetches RSS feeds for news categories (Tech, Culture, Lifestyle, Business)
+2. Parses with BeautifulSoup to extract article content
+3. Sends to Google Gemini for AI analysis and categorization
+4. Stores posts in Supabase `posts` table
+5. Logs events to `scraper/logs/scraper_log.jsonl`
+6. Rotates featured story every 8 hours
+
+If articles don't appear on frontend:
+- Check Supabase dashboard → `posts` table for records
+- Review workflow logs for errors
+- Verify API keys are correct in GitHub secrets
+
+---
+
+## Step 4: Monitor & Maintain 📊
+
+### View Logs
+
+**Frontend Errors:**
+- Cloudflare Pages → **Deployments** → click a deployment → view build/runtime logs
+- Browser console: Open website → F12 → Console tab
+
+**Scraper Logs:**
+- GitHub Actions → Actions tab → click workflow run → view job output
+- Local file: `scraper/logs/scraper_log.jsonl` (JSON format, one log per line)
+
+### Performance Tips
+
+**Frontend Optimization:**
+- Cloudflare Pages automatically serves from edge locations
+- Images are cached (consider adding image optimization in future)
+- TypeScript errors caught before deployment (CI/CD)
+
+**Scraper Efficiency:**
+- Runs only every 4 hours (adjust cron if needed in `.github/workflows/scraper.yml`)
+- Queries Supabase efficiently with date filters
+- Gemini API costs: ~$0-5/month depending on article volume
+
+### Troubleshooting Common Issues
+
+| Issue | Solution |
+|---|---|
+| Frontend shows "No stories" | Check Supabase connection, verify posts in database |
+| Images not loading | Ensure `image_url` field populated in Supabase posts table |
+| Scraper keeps failing | Verify secrets configured correctly, check Gemini API quota |
+| Deploy takes too long | Clear Cloudflare cache or check build logs for dependency issues |
+| Workflow runs not triggering | Verify secrets are set; cron workflows need at least one manual trigger first |
+
+---
 
 ## Local Development
 
-```bash
-# Frontend
-cd web && npm install && npm run dev
-# Open http://localhost:3000
+### Frontend
 
-# Scraper (one-time)
-cd scraper && python3 -m venv .venv
+```bash
+cd web
+npm install
+npm run dev
+# Open http://localhost:3000
+```
+
+### Scraper (Test Locally)
+
+```bash
+cd scraper
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-# Create .env with secrets
+
+# Create .env file with your secrets
+cat > .env << EOF
+GEMINI_API_KEY=your_key
+SUPABASE_URL=your_url
+SUPABASE_KEY=your_key
+EOF
+
+# Run once
 python3 scraper.py
 ```
 
-## Troubleshooting
+---
 
-- **Frontend shows "No stories"**: Check Supabase connection and database has posts
-- **Scraper fails to run**: Verify API keys are correct and Gemini quota is not exceeded
-- **Images not loading**: Ensure `image_url` in Supabase `posts` table is populated
-- **Logs**: Check `scraper/logs/scraper_log.jsonl` for detailed event logs
+## Alternative: Deploy Frontend to Vercel (Optional)
+
+If you prefer Vercel instead of Cloudflare Pages:
+
+1. Go to [vercel.com](https://vercel.com)
+2. Click "Import Project" → Connect GitHub
+3. Select `macedonian-vibe-news`
+4. Configure:
+   - Root Directory: `web`
+   - Framework: Next.js (auto-selected)
+5. Add environment variables (same as Cloudflare setup)
+6. Deploy
+
+**Vercel Pros:** Native Next.js optimization, simpler UI
+**Cloudflare Pros:** Same ecosystem as your domain, free tier more generous, edge caching
+
+---
 
 ## Future Enhancements
 
-- Add Sentry for error tracking
-- Set up Slack notifications for scraper failures
-- Migrate to Supabase Edge Functions for native scheduling
-- Add email digest of weekly top stories
+- [ ] Migrate scraper to Supabase Edge Functions (runs in Postgres without GitHub Actions)
+- [ ] Add Sentry error tracking (frontend & scraper)
+- [ ] Implement Slack notifications for scraper failures
+- [ ] Set up database backups to S3
+- [ ] Add email digest of weekly top stories
+- [ ] Implement CDN image optimization with Cloudflare Image Resizing
+- [ ] Add authentication for admin panel (scraper management)
+
+---
+
+## Security Checklist
+
+- ✅ All secrets stored in GitHub Actions (never committed)
+- ✅ Frontend uses anon key (safe to expose publicly)
+- ✅ Scraper uses service role key (private, only in GitHub secrets)
+- ✅ `.gitignore` covers environment files
+- ✅ Supabase Row Level Security (RLS) configured
+- ⚠️ Keep API keys rotated quarterly
+- ⚠️ Monitor Gemini API usage to prevent bill shock
+
+---
+
+## Quick Links
+
+- 🔗 [GitHub Repository](https://github.com/abalinda/macedonian-vibe-news)
+- 🔗 [Cloudflare Pages Dashboard](https://dash.cloudflare.com/)
+- 🔗 [Supabase Dashboard](https://app.supabase.com)
+- 🔗 [Google AI Studio](https://aistudio.google.com)
+- 🔗 [GitHub Actions Logs](https://github.com/abalinda/macedonian-vibe-news/actions)
