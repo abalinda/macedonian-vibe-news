@@ -10,7 +10,7 @@ export const NavBar = () => (
         </svg>
       </button>
       <span className="text-xs font-bold tracking-widest uppercase font-sans hidden md:block">
-        Macedonia / Curated
+        Македонија / Избрано
       </span>
     </div>
 
@@ -32,11 +32,11 @@ type CategoryNavProps = {
 
 export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavProps) => {
   const categories = [
-    { name: "Homepage", value: null },
-    { name: "Tech", value: "Tech" },
-    { name: "Culture", value: "Culture" },
-    { name: "Lifestyle", value: "Lifestyle" },
-    { name: "Business", value: "Business" },
+    { name: "Почетна", value: null },
+    { name: "Технологија", value: "Tech" },
+    { name: "Култура", value: "Culture" },
+    { name: "Животен стил", value: "Lifestyle" },
+    { name: "Бизнис", value: "Business" },
   ];
 
   return (
@@ -78,7 +78,7 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
               }
             `}
           >
-            All
+            Сите
           </Link>
         </nav>
       </div>

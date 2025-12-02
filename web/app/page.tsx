@@ -22,6 +22,13 @@ const CATEGORY_SLOT_MAP = {
   Business: "business",
 } as const;
 
+const CATEGORY_LABELS = {
+  Tech: "Технологија",
+  Culture: "Култура",
+  Lifestyle: "Животен стил",
+  Business: "Бизнис",
+} as const;
+
 // -- HELPER COMPONENTS --
 
 // 1. Small Card (Sidebars)
@@ -55,14 +62,14 @@ const HeroStory = ({ post }: { post: any }) => {
           {heroImage ? (
             <img 
               src={heroImage} 
-              alt={post.title || "Hero story image"}
+              alt={post.title || "Слика за главната приказна"}
               className="w-full h-full object-cover"
               loading="eager"
               decoding="async"
               referrerPolicy="no-referrer"
             />
           ) : (
-            <span className="text-neutral-400 font-mono text-sm">Image Placeholder</span>
+            <span className="text-neutral-400 font-mono text-sm">Привремен простор за слика</span>
           )}
       </div>
       
@@ -77,7 +84,7 @@ const HeroStory = ({ post }: { post: any }) => {
           {teaserText}
         </p>
         <div className="mt-6 text-xs font-bold text-neutral-400 uppercase tracking-widest">
-          Read Story &rarr;
+          Прочитај ја приказната &rarr;
         </div>
       </div>
     </a>
@@ -89,19 +96,19 @@ const EmptyState = ({ category }: { category: string | null }) => (
   <div className="flex flex-col items-center justify-center py-20 px-4">
     <div className="text-center max-w-md">
       <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4 text-neutral-800">
-        No stories found
+        Нема пронајдени приказни
       </h2>
       <p className="font-serif text-lg text-neutral-600 italic">
         {category 
-          ? `There are currently no articles in the "${category}" category. Check back soon!`
-          : "No articles available at the moment. Check back soon!"
+          ? `Моментално нема написи во категоријата "${category}". Проверете повторно наскоро!`
+          : "Нема написи во моментот. Проверете повторно наскоро!"
         }
       </p>
       <Link 
         href="/" 
         className="inline-block mt-8 px-6 py-2 border-2 border-black font-sans text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
       >
-        View All Stories
+        Види ги сите приказни
       </Link>
     </div>
   </div>
@@ -119,6 +126,7 @@ export default async function Home({
   const rawCategory = params.category || null;
   const hasCategory = rawCategory ? Object.prototype.hasOwnProperty.call(CATEGORY_SLOT_MAP, rawCategory) : false;
   const selectedCategory = hasCategory ? (rawCategory as keyof typeof CATEGORY_SLOT_MAP) : null;
+  const displayCategory = selectedCategory ? CATEGORY_LABELS[selectedCategory] ?? selectedCategory : null;
 
   // Build the Supabase query
   let query = supabase
@@ -140,7 +148,7 @@ export default async function Home({
       <main className="min-h-screen bg-[#FDFBF7] text-neutral-900">
         <NavBar />
         <CategoryNav activeCategory={selectedCategory} />
-        <EmptyState category={selectedCategory} />
+        <EmptyState category={displayCategory} />
       </main>
     );
   }
@@ -220,7 +228,7 @@ export default async function Home({
           {/* LEFT SIDEBAR (Hidden on mobile initially, visible on Tablet/Desktop) */}
           <div className="lg:col-span-3 lg:border-r border-neutral-300 lg:pr-8 order-2 lg:order-1">
             <h4 className="font-sans text-xs font-black uppercase tracking-widest border-b-4 border-black pb-2 mb-4">
-              Latest Updates
+              Последни новости
             </h4>
             <div className="flex flex-col">
               {leftColumnPosts.map((post) => (
@@ -237,7 +245,7 @@ export default async function Home({
           {/* RIGHT SIDEBAR */}
           <div className="lg:col-span-3 lg:border-l border-neutral-300 lg:pl-8 order-3">
              <h4 className="font-sans text-xs font-black uppercase tracking-widest border-b-4 border-black pb-2 mb-4">
-              More Stories
+              Повеќе приказни
             </h4>
             <div className="flex flex-col">
               {rightColumnPosts.map((post) => (

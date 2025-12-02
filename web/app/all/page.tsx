@@ -3,6 +3,13 @@ import { CategoryNav, NavBar } from "../_components/navigation";
 
 export const revalidate = 60;
 
+const CATEGORY_LABELS: Record<string, string> = {
+  Tech: "Технологија",
+  Culture: "Култура",
+  Lifestyle: "Животен стил",
+  Business: "Бизнис",
+};
+
 const stripHtml = (value: string) => value.replace(/<[^>]*>/g, "");
 
 const getTeaserText = (post: any) => {
@@ -14,15 +21,15 @@ const getTeaserText = (post: any) => {
 };
 
 const formatDate = (value?: string | null) => {
-  if (!value) return "Recently added";
+  if (!value) return "Неодамна додадено";
   const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "Recently added";
+  if (Number.isNaN(parsed.getTime())) return "Неодамна додадено";
   return parsed.toLocaleDateString('mk-MK', { day: "2-digit", month: "short", year: "numeric" });
 };
 
 const StoryRow = ({ post, index }: { post: any; index: number }) => {
   const teaserText = getTeaserText(post);
-  const categoryLabel = post?.category || "All";
+  const categoryLabel = CATEGORY_LABELS[post?.category] ?? post?.category ?? "Сите";
 
   return (
     <a href={post.link} target="_blank" className="group block px-4 py-5 md:px-6">
@@ -54,7 +61,7 @@ const StoryRow = ({ post, index }: { post: any; index: number }) => {
             <span className="h-[1px] w-10 bg-neutral-300" />
             <span className="font-mono">{formatDate(post?.published_at)}</span>
             <span className="font-mono text-neutral-400 group-hover:text-neutral-700 transition-colors">
-              Read article →
+              Прочитај го написот →
             </span>
           </div>
         </div>
@@ -65,9 +72,9 @@ const StoryRow = ({ post, index }: { post: any; index: number }) => {
 
 const EmptyState = () => (
   <div className="py-16 px-6 text-center border border-dashed border-neutral-300 bg-white/60">
-    <h2 className="font-serif text-3xl font-bold mb-2 text-neutral-800">No stories just yet</h2>
+    <h2 className="font-serif text-3xl font-bold mb-2 text-neutral-800">Сè уште нема приказни</h2>
     <p className="text-neutral-600 font-sans">
-      Keep an eye here as we collect every headline across categories.
+      Следете нè тука додека ги собираме сите наслови од сите категории.
     </p>
   </div>
 );
@@ -80,6 +87,7 @@ export default async function AllStoriesPage() {
     .limit(80);
 
   const allPosts = posts || [];
+  const storiesLabel = allPosts.length === 1 ? "приказна" : "приказни";
 
   return (
     <main className="min-h-screen bg-[#FDFBF7] text-neutral-900 pb-20">
@@ -89,13 +97,13 @@ export default async function AllStoriesPage() {
       <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-10">
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between mb-8">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-neutral-500">All Stories</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-neutral-500">Сите приказни</p>
             <h1 className="font-serif text-4xl md:text-5xl font-black leading-tight">
-              Every headline, no hero story.
+              Секој наслов, без главна приказна.
             </h1>
           </div>
           <div className="text-xs font-mono uppercase tracking-[0.3em] text-neutral-600">
-            {allPosts.length} stories
+            {allPosts.length} {storiesLabel}
           </div>
         </div>
 
