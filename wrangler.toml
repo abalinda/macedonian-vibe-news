@@ -5,9 +5,7 @@ pages_build_output_dir = "web/.next"
 
 [env.production.vars]
 ENVIRONMENT = "production"
-# Set the following in the Cloudflare Pages project settings (do NOT commit real secrets)
-NEXT_PUBLIC_SUPABASE_URL = ""
-NEXT_PUBLIC_SUPABASE_ANON_KEY = ""
+# These values should be configured in the Cloudflare Pages dashboard
 
 [env.preview.vars]
 ENVIRONMENT = "preview"
