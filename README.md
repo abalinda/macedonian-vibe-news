@@ -181,50 +181,6 @@ The scraper aggregates from these Macedonian news sources:
 
 *(Sources defined in `scraper/scraper.py`)*
 
----
-
-## 🚀 Deployment
-
-### Frontend (Vercel)
-
-Automatically deploys on push to `main` branch:
-
-1. **Connect GitHub:** [vercel.com](https://vercel.com) → Import project
-2. **Set Root Directory:** `web`
-3. **Add Environment Variables:**
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. **Deploy:** Vercel auto-deploys on every push
-
-**Live URL:** [macedonian-vibe-news.vercel.app](https://macedonian-vibe-news.vercel.app)
-
-### Backend (GitHub Actions)
-
-Scraper runs automatically via cron:
-
-- **Schedule:** Every 4 hours (`0 */4 * * *`)
-- **Trigger:** GitHub Actions free tier (2000 minutes/month)
-- **Logs:** Stored as 7-day artifacts
-
-Manual trigger:
-```bash
-# Visit GitHub Actions → scraper → Run workflow
-```
-
----
-
-## 💰 Cost Breakdown
-
-| Service | Cost | Notes |
-|---------|------|-------|
-| GitHub | Free | Public repo, unlimited Actions (2000 min/month) |
-| Vercel | Free | Unlimited deployments, no usage limits |
-| GitHub Actions (Scraper) | Free | ~5 min per run × 6 runs/day = 30 min/day |
-| Supabase | Free | 500MB storage, unlimited API calls |
-| Google Gemini API | $0-5/month | Pay-per-use, ~0.5¢ per article |
-| **Total** | **$0-5/month** | Fully serverless, auto-scaling |
-
----
 
 ## 🔐 Security
 
