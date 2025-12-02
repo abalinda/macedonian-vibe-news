@@ -1,3 +1,415 @@
-# macedonian-vibes-news
+# Macedonian Vibes News 📰
 
-First Macedonian AI-curated news agregator
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?logo=vercel)](https://macedonian-vibe-news.vercel.app)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python)](https://www.python.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+
+**AI-curated news aggregator for Macedonia** — Automatically fetches, analyzes, and displays news from top Macedonian RSS feeds using Google Gemini AI for intelligent summarization and categorization.
+
+**Live:** [macedonian-vibe-news.vercel.app](https://macedonian-vibe-news.vercel.app)
+
+---
+
+## 🎯 Overview
+
+Macedonian Vibes News is a full-stack news aggregation platform that:
+
+- 🔄 **Automatically scrapes** 13+ Macedonian news sources via RSS feeds
+- 🤖 **AI-analyzes** articles using Google Gemini for summaries and categorization
+- 📊 **Stores** all articles in Supabase PostgreSQL database with metadata
+- 🌐 **Displays** via a modern Next.js frontend with category filtering and featured stories
+- ⚡ **Runs serverlessly** — Zero infrastructure management, fully automated
+
+### Key Features
+
+✅ **Automated News Scraping** — Runs every 4 hours via GitHub Actions  
+✅ **AI-Powered Summaries** — Google Gemini generates teaser text and full summaries  
+✅ **Category Filtering** — Browse by Tech, Culture, Lifestyle, Business  
+✅ **Featured Stories** — Rotating 8-hour featured story slot system  
+✅ **Responsive Design** — Mobile-first UI with Tailwind CSS  
+✅ **Global CDN** — Deployed on Vercel for sub-second response times  
+✅ **Zero Cost** — Free tier for all services (GitHub Actions, Vercel, Supabase, Gemini)  
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│         Your Browser / Mobile               │
+└────────────────────┬────────────────────────┘
+                     │ HTTPS
+         ┌───────────▼──────────┐
+         │   Vercel CDN         │
+         │ (Frontend Hosting)   │
+         └───────────┬──────────┘
+                     │ Fetches Data
+         ┌───────────▼──────────┐
+         │  Supabase PostgreSQL │
+         │  (Article Database)  │
+         └───────────▲──────────┘
+                     │ Writes Data
+         ┌───────────┴──────────┐
+         │  GitHub Actions      │
+         │  (Every 4 hours)     │
+         │                      │
+         │  scraper.py:         │
+         │  • Fetch RSS feeds   │
+         │  • Parse content     │
+         │  • AI summarize      │
+         │  • Save to DB        │
+         └──────────────────────┘
+```
+
+### Technology Stack
+
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Frontend** | Next.js 16, React 19, TypeScript, Tailwind CSS | Web UI with SSR |
+| **Backend** | Python 3.11, BeautifulSoup4, feedparser | Article scraping & parsing |
+| **AI/ML** | Google Gemini API | Content analysis & summarization |
+| **Database** | Supabase (PostgreSQL) | Articles & metadata storage |
+| **Hosting** | Vercel | Frontend deployment & CDN |
+| **Automation** | GitHub Actions | Scheduled scraper execution |
+| **Source Control** | GitHub | Repository & CI/CD |
+
+---
+
+## 🚀 Quick Start
+
+### Live Demo
+
+Visit [macedonian-vibe-news.vercel.app](https://macedonian-vibe-news.vercel.app) to see the site in action.
+
+### Local Development
+
+**Prerequisites:**
+- Node.js 18+ and npm
+- Python 3.11+
+- Git
+
+**Frontend (Next.js Dev Server):**
+```bash
+cd web
+npm install
+npm run dev
+# Open http://localhost:3000
+```
+
+**Scraper (Local Testing):**
+```bash
+cd scraper
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Create .env with your secrets
+cat > .env << EOF
+GEMINI_API_KEY=your_key
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your_service_role_key
+EOF
+
+# Run scraper once
+python3 scraper.py
+```
+
+---
+
+## 📋 Project Structure
+
+```
+macedonian-vibes-news/
+├── web/                          # Next.js Frontend
+│   ├── app/
+│   │   ├── page.tsx             # Homepage with categories
+│   │   ├── all/page.tsx         # All articles list view
+│   │   └── layout.tsx           # Root layout
+│   ├── lib/
+│   │   └── supabase.ts          # Supabase client
+│   ├── package.json             # Frontend dependencies
+│   └── next.config.ts           # Next.js config
+│
+├── scraper/                      # Python Backend
+│   ├── scraper.py               # Main scraping logic
+│   ├── curator.py               # AI curation with Gemini
+│   ├── logger.py                # Logging utilities
+│   ├── requirements.txt          # Python dependencies
+│   ├── logs/                    # Scraper logs (JSONL format)
+│   └── .env.example             # Environment template
+│
+├── .github/workflows/            # GitHub Actions Automation
+│   ├── scraper.yml              # Scheduled scraper (every 4h)
+│   └── lint-build.yml           # Frontend CI/CD
+│
+├── docs/                         # Documentation
+│   ├── DEPLOYMENT.md            # Deployment guide
+│   ├── QUICK_START.md           # Quick setup checklist
+│   └── SUPABASE_SCHEMA.md       # Database schema reference
+│
+└── README.md                     # This file
+```
+
+---
+
+## 🔧 Configuration
+
+### Environment Variables
+
+**Frontend (.env.local)** — Public, safe to expose:
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+```
+
+**Scraper (.env)** — Private, for GitHub Actions only:
+```env
+GEMINI_API_KEY=your_api_key
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your_service_role_key
+```
+
+### Database Schema
+
+**`posts` table:**
+- `id` (int, PK)
+- `title` (text)
+- `link` (text)
+- `source` (text) — RSS feed source
+- `category` (text) — Tech, Culture, Lifestyle, Business
+- `teaser` (text) — AI-generated short snippet
+- `summary` (text) — Full AI summary
+- `image_url` (text) — Article featured image
+- `published_at` (timestamp) — Article publication date
+- `scraped_at` (timestamp) — When article was scraped
+- `created_at` (timestamp) — DB record creation
+- `updated_at` (timestamp) — DB record update
+
+---
+
+## 🔄 How It Works
+
+### 1. **Scraper Runs Automatically (Every 4 Hours)**
+
+GitHub Actions trigger `.github/workflows/scraper.yml`:
+
+```
+Scraper Start
+    ↓
+Fetch RSS feeds (13 Macedonian news sources)
+    ↓
+Parse HTML with BeautifulSoup
+    ↓
+Send to Google Gemini API for:
+  • Content summarization
+  • Category classification
+  • Teaser text generation
+    ↓
+Upsert to Supabase `posts` table
+    ↓
+Log events to scraper_log.jsonl
+```
+
+### 2. **Frontend Fetches & Displays Data**
+
+User visits site:
+```
+Browser → Vercel CDN
+    ↓
+Next.js server fetches from Supabase
+    ↓
+Renders homepage with categories
+    ↓
+User filters by category or browses "All"
+    ↓
+Click article → Opens in new tab
+```
+
+### 3. **Featured Story Rotation (Every 8 Hours)**
+
+A random article from each category is featured:
+- Tech, Culture, Lifestyle, Business each get 1 featured slot
+- Homepage displays featured story prominently
+- Rotates every 8 hours automatically
+
+---
+
+## 📊 RSS Feed Sources
+
+The scraper aggregates from these Macedonian news sources:
+
+- IT.mk
+- Porta3.mk
+- Telma.mk
+- MKD.mk
+- Dnevnik.mk
+- Vesti.mk
+- 24VESTI.mk
+- Nova.mk
+- TVM.mk
+- Plus.mk
+- MKDNews.mk
+- Faktor.mk
+- Ekonomija.mk
+
+*(Sources defined in `scraper/scraper.py`)*
+
+---
+
+## 🚀 Deployment
+
+### Frontend (Vercel)
+
+Automatically deploys on push to `main` branch:
+
+1. **Connect GitHub:** [vercel.com](https://vercel.com) → Import project
+2. **Set Root Directory:** `web`
+3. **Add Environment Variables:**
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. **Deploy:** Vercel auto-deploys on every push
+
+**Live URL:** [macedonian-vibe-news.vercel.app](https://macedonian-vibe-news.vercel.app)
+
+### Backend (GitHub Actions)
+
+Scraper runs automatically via cron:
+
+- **Schedule:** Every 4 hours (`0 */4 * * *`)
+- **Trigger:** GitHub Actions free tier (2000 minutes/month)
+- **Logs:** Stored as 7-day artifacts
+
+Manual trigger:
+```bash
+# Visit GitHub Actions → scraper → Run workflow
+```
+
+---
+
+## 💰 Cost Breakdown
+
+| Service | Cost | Notes |
+|---------|------|-------|
+| GitHub | Free | Public repo, unlimited Actions (2000 min/month) |
+| Vercel | Free | Unlimited deployments, no usage limits |
+| GitHub Actions (Scraper) | Free | ~5 min per run × 6 runs/day = 30 min/day |
+| Supabase | Free | 500MB storage, unlimited API calls |
+| Google Gemini API | $0-5/month | Pay-per-use, ~0.5¢ per article |
+| **Total** | **$0-5/month** | Fully serverless, auto-scaling |
+
+---
+
+## 🔐 Security
+
+- ✅ API keys stored in GitHub Actions Secrets (never in code)
+- ✅ Frontend uses Supabase anon key (read-only public)
+- ✅ Scraper uses service role key (private, GitHub-only)
+- ✅ All data in transit encrypted (HTTPS/TLS)
+- ✅ Supabase Row-Level Security (RLS) configured
+- ✅ `.gitignore` prevents `.env` file commits
+
+---
+
+## 📈 Monitoring
+
+### GitHub Actions Logs
+
+View scraper execution:
+```
+GitHub → Actions → scraper workflow → Latest run → View logs
+```
+
+Expected output:
+```
+✅ Fetched 8 articles from IT.mk
+✅ Fetched 6 articles from Porta3.mk
+✅ Sent 42 articles to Gemini API
+✅ Upserted 42 articles to Supabase
+✅ Featured story rotated
+```
+
+### Vercel Dashboard
+
+Monitor frontend:
+- Build logs: [vercel.com/dashboard](https://vercel.com/dashboard)
+- Analytics: Traffic, response times, errors
+- Auto-redeploy on `main` push
+
+### Supabase Dashboard
+
+Check database:
+- [app.supabase.com](https://app.supabase.com) → Select project
+- Table Editor → `posts` table
+- Verify articles updated every 4 hours
+
+---
+
+## 🤝 Contributing
+
+This is a personal project, but improvements are welcome:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📝 License
+
+This project is open source and available under the MIT License.
+
+---
+
+## 📚 Documentation
+
+- [DEPLOYMENT.md](./DEPLOYMENT.md) — Complete deployment guide
+- [QUICK_START.md](./QUICK_START.md) — 30-minute setup checklist
+- [SUPABASE_SCHEMA.md](./SUPABASE_SCHEMA.md) — Database schema reference
+- [GITHUB_ACTIONS_SECRETS.md](./GITHUB_ACTIONS_SECRETS.md) — Secrets configuration
+
+---
+
+## 🐛 Troubleshooting
+
+### Site shows 404
+
+- Frontend not deployed on Vercel
+- Check: [vercel.com/dashboard](https://vercel.com/dashboard) → Deployments tab
+
+### No articles displaying
+
+- Scraper hasn't run yet (runs every 4 hours)
+- Manual trigger: GitHub Actions → scraper → Run workflow
+- Check logs for errors
+
+### Scraper fails
+
+- Verify GitHub Actions secrets configured (case-sensitive)
+- Check Gemini API quota and billing
+- Review scraper logs in GitHub Actions
+
+### Build takes too long
+
+- First build: 2-3 minutes (normal)
+- Subsequent builds: ~1 minute
+- Check Vercel build logs for issues
+
+---
+
+## 📞 Support
+
+For issues or questions:
+
+1. Check documentation files above
+2. Review GitHub Actions logs for scraper errors
+3. Check Vercel build logs for frontend errors
+4. Inspect browser console (F12) for client-side errors
+
+---
+
+**Made with ❤️ in Macedonia**
+
+*Last Updated: December 2, 2025*
