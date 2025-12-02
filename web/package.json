@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prebuild": "node -e \"console.log('Build Environment:'); Object.keys(process.env).filter(k => k.includes('SUPABASE')).forEach(k => console.log(k + ':', process.env[k] ? 'SET' : 'MISSING'));\""
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.86.0",
