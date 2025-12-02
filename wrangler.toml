@@ -1,3 +1,4 @@
+pages_build_output_dir = "web/.next"
 name = "macedonian-vibe-news"
 type = "javascript"
 account_id = ""
