@@ -76,46 +76,7 @@ Macedonian Vibes News is a full-stack news aggregation platform that:
 
 ---
 
-## 🚀 Quick Start
 
-### Live Demo
-
-Visit [macedonian-vibe-news.vercel.app](https://macedonian-vibe-news.vercel.app) to see the site in action.
-
-### Local Development
-
-**Prerequisites:**
-- Node.js 18+ and npm
-- Python 3.11+
-- Git
-
-**Frontend (Next.js Dev Server):**
-```bash
-cd web
-npm install
-npm run dev
-# Open http://localhost:3000
-```
-
-**Scraper (Local Testing):**
-```bash
-cd scraper
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-# Create .env with your secrets
-cat > .env << EOF
-GEMINI_API_KEY=your_key
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your_service_role_key
-EOF
-
-# Run scraper once
-python3 scraper.py
-```
-
----
 
 ## 📋 Project Structure
 
@@ -150,41 +111,6 @@ macedonian-vibes-news/
 │
 └── README.md                     # This file
 ```
-
----
-
-## 🔧 Configuration
-
-### Environment Variables
-
-**Frontend (.env.local)** — Public, safe to expose:
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-```
-
-**Scraper (.env)** — Private, for GitHub Actions only:
-```env
-GEMINI_API_KEY=your_api_key
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your_service_role_key
-```
-
-### Database Schema
-
-**`posts` table:**
-- `id` (int, PK)
-- `title` (text)
-- `link` (text)
-- `source` (text) — RSS feed source
-- `category` (text) — Tech, Culture, Lifestyle, Business
-- `teaser` (text) — AI-generated short snippet
-- `summary` (text) — Full AI summary
-- `image_url` (text) — Article featured image
-- `published_at` (timestamp) — Article publication date
-- `scraped_at` (timestamp) — When article was scraped
-- `created_at` (timestamp) — DB record creation
-- `updated_at` (timestamp) — DB record update
 
 ---
 
@@ -311,40 +237,6 @@ Manual trigger:
 
 ---
 
-## 📈 Monitoring
-
-### GitHub Actions Logs
-
-View scraper execution:
-```
-GitHub → Actions → scraper workflow → Latest run → View logs
-```
-
-Expected output:
-```
-✅ Fetched 8 articles from IT.mk
-✅ Fetched 6 articles from Porta3.mk
-✅ Sent 42 articles to Gemini API
-✅ Upserted 42 articles to Supabase
-✅ Featured story rotated
-```
-
-### Vercel Dashboard
-
-Monitor frontend:
-- Build logs: [vercel.com/dashboard](https://vercel.com/dashboard)
-- Analytics: Traffic, response times, errors
-- Auto-redeploy on `main` push
-
-### Supabase Dashboard
-
-Check database:
-- [app.supabase.com](https://app.supabase.com) → Select project
-- Table Editor → `posts` table
-- Verify articles updated every 4 hours
-
----
-
 ## 🤝 Contributing
 
 This is a personal project, but improvements are welcome:
@@ -360,53 +252,6 @@ This is a personal project, but improvements are welcome:
 ## 📝 License
 
 This project is open source and available under the MIT License.
-
----
-
-## 📚 Documentation
-
-- [DEPLOYMENT.md](./DEPLOYMENT.md) — Complete deployment guide
-- [QUICK_START.md](./QUICK_START.md) — 30-minute setup checklist
-- [SUPABASE_SCHEMA.md](./SUPABASE_SCHEMA.md) — Database schema reference
-- [GITHUB_ACTIONS_SECRETS.md](./GITHUB_ACTIONS_SECRETS.md) — Secrets configuration
-
----
-
-## 🐛 Troubleshooting
-
-### Site shows 404
-
-- Frontend not deployed on Vercel
-- Check: [vercel.com/dashboard](https://vercel.com/dashboard) → Deployments tab
-
-### No articles displaying
-
-- Scraper hasn't run yet (runs every 4 hours)
-- Manual trigger: GitHub Actions → scraper → Run workflow
-- Check logs for errors
-
-### Scraper fails
-
-- Verify GitHub Actions secrets configured (case-sensitive)
-- Check Gemini API quota and billing
-- Review scraper logs in GitHub Actions
-
-### Build takes too long
-
-- First build: 2-3 minutes (normal)
-- Subsequent builds: ~1 minute
-- Check Vercel build logs for issues
-
----
-
-## 📞 Support
-
-For issues or questions:
-
-1. Check documentation files above
-2. Review GitHub Actions logs for scraper errors
-3. Check Vercel build logs for frontend errors
-4. Inspect browser console (F12) for client-side errors
 
 ---
 
