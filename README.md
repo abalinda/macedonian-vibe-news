@@ -72,7 +72,7 @@ Macedonian Vibes News is a full-stack news aggregation platform that:
 | **Database** | Supabase (PostgreSQL) | Articles & metadata storage |
 | **Hosting** | Vercel | Frontend deployment & CDN |
 | **Automation** | GitHub Actions | Scheduled scraper execution |
-| **Source Control** | GitHub | Repository & CI/CD |
+| **Source Control** | GitHub | Repository & CI/CD 
 
 ---
 
