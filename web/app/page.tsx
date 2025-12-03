@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabaseServer } from "@/lib/supabase-server";
 import Link from "next/link";
 import { CategoryNav, NavBar } from "./_components/navigation";
 
@@ -131,7 +131,7 @@ export default async function Home({
   const displayCategory = selectedCategory ? CATEGORY_LABELS[selectedCategory] ?? selectedCategory : null;
 
   // Build the Supabase query
-  let query = supabase
+  let query = supabaseServer
     .from('posts')
     .select('*')
     .order('published_at', { ascending: false })
@@ -167,7 +167,7 @@ export default async function Home({
   const featuredMap = new Map<string, number>();
 
   if (featuredSlots.length > 0) {
-    const { data: featuredRows } = await supabase
+    const { data: featuredRows } = await supabaseServer
       .from('featured_story')
       .select('slot, post_id')
       .in('slot', featuredSlots);
@@ -190,7 +190,7 @@ export default async function Home({
   });
 
   if (neededIds.size > 0) {
-    const { data: extraPosts } = await supabase
+    const { data: extraPosts } = await supabaseServer
       .from('posts')
       .select('*')
       .in('id', Array.from(neededIds));

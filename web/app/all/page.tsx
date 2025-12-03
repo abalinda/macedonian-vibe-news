@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabaseServer } from "@/lib/supabase-server";
 import { CategoryNav, NavBar } from "../_components/navigation";
 
 export const revalidate = 60;
@@ -81,7 +81,7 @@ const EmptyState = () => (
 );
 
 export default async function AllStoriesPage() {
-  const { data: posts } = await supabase
+  const { data: posts } = await supabaseServer
     .from('posts')
     .select('*')
     .order('published_at', { ascending: false })
