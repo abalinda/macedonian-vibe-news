@@ -26,3 +26,6 @@ web/.DS_Store
 .idea/
 *.swp
 *.swo
+
+# MD
+/Users/abalinda/Documents/programming/macedonian-vibes-news/DEPLOYMENT.md

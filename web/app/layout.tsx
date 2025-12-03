@@ -6,8 +6,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
 export const metadata: Metadata = {
-  title: "МК Вајб Чек",
-  description: "Курирани македонски вести",
+  title: "Vibes - Убави Вести",
+  description: "Избрани вести од македонски портали",
 };
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="mk">
       <body className={`${inter.variable} ${playfair.variable} bg-[#FDFBF7] text-neutral-900 antialiased`}>
-        {/* We use a slight off-white background (#FDFBF7) for that 'paper' feel */}
+        {/* slight off-white background (#FDFBF7) for 'paper' feel */}
         {children}
       </body>
     </html>

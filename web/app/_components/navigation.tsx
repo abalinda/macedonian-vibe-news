@@ -10,7 +10,6 @@ export const NavBar = () => (
         </svg>
       </button>
       <span className="text-xs font-bold tracking-widest uppercase font-sans hidden md:block">
-        Македонија / Избрано
       </span>
     </div>
 
@@ -37,6 +36,7 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
     { name: "Култура", value: "Culture" },
     { name: "Животен стил", value: "Lifestyle" },
     { name: "Бизнис", value: "Business" },
+    { name: "Спорт", value: "Sports" },
   ];
 
   return (
