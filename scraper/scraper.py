@@ -26,6 +26,7 @@ FEATURE_SLOTS = {
     "culture": {"category": "Culture", "label": "Culture"},
     "lifestyle": {"category": "Lifestyle", "label": "Lifestyle"},
     "business": {"category": "Business", "label": "Business"},
+    "sports": {"category": "Sports", "label": "Sports"},
 }
 
 feature_states: dict[str, dict] = {}

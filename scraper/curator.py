@@ -101,10 +101,11 @@ def analyze_news_batch(articles):
         - Culture: Art, architecture, film, literature, design, history, music, exhibitions, theatre, creative festivals.
         - Lifestyle: Wellness, productivity, travel, gastronomy, fashion, urban living, human-interest, education tips, youth initiatives.
         - Business: Entrepreneurs, funding, career growth, market trends, sustainability wins, Macedonians succeeding in business.
+        - Sports: Sports events, athlete achievements, fitness trends, community sports initiatives, inspiring sports stories. Put preference for Macedonian sport stories.
         If nothing fits or vibes are off, REJECT the article rather than forcing a category.
 
         ENRICHMENT FIELDS FOR ACCEPTED STORIES
-        - "category": one of ["Tech", "Culture", "Lifestyle", "Business"].
+        - "category": one of ["Tech", "Culture", "Lifestyle", "Business", "Sports"].
         - "summary": 1 elegant Macedonian sentence (<= 25 words) highlighting why it matters.
         - "teaser": 6-10 word uppercase-friendly hook (no punctuation at the end) that could sit under a headline.
         - "tone": "positive", "neutral", or "negative" (if negative, strongly consider rejecting unless it's still inspiring).

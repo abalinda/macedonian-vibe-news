@@ -20,6 +20,7 @@ const CATEGORY_SLOT_MAP = {
   Culture: "culture",
   Lifestyle: "lifestyle",
   Business: "business",
+  Sports: "sports",
 } as const;
 
 const CATEGORY_LABELS = {
@@ -27,6 +28,7 @@ const CATEGORY_LABELS = {
   Culture: "Култура",
   Lifestyle: "Животен стил",
   Business: "Бизнис",
+  Sports: "Спорт",
 } as const;
 
 // -- HELPER COMPONENTS --

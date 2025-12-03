@@ -8,6 +8,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   Culture: "Култура",
   Lifestyle: "Животен стил",
   Business: "Бизнис",
+  Sports: "Спорт",
 };
 
 const stripHtml = (value: string) => value.replace(/<[^>]*>/g, "");
@@ -99,7 +100,7 @@ export default async function AllStoriesPage() {
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-neutral-500">Сите приказни</p>
             <h1 className="font-serif text-4xl md:text-5xl font-black leading-tight">
-              Секој наслов, без главна приказна.
+              Сите приказни во еден простор
             </h1>
           </div>
           <div className="text-xs font-mono uppercase tracking-[0.3em] text-neutral-600">
