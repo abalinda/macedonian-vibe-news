@@ -17,6 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="mk">
+      <head>
+        <meta name="apple-mobile-web-app-title" content="Vibes" />
+      </head>
       <body className={`${inter.variable} ${playfair.variable} bg-[#FDFBF7] text-neutral-900 antialiased`}>
         {/* slight off-white background (#FDFBF7) for 'paper' feel */}
         {children}
