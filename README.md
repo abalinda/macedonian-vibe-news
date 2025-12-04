@@ -7,7 +7,7 @@
 
 **AI-curated news aggregator for Macedonia** — Automatically fetches, analyzes, and displays news from top Macedonian RSS feeds using Google Gemini AI for intelligent summarization and categorization.
 
-**Live:** [macedonian-vibe-news.vercel.app](https://macedonian-vibe-news.vercel.app)
+**Live:** [vibes.mk](https://vibes.mk)
 
 ---
 
