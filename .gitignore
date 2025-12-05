@@ -13,6 +13,7 @@ scraper/logs/
 
 # Node.js / Next.js (from web/.gitignore)
 web/node_modules/
+node_modules
 web/.pnp
 web/.next/
 web/out/
@@ -29,3 +30,4 @@ web/.DS_Store
 
 # MD
 /Users/abalinda/Documents/programming/macedonian-vibes-news/DEPLOYMENT.md
+node_modules

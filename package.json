@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@next/third-parties": "^16.0.7",
     "posthog-js": "^1.300.0"
   }
 }
