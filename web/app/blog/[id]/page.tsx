@@ -102,13 +102,13 @@ export default async function BlogPostPage({
       <NavBar />
       <CategoryNav activeCategory="Blog" />
 
-      <article className="max-w-3xl mx-auto px-4 md:px-8 py-10 md:py-14">
+      <article className="max-w-3xl mx-auto px-4 md:px-8 py-10 md:py-5">
         <div className="text-xs font-bold uppercase tracking-[0.35em] text-neutral-500 mb-3 flex flex-wrap gap-2 items-center">
-          <span>{post?.source || "Блог"}</span>
-          {readableDate ? <span className="text-neutral-400">• {readableDate}</span> : null}
-        </div>
+          {/* {/* {* <span>{post?.source || "Блог"}</span>
+          {readableDate ? <span className="text-neutral-400">• {readableDate}</span> : null} */} 
+        </div> 
 
-        <h1 className="font-serif text-4xl md:text-5xl font-black leading-tight mb-4">
+        <h1 className="text-center font-serif text-4xl md:text-5xl font-black leading-tight mb-4">
           {post?.title || "Блог објава"}
         </h1>
 
@@ -143,7 +143,7 @@ export default async function BlogPostPage({
             href="/?category=Blog"
             className="text-xs font-bold uppercase tracking-[0.3em] border border-black px-4 py-2 rounded-full transition-colors hover:bg-black hover:text-white"
           >
-            Назад кон блогот
+            Назад кон повеќе блогови
           </Link>
           {readableDate ? (
             <span className="text-[11px] uppercase tracking-[0.25em] text-neutral-400">
