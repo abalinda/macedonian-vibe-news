@@ -40,18 +40,41 @@ const CATEGORY_LABELS = {
 // 1. Small Card (Sidebars)
 const SideStory = ({ post }: { post: any }) => {
   const teaserText = getTeaserText(post);
+  const imageUrl = post?.image_url;
 
   return (
-    <a href={post.link} target="_blank" className="group block py-6   last:border-0">
-      <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1 block">
-        {post.source}
-      </span>
-      <h3 className="font-serif text-lg leading-tight font-bold group-hover:underline decoration-2 underline-offset-4 mb-2">
-        {post.title}
-      </h3>
-      <p className="text-xs text-neutral-800 font-mono uppercase tracking-[0.3em] line-clamp-2">
-        {teaserText}
-      </p>
+    <a href={post.link} target="_blank" className="group block py-6 last:border-0">
+      <div className="flex gap-4">
+        <div className="relative w-32 aspect-[16/10] overflow-hidden bg-neutral-200 border border-black flex-shrink-0">
+          {imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={imageUrl}
+              alt={post.title || "Слика за приказната"}
+              className="h-full w-full object-cover"
+              loading="lazy"
+              decoding="async"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-[10px] text-neutral-400 font-mono text-center px-2 leading-tight">
+              Нема слика
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1 block">
+            {post.source}
+          </span>
+          <h3 className="font-serif text-lg leading-tight font-bold group-hover:underline decoration-2 underline-offset-4 mb-2">
+            {post.title}
+          </h3>
+          <p className="text-xs text-neutral-800 font-mono uppercase tracking-[0.3em] line-clamp-2">
+            {teaserText}
+          </p>
+        </div>
+      </div>
     </a>
   );
 };
@@ -371,7 +394,7 @@ export default async function Home({
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         
         {/* GRID LAYOUT: 1 Col Mobile -> 3 Col Desktop */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 border-t border-black pt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 border-t border-black pt-8">
           
           {/* LEFT SIDEBAR (Hidden on mobile initially, visible on Tablet/Desktop) */}
           <div className="lg:col-span-3 lg:border-r border-neutral-300 lg:pr-8 order-2 lg:order-1">
