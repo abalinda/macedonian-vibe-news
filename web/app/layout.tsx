@@ -22,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="mk">
       <head>
+        <script type="text/javascript" data-cmp-ab="1" src="https://cdn.consentmanager.net/delivery/autoblocking/f8fee6b9a292f.js" data-cmp-host="d.delivery.consentmanager.net" data-cmp-cdn="cdn.consentmanager.net" data-cmp-codesrc="16"></script>
         <meta name="apple-mobile-web-app-title" content="Vibes" />
       </head>
       <GoogleAnalytics gaId="G-VG899CFSWV" />

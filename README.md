@@ -178,9 +178,13 @@ The scraper aggregates from these Macedonian news sources:
 - MKDNews.mk
 - Faktor.mk
 - Ekonomija.mk
+- Конект.мк
 
 *(Sources defined in `scraper/scraper.py`)*
 
+## 🔖 Blog
+
+- We have an in-house blog posts that are being occasionally uploaded by peopele dear to us (me). Contact us (me) if you want to be featured/
 
 ## 🔐 Security
 

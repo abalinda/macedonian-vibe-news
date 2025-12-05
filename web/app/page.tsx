@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { CategoryNav, NavBar } from "./_components/navigation";
 
 // Revalidate every 60 seconds
@@ -39,13 +40,41 @@ const CATEGORY_LABELS = {
 
 // -- HELPER COMPONENTS --
 
+// Link helper to route Blog stories internally
+const StoryLink = ({
+  post,
+  className,
+  children,
+}: {
+  post: any;
+  className?: string;
+  children: ReactNode;
+}) => {
+  const isBlog = post?.category === "Blog";
+  const href = isBlog ? `/blog/${post.id}` : post?.link || "#";
+
+  if (isBlog) {
+    return (
+      <Link href={href} className={className}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <a href={href} target="_blank" rel="noreferrer" className={className}>
+      {children}
+    </a>
+  );
+};
+
 // 1. Small Card (Sidebars)
 const SideStory = ({ post }: { post: any }) => {
   const teaserText = getTeaserText(post);
   const imageUrl = post?.image_url;
 
   return (
-    <a href={post.link} target="_blank" className="group block py-6 last:border-0">
+    <StoryLink post={post} className="group block py-6 last:border-0">
       <div className="flex gap-4">
         <div className="relative w-32 aspect-[16/10] overflow-hidden bg-neutral-200 border border-black flex-shrink-0">
           {imageUrl ? (
@@ -77,7 +106,7 @@ const SideStory = ({ post }: { post: any }) => {
           </p>
         </div>
       </div>
-    </a>
+    </StoryLink>
   );
 };
 
@@ -87,7 +116,7 @@ const HeroStory = ({ post }: { post: any }) => {
   const heroImage = post?.image_url;
 
   return (
-    <a href={post.link} target="_blank" className="group block mb-12 md:mb-0">
+    <StoryLink post={post} className="group block mb-12 md:mb-0">
       {/* Placeholder for Image - in future we can scrape these */}
       <div className="w-full aspect-video bg-neutral-200 mb-6 flex items-center justify-center border border-black overflow-hidden relative">
           {heroImage ? (
@@ -119,12 +148,12 @@ const HeroStory = ({ post }: { post: any }) => {
           Прочитај ја приказната &rarr;
         </div>
       </div>
-    </a>
+    </StoryLink>
   );
 };
 
 // 3. Empty State Component
-const EmptyState = ({ category }: { category: string | null }) => (
+const EmptyState = ({ category, teaserMessage }: { category: string | null; teaserMessage?: string }) => (
   <div className="flex flex-col items-center justify-center py-20 px-4">
     <div className="text-center max-w-md">
       <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4 text-neutral-800">
@@ -142,6 +171,14 @@ const EmptyState = ({ category }: { category: string | null }) => (
       >
         Види ги сите приказни
       </Link>
+      {teaserMessage ? (
+        <div
+          className="text-center -mt-6 text-[11px] text-neutral-300 tracking-[0.3em] select-none"
+          aria-hidden="true"
+        >
+          {teaserMessage}
+        </div>
+      ) : null}
     </div>
   </div>
 );
@@ -243,22 +280,7 @@ export default async function Home({
   const hasCategory = rawCategory ? Object.prototype.hasOwnProperty.call(CATEGORY_SLOT_MAP, rawCategory) : false;
   const selectedCategory = hasCategory ? (rawCategory as keyof typeof CATEGORY_SLOT_MAP) : null;
   const displayCategory = selectedCategory ? CATEGORY_LABELS[selectedCategory] ?? selectedCategory : null;
-
-  if (selectedCategory === "Blog") {
-    return (
-      <main className="min-h-screen bg-[#FDFBF7] text-neutral-900">
-        <NavBar />
-        <CategoryNav activeCategory={selectedCategory} />
-        <EmptyState category={displayCategory} />
-        <div
-          className="text-center -mt-10 text-s text-red tracking-[0.5em] select-none"
-          aria-hidden="true"
-        >
-          🍒🍒🍒 
-        </div>
-      </main>
-    );
-  }
+  const blogTeaser = selectedCategory === "Blog" ? "" : undefined;
 
   // Build the Supabase query
   let query = supabase
@@ -294,12 +316,12 @@ export default async function Home({
   }
 
   // Handle empty state
-    if (!safePosts || safePosts.length === 0) {
+  if (!safePosts || safePosts.length === 0) {
     return (
       <main className="min-h-screen bg-[#FDFBF7] text-neutral-900">
         <NavBar />
         <CategoryNav activeCategory={selectedCategory} />
-        <EmptyState category={displayCategory} />
+        <EmptyState category={displayCategory} teaserMessage={blogTeaser} />
       </main>
     );
   }
