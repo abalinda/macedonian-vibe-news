@@ -9,34 +9,48 @@ export const revalidate = 120;
 
 const stripHtml = (value: string) => value.replace(/<[^>]*>/g, "");
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}): Promise<Metadata> {
-  const awaitedParams = await params;
-  const postId = Number(awaitedParams.id);
-
-  if (Number.isNaN(postId)) {
-    return { title: "Блог" };
-  }
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const postId = Number(id);
+  if (Number.isNaN(postId)) return { title: "Блог" };
 
   try {
     const { data } = await supabase
       .from("posts")
-      .select("title")
+      .select("title, teaser, summary, image_url")
       .eq("id", postId)
       .eq("category", "Blog")
       .single();
 
-    if (data?.title) {
-      return { title: data.title };
-    }
-  } catch (err) {
-    console.warn("Metadata fetch failed for blog post", err);
-  }
+    const title = ("Vibes - " + data?.title) || "Блог";
+    const description =
+      (data?.teaser && String(data.teaser)) ||
+      (data?.summary && stripHtml(String(data.summary)).slice(0, 160)) ||
+      "Блог објава од Vibes.";
+    const image = data?.image_url;
 
-  return { title: "Блог" };
+    const meta: Metadata = {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url: `/blog/${postId}`,
+        siteName: "VIBES",
+        type: "article",
+        images: image ? [{ url: image, width: 1200, height: 630, alt: title }] : undefined,
+      },
+      twitter: {
+        card: image ? "summary_large_image" : "summary",
+        title,
+        description,
+        images: image ? [image] : undefined,
+      },
+    };
+    return meta;
+  } catch {
+    return { title: "Блог" };
+  }
 }
 
 export default async function BlogPostPage({

@@ -8,8 +8,10 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://vibes.mk";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Vibes - Убави Вести",
   description: "Избрани вести од македонски портали",
 };
@@ -22,7 +24,7 @@ export default function RootLayout({
   return (
     <html lang="mk">
       <head>
-        <script type="text/javascript" data-cmp-ab="1" src="https://cdn.consentmanager.net/delivery/autoblocking/f8fee6b9a292f.js" data-cmp-host="d.delivery.consentmanager.net" data-cmp-cdn="cdn.consentmanager.net" data-cmp-codesrc="16"></script>
+        {/* <script type="text/javascript" data-cmp-ab="1" src="https://cdn.consentmanager.net/delivery/autoblocking/f8fee6b9a292f.js" data-cmp-host="d.delivery.consentmanager.net" data-cmp-cdn="cdn.consentmanager.net" data-cmp-codesrc="16"></script> */}
         <meta name="apple-mobile-web-app-title" content="Vibes" />
       </head>
       <GoogleAnalytics gaId="G-VG899CFSWV" />
