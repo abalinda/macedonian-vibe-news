@@ -142,10 +142,16 @@ export default async function Home({
     query = query.eq('category', selectedCategory);
   }
 
-  const { data: posts } = await query;
+    const { data: posts, error: postsError } = await query;
+
+  if (postsError) {
+    console.error("Failed to load posts", postsError.message);
+  }
+
+  const safePosts = posts ?? [];
 
   // Handle empty state
-  if (!posts || posts.length === 0) {
+    if (!safePosts || safePosts.length === 0) {
     return (
       <main className="min-h-screen bg-[#FDFBF7] text-neutral-900">
         <NavBar />
@@ -167,10 +173,14 @@ export default async function Home({
   const featuredMap = new Map<string, number>();
 
   if (featuredSlots.length > 0) {
-    const { data: featuredRows } = await supabase
+    const { data: featuredRows, error: featuredError } = await supabase
       .from('featured_story')
       .select('slot, post_id')
       .in('slot', featuredSlots);
+
+    if (featuredError) {
+      console.warn("Featured stories unavailable, falling back to latest posts", featuredError.message);
+    }
 
     featuredRows?.forEach((row: any) => {
       if (row.post_id) {
@@ -179,7 +189,7 @@ export default async function Home({
     });
   }
 
-  const postsById = new Map(posts.map((post) => [post.id, post]));
+  const postsById = new Map(safePosts.map((post) => [post.id, post]));
 
   const neededIds = new Set<number>();
   featuredSlots.forEach((slot) => {
@@ -200,7 +210,7 @@ export default async function Home({
     });
   }
 
-  let heroPost = posts[0] ?? null;
+  let heroPost = safePosts[0] ?? null;
   const heroSlot = selectedCategory ? CATEGORY_SLOT_MAP[selectedCategory] : 'main';
   if (heroSlot) {
     const featuredId = featuredMap.get(heroSlot);
@@ -210,10 +220,10 @@ export default async function Home({
   }
 
   if (!heroPost) {
-    heroPost = posts[0];
+    heroPost = safePosts[0];
   }
 
-  const remainingPosts = heroPost ? posts.filter((post) => post.id !== heroPost.id) : posts;
+  const remainingPosts = heroPost ? safePosts.filter((post) => post.id !== heroPost.id) : safePosts;
   const leftColumnPosts = remainingPosts.slice(0, 4);
   const rightColumnPosts = remainingPosts.slice(4, 9);
 
