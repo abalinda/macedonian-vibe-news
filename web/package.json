@@ -10,6 +10,7 @@
     "prebuild": "node -e \"console.log('Build Environment:'); Object.keys(process.env).filter(k => k.includes('SUPABASE')).forEach(k => console.log(k + ':', process.env[k] ? 'SET' : 'MISSING'));\""
   },
   "dependencies": {
+    "@next/third-parties": "^16.0.7",
     "@supabase/supabase-js": "^2.86.0",
     "date-fns": "^4.1.0",
     "next": "16.0.5",
