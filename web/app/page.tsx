@@ -250,6 +250,12 @@ export default async function Home({
         <NavBar />
         <CategoryNav activeCategory={selectedCategory} />
         <EmptyState category={displayCategory} />
+        <div
+          className="text-center -mt-10 text-s text-red tracking-[0.5em] select-none"
+          aria-hidden="true"
+        >
+          🍒🍒🍒 
+        </div>
       </main>
     );
   }
