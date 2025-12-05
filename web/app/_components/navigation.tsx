@@ -1,7 +1,8 @@
 import Link from "next/link";
 
 export const NavBar = () => (
-  <nav className="sticky top-0 z-50 border-b border-black bg-[#FDFBF7] py-3 px-4 md:px-8 flex justify-between items-center">
+  <nav className="sticky top-0 z-50 border-b border-black bg-[#FDFBF7] py-3 px-4 md:px-8
+   flex justify-between items-center">
     <div className="flex items-center gap-4">
       <button className="p-2 hover:bg-black hover:text-white transition-colors rounded-full">
         {/* Hamburger Icon */}
@@ -40,10 +41,10 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
   ];
 
   return (
-    <div className="border-b border-neutral-300 bg-[#FDFBF7]">
+    <div className="bg-[#FDFBF7]">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-        <nav className="flex items-center gap-6 py-4 overflow-x-auto scrollbar-hide">
-          <div className="flex items-center gap-6">
+        <nav className="flex items-center gap-4 md:gap-6 py-4 overflow-x-auto scrollbar-hide justify-start md:justify-center px-1 md:px-0">
+          <div className="flex items-center gap-4 md:gap-6 flex-none md:flex-1 md:justify-center">
             {categories.map((cat) => {
               const isActive = activeCategory === cat.value;
               const href = cat.value ? `/?category=${cat.value}` : "/";
@@ -53,7 +54,7 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
                   key={cat.name}
                   href={href}
                   className={`
-                    text-xs font-bold uppercase tracking-widest whitespace-nowrap
+                    text-sm md:text-base font-bold uppercase tracking-widest whitespace-nowrap
                     transition-colors hover:text-black
                     ${isActive 
                       ? "text-black border-b-2 border-black pb-1" 
@@ -70,7 +71,7 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
           <Link
             href="/all"
             className={`
-              ml-auto text-xs font-bold uppercase tracking-widest whitespace-nowrap
+              ml-auto flex-shrink-0 text-xs font-bold uppercase tracking-widest whitespace-nowrap
               border border-black px-3 py-1 rounded-full transition-all
               ${isAllPage 
                 ? "bg-black text-white shadow-[4px_4px_0_#000]" 

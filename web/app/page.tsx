@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { CategoryNav, NavBar } from "./_components/navigation";
@@ -41,7 +42,7 @@ const SideStory = ({ post }: { post: any }) => {
   const teaserText = getTeaserText(post);
 
   return (
-    <a href={post.link} target="_blank" className="group block py-6 border-b border-neutral-300 last:border-0">
+    <a href={post.link} target="_blank" className="group block py-6   last:border-0">
       <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1 block">
         {post.source}
       </span>
@@ -65,6 +66,7 @@ const HeroStory = ({ post }: { post: any }) => {
       {/* Placeholder for Image - in future we can scrape these */}
       <div className="w-full aspect-video bg-neutral-200 mb-6 flex items-center justify-center border border-black overflow-hidden relative">
           {heroImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img 
               src={heroImage} 
               alt={post.title || "Слика за главната приказна"}
@@ -330,10 +332,9 @@ export default async function Home({
       console.warn("Failed to hydrate missing featured posts", err?.message || err);
     }
 
-    const stillMissing = Array.from(neededIds).filter((id) => !postsById.has(id));
-    if (stillMissing.length > 0) {
+    if (neededIds.size > 0) {
       try {
-        const fallbackExtra = await fetchSpecificPostsFallback(stillMissing);
+        const fallbackExtra = await fetchSpecificPostsFallback(Array.from(neededIds));
         fallbackExtra?.forEach((post: any) => {
           if (post?.id) {
             postsById.set(post.id, post);
@@ -367,7 +368,7 @@ export default async function Home({
       <NavBar />
       <CategoryNav activeCategory={selectedCategory} />
 
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8 pt-10">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         
         {/* GRID LAYOUT: 1 Col Mobile -> 3 Col Desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 border-t border-black pt-8">
