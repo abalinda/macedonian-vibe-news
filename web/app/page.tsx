@@ -5,6 +5,9 @@ import { CategoryNav, NavBar } from "./_components/navigation";
 // Revalidate every 60 seconds
 export const revalidate = 60;
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
 const stripHtml = (value: string) => value.replace(/<[^>]*>/g, "");
 
 const getTeaserText = (post: any) => {
@@ -116,6 +119,90 @@ const EmptyState = ({ category }: { category: string | null }) => (
   </div>
 );
 
+// -- DATA HELPERS --
+const fetchPostsFallback = async (category: string | null) => {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return [];
+
+  const params = new URLSearchParams({
+    select: "*",
+    order: "published_at.desc",
+    limit: "20",
+  });
+
+  if (category) {
+    params.append("category", `eq.${category}`);
+  }
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/posts?${params.toString()}`, {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+    },
+    next: {
+      revalidate: 120,
+      tags: ["posts", category ?? "all"],
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Fallback posts fetch failed with status ${res.status}`);
+  }
+
+  return res.json();
+};
+
+const fetchFeaturedFallback = async (slots: string[]) => {
+  if (!SUPABASE_URL || !SUPABASE_KEY || slots.length === 0) return [];
+
+  const params = new URLSearchParams({
+    select: "slot,post_id",
+    slot: `in.(${slots.join(",")})`,
+  });
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/featured_story?${params.toString()}`, {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+    },
+    next: {
+      revalidate: 120,
+      tags: ["featured"],
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Fallback featured fetch failed with status ${res.status}`);
+  }
+
+  return res.json();
+};
+
+const fetchSpecificPostsFallback = async (ids: number[]) => {
+  if (!SUPABASE_URL || !SUPABASE_KEY || ids.length === 0) return [];
+
+  const params = new URLSearchParams({
+    select: "*",
+    id: `in.(${ids.join(",")})`,
+  });
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/posts?${params.toString()}`, {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+    },
+    next: {
+      revalidate: 300,
+      tags: ["posts-specific"],
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Fallback specific posts fetch failed with status ${res.status}`);
+  }
+
+  return res.json();
+};
+
 // -- MAIN PAGE --
 
 export default async function Home({
@@ -142,13 +229,26 @@ export default async function Home({
     query = query.eq('category', selectedCategory);
   }
 
+  let safePosts: any[] = [];
+  try {
     const { data: posts, error: postsError } = await query;
-
-  if (postsError) {
-    console.error("Failed to load posts", postsError.message);
+    if (postsError) {
+      console.error("Failed to load posts", postsError.message);
+    }
+    safePosts = posts ?? [];
+  } catch (err: any) {
+    console.error("Unexpected failure loading posts", err?.message || err);
+    safePosts = [];
   }
 
-  const safePosts = posts ?? [];
+  if (!safePosts || safePosts.length === 0) {
+    try {
+      const cached = await fetchPostsFallback(selectedCategory);
+      safePosts = cached ?? [];
+    } catch (fallbackErr: any) {
+      console.warn("Fallback posts fetch failed", fallbackErr?.message || fallbackErr);
+    }
+  }
 
   // Handle empty state
     if (!safePosts || safePosts.length === 0) {
@@ -173,20 +273,37 @@ export default async function Home({
   const featuredMap = new Map<string, number>();
 
   if (featuredSlots.length > 0) {
-    const { data: featuredRows, error: featuredError } = await supabase
-      .from('featured_story')
-      .select('slot, post_id')
-      .in('slot', featuredSlots);
+    try {
+      const { data: featuredRows, error: featuredError } = await supabase
+        .from('featured_story')
+        .select('slot, post_id')
+        .in('slot', featuredSlots);
 
-    if (featuredError) {
-      console.warn("Featured stories unavailable, falling back to latest posts", featuredError.message);
+      if (featuredError) {
+        console.warn("Featured stories unavailable, falling back to latest posts", featuredError.message);
+      }
+
+      featuredRows?.forEach((row: any) => {
+        if (row.post_id) {
+          featuredMap.set(row.slot, row.post_id);
+        }
+      });
+    } catch (err: any) {
+      console.warn("Featured fetch threw; ignoring featured slots", err?.message || err);
     }
 
-    featuredRows?.forEach((row: any) => {
-      if (row.post_id) {
-        featuredMap.set(row.slot, row.post_id);
+    if (featuredMap.size === 0) {
+      try {
+        const fallbackFeatured = await fetchFeaturedFallback(featuredSlots);
+        fallbackFeatured?.forEach((row: any) => {
+          if (row?.slot && row?.post_id) {
+            featuredMap.set(row.slot, row.post_id);
+          }
+        });
+      } catch (fallbackErr: any) {
+        console.warn("Featured fallback failed, proceeding without featured overrides", fallbackErr?.message || fallbackErr);
       }
-    });
+    }
   }
 
   const postsById = new Map(safePosts.map((post) => [post.id, post]));
@@ -200,14 +317,32 @@ export default async function Home({
   });
 
   if (neededIds.size > 0) {
-    const { data: extraPosts } = await supabase
-      .from('posts')
-      .select('*')
-      .in('id', Array.from(neededIds));
+    try {
+      const { data: extraPosts } = await supabase
+        .from('posts')
+        .select('*')
+        .in('id', Array.from(neededIds));
 
-    extraPosts?.forEach((post) => {
-      postsById.set(post.id, post);
-    });
+      extraPosts?.forEach((post) => {
+        postsById.set(post.id, post);
+      });
+    } catch (err: any) {
+      console.warn("Failed to hydrate missing featured posts", err?.message || err);
+    }
+
+    const stillMissing = Array.from(neededIds).filter((id) => !postsById.has(id));
+    if (stillMissing.length > 0) {
+      try {
+        const fallbackExtra = await fetchSpecificPostsFallback(stillMissing);
+        fallbackExtra?.forEach((post: any) => {
+          if (post?.id) {
+            postsById.set(post.id, post);
+          }
+        });
+      } catch (fallbackErr: any) {
+        console.warn("Fallback hydration failed", fallbackErr?.message || fallbackErr);
+      }
+    }
   }
 
   let heroPost = safePosts[0] ?? null;
