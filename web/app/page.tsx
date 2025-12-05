@@ -25,6 +25,7 @@ const CATEGORY_SLOT_MAP = {
   Lifestyle: "lifestyle",
   Business: "business",
   Sports: "sports",
+  Blog: "blog",
 } as const;
 
 const CATEGORY_LABELS = {
@@ -33,6 +34,7 @@ const CATEGORY_LABELS = {
   Lifestyle: "Животен стил",
   Business: "Бизнис",
   Sports: "Спорт",
+  Blog: "Блог",
 } as const;
 
 // -- HELPER COMPONENTS --
@@ -241,6 +243,16 @@ export default async function Home({
   const hasCategory = rawCategory ? Object.prototype.hasOwnProperty.call(CATEGORY_SLOT_MAP, rawCategory) : false;
   const selectedCategory = hasCategory ? (rawCategory as keyof typeof CATEGORY_SLOT_MAP) : null;
   const displayCategory = selectedCategory ? CATEGORY_LABELS[selectedCategory] ?? selectedCategory : null;
+
+  if (selectedCategory === "Blog") {
+    return (
+      <main className="min-h-screen bg-[#FDFBF7] text-neutral-900">
+        <NavBar />
+        <CategoryNav activeCategory={selectedCategory} />
+        <EmptyState category={displayCategory} />
+      </main>
+    );
+  }
 
   // Build the Supabase query
   let query = supabase

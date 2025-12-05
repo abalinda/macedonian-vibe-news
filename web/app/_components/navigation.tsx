@@ -38,6 +38,7 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
     { name: "Животен стил", value: "Lifestyle" },
     { name: "Бизнис", value: "Business" },
     { name: "Спорт", value: "Sports" },
+    { name: "Блог", value: "Blog" },
   ];
 
   return (

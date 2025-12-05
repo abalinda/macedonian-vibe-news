@@ -36,6 +36,12 @@ feature_updated_this_run: dict[str, bool] = {slot: False for slot in FEATURE_SLO
 TARGET_FEEDS = [
     # --- TECH & SCIENCE (Priority for "Cool" Vibes) ---
     {"url": "https://it.mk/feed/", "source": "IT.mk"},
+    {"url": "https://konekt.mk/category/смартфони/feed", "source": "Konekt - Смартфони"},
+    {"url": "https://konekt.mk/category/софтвер-веб/feed", "source": "Konekt - Софтвер и Веб"},
+    {"url": "https://konekt.mk/category/футуризам/feed", "source": "Konekt - Футуризам"},
+    {"url": "https://konekt.mk/category/паметни-уреди/feed", "source": "Konekt - Паметни Уреди"},
+    {"url": "https://konekt.mk/category/рецензии/feed", "source": "Konekt - Рецензии"},
+    {"url": "https://konekt.mk/category/мултимедија/feed", "source": "Konekt - Мултимедија"},
 
     # --- CULTURE, ART & URBAN LIVING ---
     {"url": "https://www.porta3.mk/feed/", "source": "Porta3"},  # Architecture/Design
@@ -55,6 +61,11 @@ TARGET_FEEDS = [
     {"url": "https://kanal5.com.mk/rss.aspx", "source": "Kanal 5"},
     {"url": "https://www.slobodenpecat.mk/feed/", "source": "Sloboden Pecat"},
     {"url": "https://mkd.mk/feed/", "source": "MKD.mk"},
+    {"url": "https://www.slobodnaevropa.mk/api/z_poml-vomx-tpevjpy", "source": "RSE-Vesti"},
+    {"url": "https://www.slobodnaevropa.mk/api/zypo_l-vomx-tpetjpv", "source": "RSE-Makedonija"},
+    {"url": "https://www.slobodnaevropa.mk/api/zybiptl-vomx-tpetv_pq", "source": "RSE-Tema na Denot"},
+    {"url": "https://konekt.mk/feed/", "source": "Konekt"},
+    
 ]
 
 def parse_date(entry):
@@ -140,7 +151,7 @@ def scrape_image_from_page(article_url: str, scraper) -> str | None:
         ]
 
         for tag_name, attrs in meta_props:
-            tag = soup.find(tag_name, attrs=attrs) # if attrs: dict[str, Any]
+            tag = soup.find(tag_name, attrs=attrs) # type: ignore # if attrs: dict[str, Any]
             if tag and tag.get('content'):
                 return normalize_image_url(tag['content'], article_url)
 
@@ -148,11 +159,11 @@ def scrape_image_from_page(article_url: str, scraper) -> str | None:
         if article_img:
             img = article_img.find('img')
             if img and img.get('src'):
-                return normalize_image_url(img['src'], article_url)
+                return normalize_image_url(img['src'], article_url) # pyright: ignore[reportArgumentType]
 
         fallback_img = soup.find('img')
         if fallback_img and fallback_img.get('src'):
-            return normalize_image_url(fallback_img['src'], article_url)
+            return normalize_image_url(fallback_img['src'], article_url) # pyright: ignore[reportArgumentType]
 
     except Exception as err:
         log_event("image_scrape_error", {"url": article_url, "error": str(err)})
@@ -286,7 +297,6 @@ def fetch_and_save_feed(feed_config):
         scraper = cloudscraper.create_scraper() 
         
         # Use scraper.get instead of requests.get
-        # We don't even need manual headers anymore, it handles them.
         resp = scraper.get(url, timeout=15)
         
         if resp.status_code != 200:
