@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { supabase } from "@/lib/supabase";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CategoryNav, NavBar } from "../../_components/navigation";
@@ -7,6 +8,36 @@ import { CategoryNav, NavBar } from "../../_components/navigation";
 export const revalidate = 120;
 
 const stripHtml = (value: string) => value.replace(/<[^>]*>/g, "");
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const awaitedParams = await params;
+  const postId = Number(awaitedParams.id);
+
+  if (Number.isNaN(postId)) {
+    return { title: "Блог" };
+  }
+
+  try {
+    const { data } = await supabase
+      .from("posts")
+      .select("title")
+      .eq("id", postId)
+      .eq("category", "Blog")
+      .single();
+
+    if (data?.title) {
+      return { title: data.title };
+    }
+  } catch (err) {
+    console.warn("Metadata fetch failed for blog post", err);
+  }
+
+  return { title: "Блог" };
+}
 
 export default async function BlogPostPage({
   params,
