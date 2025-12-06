@@ -10,11 +10,21 @@ export function DateFilter() {
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
 
-  // Initialize state from URL or default to Today
-  const [from, setFrom] = useState(searchParams.get('from') ?? today);
-  const [to, setTo] = useState(searchParams.get('to') ?? today);
+  // Initialize state from URL or default to empty
+  const [from, setFrom] = useState(searchParams.get('from') ?? '');
+  const [to, setTo] = useState(searchParams.get('to') ?? '');
+
+  useEffect(() => {
+    setFrom(searchParams.get('from') ?? '');
+    setTo(searchParams.get('to') ?? '');
+  }, [searchParams]);
 
   const handleSearch = () => {
+    if (!from && !to) {
+      router.push('/all');
+      return;
+    }
+
     const params = new URLSearchParams();
     if (from) params.set('from', from);
     if (to) params.set('to', to);
@@ -25,7 +35,7 @@ export function DateFilter() {
   const clearFilter = () => {
     setFrom('');
     setTo('');
-    router.push('/all?clear=true'); // Special flag to bypass default "today" logic if needed
+    router.push('/all');
   };
 
   return (
