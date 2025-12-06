@@ -68,7 +68,6 @@ export const NavBar = () => {
             )}
           </button>
           <span className="text-[11px] font-bold tracking-[0.3em] uppercase font-sans hidden md:block">
-            Мени
           </span>
         </div>
 
