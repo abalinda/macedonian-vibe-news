@@ -1,6 +1,6 @@
 # Macedonian Vibes News 📰
 
-[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?logo=vercel)](https://macedonian-vibe-news.vercel.app)
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?logo=vercel)](https:/vibes.mk)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python)](https://www.python.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
