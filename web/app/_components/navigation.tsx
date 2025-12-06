@@ -1,4 +1,6 @@
 'use client'
+import { posthog } from 'posthog-js'
+import { useUser } from '@clerk/clerk-react'
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -10,6 +12,22 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 
+export default function PostHogClerkSync() {
+  const { isLoaded, user } = useUser();
+    useEffect(() => {
+    if (isLoaded) {
+      if (user) {
+        // User is signed in - identify them
+        posthog.identify(user.id)
+      } else {
+        // User is signed out - reset PostHog
+        posthog.reset()
+      }
+    }
+  }, [isLoaded, user])
+
+  return null
+}
 export const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const currentDate = new Date().toLocaleDateString("mk-MK", {
@@ -145,6 +163,7 @@ export const NavBar = () => {
               <SignedIn>
                 <div className="flex items-center justify-between gap-3 bg-white/70 backdrop-blur border border-neutral-200 rounded-xl px-4 py-3">
                   <div>
+                    
                     <p className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Сметка</p>
                     <p className="text-sm font-semibold text-neutral-900">Управувај профил</p>
                   </div>

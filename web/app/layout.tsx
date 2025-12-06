@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import './globals.css'
-import { PHProvider } from './providers'
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { ClerkProvider } from '@clerk/nextjs'
 import { Geist, Geist_Mono } from 'next/font/google'
+import { PostHogProvider } from './providers'
+import PostHogClerkSync from './PostHogClerkSync'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -41,9 +42,10 @@ export default function RootLayout({
         <GoogleAnalytics gaId="G-VG899CFSWV" />
         <body className={`${inter.variable} ${playfair.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-[#FDFBF7] text-neutral-900 antialiased`}>
           {/* slight off-white background (#FDFBF7) for 'paper' feel */}
-          <PHProvider>
+          <PostHogProvider>
+            <PostHogClerkSync />
             {children}
-          </PHProvider>
+          </PostHogProvider>
         </body>
       </html>
     </ClerkProvider>
