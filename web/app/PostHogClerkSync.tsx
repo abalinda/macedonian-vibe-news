@@ -10,7 +10,11 @@ export default function PostHogClerkSync() {
     if (isLoaded) {
       if (user) {
         // User is signed in - identify them
-        posthog.identify(user.id)
+        posthog.identify(user.id, {
+            email: user.emailAddresses[0]?.emailAddress,
+            name: user.fullName,
+        })
+        
       } else {
         // User is signed out - reset PostHog
         posthog.reset()
