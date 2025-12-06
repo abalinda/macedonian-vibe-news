@@ -10,9 +10,10 @@ export default function PostHogClerkSync() {
     if (isLoaded) {
       if (user) {
         // User is signed in - identify them
-        posthog.identify(user.id, {
-            email: user.emailAddresses[0]?.emailAddress,
-            name: user.fullName,
+        const email = user.emailAddresses[0]?.emailAddress
+        
+        posthog.identify(email, {
+            name: user.fullName
         })
         
       } else {
