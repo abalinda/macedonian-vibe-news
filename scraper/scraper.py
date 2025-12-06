@@ -1,3 +1,4 @@
+import sys
 import os
 import time
 import feedparser
@@ -377,7 +378,14 @@ def main():
         fetch_and_save_feed(config)
         
     print("🏁 Done.")
-    exit(0)
+    try:
+        client.close()
+        print("🔌 Database connection closed.")
+    except Exception as e:
+        print(f"⚠️ Error closing DB: {e}")
+
+    # Use sys.exit instead of exit()
+    sys.exit(0)
 
 if __name__ == "__main__":
     main()
