@@ -1,14 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { supabase } from "@/lib/supabase";
+import { turso } from "@/lib/turso";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { CategoryNav, NavBar } from "./_components/navigation";
 
-// Revalidate every 60 seconds
+// Revalidate every 60 seconds (ISR)
 export const revalidate = 60;
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const stripHtml = (value: string) => value.replace(/<[^>]*>/g, "");
 
@@ -20,6 +17,7 @@ const getTeaserText = (post: any) => {
   return summaryFallback ? summaryFallback.toUpperCase() : "";
 };
 
+// Maps URL parameter -> Database slot_id
 const CATEGORY_SLOT_MAP = {
   Tech: "tech",
   Culture: "culture",
@@ -40,7 +38,6 @@ const CATEGORY_LABELS = {
 
 // -- HELPER COMPONENTS --
 
-// Link helper to route Blog stories internally
 const StoryLink = ({
   post,
   className,
@@ -68,13 +65,12 @@ const StoryLink = ({
   );
 };
 
-// 1. Small Card (Sidebars)
 const SideStory = ({ post }: { post: any }) => {
   const teaserText = getTeaserText(post);
   const imageUrl = post?.image_url;
 
   return (
-    <StoryLink post={post} className="group block py-6 last:border-0">
+    <StoryLink post={post} className="group block py-6 last:border-0 border-b border-neutral-200 lg:border-none">
       <div className="flex gap-4">
         <div className="relative w-32 aspect-[16/10] overflow-hidden bg-neutral-200 border border-black flex-shrink-0">
           {imageUrl ? (
@@ -89,7 +85,7 @@ const SideStory = ({ post }: { post: any }) => {
             />
           ) : (
             <div className="h-full w-full flex items-center justify-center text-[10px] text-neutral-400 font-mono text-center px-2 leading-tight">
-              Нема слика
+              Vibes.mk
             </div>
           )}
         </div>
@@ -110,49 +106,46 @@ const SideStory = ({ post }: { post: any }) => {
   );
 };
 
-// 2. Hero Card (Center)
 const HeroStory = ({ post }: { post: any }) => {
   const teaserText = getTeaserText(post);
   const heroImage = post?.image_url;
 
   return (
     <StoryLink post={post} className="group block mb-12 md:mb-0">
-      {/* Placeholder for Image - in future we can scrape these */}
       <div className="w-full aspect-video bg-neutral-200 mb-6 flex items-center justify-center border border-black overflow-hidden relative">
           {heroImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img 
               src={heroImage} 
               alt={post.title || "Слика за главната приказна"}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               loading="eager"
               decoding="async"
               referrerPolicy="no-referrer"
             />
           ) : (
-            <span className="text-neutral-400 font-mono text-sm">Привремен простор за слика</span>
+             <span className="text-neutral-400 font-mono text-4xl font-bold opacity-20">VIBES</span>
           )}
       </div>
       
       <div className="text-center px-4">
-        <span className="inline-block border border-black px-2 py-0.5 text-xs font-bold uppercase tracking-widest mb-4">
+        <span className="inline-block border border-black px-2 py-0.5 text-xs font-bold uppercase tracking-widest mb-4 hover:bg-black hover:text-white transition-colors">
           {post.source}
         </span>
-        <h2 className="font-serif text-4xl md:text-6xl font-black leading-none mb-4 group-hover:text-neutral-700 transition-colors">
+        <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-black leading-[0.9] mb-4 group-hover:text-blue-800 transition-colors">
           {post.title}
         </h2>
-        <p className="text-sm md:text-base font-mono uppercase tracking-[0.3em] text-neutral-700 mb-4">
+        <p className="text-sm md:text-base font-mono uppercase tracking-[0.15em] text-neutral-600 mb-6 max-w-2xl mx-auto">
           {teaserText}
         </p>
-        <div className="mt-6 text-xs font-bold text-neutral-400 uppercase tracking-widest">
-          Прочитај ја приказната &rarr;
+        <div className="inline-flex items-center gap-2 text-xs font-bold text-neutral-900 uppercase tracking-widest border-b-2 border-transparent group-hover:border-blue-600">
+          Прочитај повеќе <span>&rarr;</span>
         </div>
       </div>
     </StoryLink>
   );
 };
 
-// 3. Empty State Component
 const EmptyState = ({ category, teaserMessage }: { category: string | null; teaserMessage?: string }) => (
   <div className="flex flex-col items-center justify-center py-20 px-4">
     <div className="text-center max-w-md">
@@ -161,111 +154,24 @@ const EmptyState = ({ category, teaserMessage }: { category: string | null; teas
       </h2>
       <p className="font-serif text-lg text-neutral-600 italic">
         {category 
-          ? `Моментално нема написи во категоријата "${category}". Проверете повторно наскоро!`
-          : "Нема написи во моментот. Проверете повторно наскоро!"
+          ? `Моментално нема написи во категоријата "${category}".`
+          : "Нема написи во моментот."
         }
       </p>
       <Link 
         href="/" 
-        className="inline-block mt-8 px-6 py-2 border-2 border-black font-sans text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
+        className="inline-block mt-8 px-6 py-3 bg-black text-white font-sans text-xs font-bold uppercase tracking-widest hover:bg-neutral-800 transition-colors"
       >
         Види ги сите приказни
       </Link>
-      {teaserMessage ? (
-        <div
-          className="text-center -mt-6 text-[11px] text-neutral-300 tracking-[0.3em] select-none"
-          aria-hidden="true"
-        >
+      {teaserMessage && (
+        <div className="mt-8 text-[10px] text-neutral-400 font-mono uppercase tracking-widest">
           {teaserMessage}
         </div>
-      ) : null}
+      )}
     </div>
   </div>
 );
-
-// -- DATA HELPERS --
-const fetchPostsFallback = async (category: string | null) => {
-  if (!SUPABASE_URL || !SUPABASE_KEY) return [];
-
-  const params = new URLSearchParams({
-    select: "*",
-    order: "published_at.desc",
-    limit: "20",
-  });
-
-  if (category) {
-    params.append("category", `eq.${category}`);
-  }
-
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/posts?${params.toString()}`, {
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-    },
-    next: {
-      revalidate: 120,
-      tags: ["posts", category ?? "all"],
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Fallback posts fetch failed with status ${res.status}`);
-  }
-
-  return res.json();
-};
-
-const fetchFeaturedFallback = async (slots: string[]) => {
-  if (!SUPABASE_URL || !SUPABASE_KEY || slots.length === 0) return [];
-
-  const params = new URLSearchParams({
-    select: "slot,post_id",
-    slot: `in.(${slots.join(",")})`,
-  });
-
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/featured_story?${params.toString()}`, {
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-    },
-    next: {
-      revalidate: 120,
-      tags: ["featured"],
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Fallback featured fetch failed with status ${res.status}`);
-  }
-
-  return res.json();
-};
-
-const fetchSpecificPostsFallback = async (ids: number[]) => {
-  if (!SUPABASE_URL || !SUPABASE_KEY || ids.length === 0) return [];
-
-  const params = new URLSearchParams({
-    select: "*",
-    id: `in.(${ids.join(",")})`,
-  });
-
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/posts?${params.toString()}`, {
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-    },
-    next: {
-      revalidate: 300,
-      tags: ["posts-specific"],
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Fallback specific posts fetch failed with status ${res.status}`);
-  }
-
-  return res.json();
-};
 
 // -- MAIN PAGE --
 
@@ -274,7 +180,6 @@ export default async function Home({
 }: {
   searchParams: Promise<{ category?: string }>;
 }) {
-  // Await searchParams for Next.js 15 compatibility
   const params = await searchParams;
   const rawCategory = params.category || null;
   const hasCategory = rawCategory ? Object.prototype.hasOwnProperty.call(CATEGORY_SLOT_MAP, rawCategory) : false;
@@ -282,41 +187,62 @@ export default async function Home({
   const displayCategory = selectedCategory ? CATEGORY_LABELS[selectedCategory] ?? selectedCategory : null;
   const blogTeaser = selectedCategory === "Blog" ? "" : undefined;
 
-  // Build the Supabase query
-  let query = supabase
-    .from('posts')
-    .select('*')
-    .order('published_at', { ascending: false })
-    .limit(20);
+  // 1. Determine which "Slot" we want for the hero
+  const heroSlotId = selectedCategory ? CATEGORY_SLOT_MAP[selectedCategory] : "main";
 
-  // Apply category filter if present
-  if (selectedCategory) {
-    query = query.eq('category', selectedCategory);
-  }
+  let posts: any[] = [];
+  let heroPost: any = null;
 
-  let safePosts: any[] = [];
   try {
-    const { data: posts, error: postsError } = await query;
-    if (postsError) {
-      console.error("Failed to load posts", postsError.message);
+    // 2. Parallel Fetching: Get Posts + Get Hero ID
+    // We execute two queries in parallel for speed
+    const [postsResult, featuredResult] = await Promise.all([
+      turso.execute({
+        sql: selectedCategory 
+          ? "SELECT * FROM posts WHERE category = ? ORDER BY published_at DESC LIMIT 20"
+          : "SELECT * FROM posts ORDER BY published_at DESC LIMIT 20",
+        args: selectedCategory ? [selectedCategory] : [],
+      }),
+      turso.execute({
+        sql: "SELECT post_id FROM featured_slots WHERE slot_id = ?",
+        args: [heroSlotId],
+      }),
+    ]);
+
+    posts = postsResult.rows;
+    
+    // 3. Resolve Hero Post
+    const featuredId = featuredResult.rows[0]?.post_id;
+
+    if (featuredId) {
+      // Check if the hero is already in our list of 20
+      const foundInList = posts.find((p) => p.id === featuredId);
+      
+      if (foundInList) {
+        heroPost = foundInList;
+      } else {
+        // If not (it's an older story explicitly featured), fetch it specifically
+        const heroResult = await turso.execute({
+          sql: "SELECT * FROM posts WHERE id = ?",
+          args: [featuredId],
+        });
+        if (heroResult.rows.length > 0) {
+          heroPost = heroResult.rows[0];
+        }
+      }
     }
-    safePosts = posts ?? [];
-  } catch (err: any) {
-    console.error("Unexpected failure loading posts", err?.message || err);
-    safePosts = [];
+  } catch (err) {
+    console.error("🔥 Database Error:", err);
+    // Silent fail: posts will be empty, UI will show empty state
   }
 
-  if (!safePosts || safePosts.length === 0) {
-    try {
-      const cached = await fetchPostsFallback(selectedCategory);
-      safePosts = cached ?? [];
-    } catch (fallbackErr: any) {
-      console.warn("Fallback posts fetch failed", fallbackErr?.message || fallbackErr);
-    }
+  // Fallback: If no Featured Slot is set, just take the first post
+  if (!heroPost && posts.length > 0) {
+    heroPost = posts[0];
   }
 
-  // Handle empty state
-  if (!safePosts || safePosts.length === 0) {
+  // 4. Handle Empty State
+  if (posts.length === 0 && !heroPost) {
     return (
       <main className="min-h-screen bg-[#FDFBF7] text-neutral-900">
         <NavBar />
@@ -326,103 +252,11 @@ export default async function Home({
     );
   }
 
-  const desiredSlots = new Set<string>(['main']);
-  if (!selectedCategory) {
-    Object.values(CATEGORY_SLOT_MAP).forEach((slot) => desiredSlots.add(slot));
-  } else {
-    const categorySlot = CATEGORY_SLOT_MAP[selectedCategory];
-    if (categorySlot) desiredSlots.add(categorySlot);
-  }
+  // 5. Filter Hero out of the sidebar lists to avoid duplicates
+  const remainingPosts = heroPost 
+    ? posts.filter((p) => p.id !== heroPost.id) 
+    : posts;
 
-  const featuredSlots = Array.from(desiredSlots);
-  const featuredMap = new Map<string, number>();
-
-  if (featuredSlots.length > 0) {
-    try {
-      const { data: featuredRows, error: featuredError } = await supabase
-        .from('featured_story')
-        .select('slot, post_id')
-        .in('slot', featuredSlots);
-
-      if (featuredError) {
-        console.warn("Featured stories unavailable, falling back to latest posts", featuredError.message);
-      }
-
-      featuredRows?.forEach((row: any) => {
-        if (row.post_id) {
-          featuredMap.set(row.slot, row.post_id);
-        }
-      });
-    } catch (err: any) {
-      console.warn("Featured fetch threw; ignoring featured slots", err?.message || err);
-    }
-
-    if (featuredMap.size === 0) {
-      try {
-        const fallbackFeatured = await fetchFeaturedFallback(featuredSlots);
-        fallbackFeatured?.forEach((row: any) => {
-          if (row?.slot && row?.post_id) {
-            featuredMap.set(row.slot, row.post_id);
-          }
-        });
-      } catch (fallbackErr: any) {
-        console.warn("Featured fallback failed, proceeding without featured overrides", fallbackErr?.message || fallbackErr);
-      }
-    }
-  }
-
-  const postsById = new Map(safePosts.map((post) => [post.id, post]));
-
-  const neededIds = new Set<number>();
-  featuredSlots.forEach((slot) => {
-    const id = featuredMap.get(slot);
-    if (id && !postsById.has(id)) {
-      neededIds.add(id);
-    }
-  });
-
-  if (neededIds.size > 0) {
-    try {
-      const { data: extraPosts } = await supabase
-        .from('posts')
-        .select('*')
-        .in('id', Array.from(neededIds));
-
-      extraPosts?.forEach((post) => {
-        postsById.set(post.id, post);
-      });
-    } catch (err: any) {
-      console.warn("Failed to hydrate missing featured posts", err?.message || err);
-    }
-
-    if (neededIds.size > 0) {
-      try {
-        const fallbackExtra = await fetchSpecificPostsFallback(Array.from(neededIds));
-        fallbackExtra?.forEach((post: any) => {
-          if (post?.id) {
-            postsById.set(post.id, post);
-          }
-        });
-      } catch (fallbackErr: any) {
-        console.warn("Fallback hydration failed", fallbackErr?.message || fallbackErr);
-      }
-    }
-  }
-
-  let heroPost = safePosts[0] ?? null;
-  const heroSlot = selectedCategory ? CATEGORY_SLOT_MAP[selectedCategory] : 'main';
-  if (heroSlot) {
-    const featuredId = featuredMap.get(heroSlot);
-    if (featuredId && postsById.has(featuredId)) {
-      heroPost = postsById.get(featuredId);
-    }
-  }
-
-  if (!heroPost) {
-    heroPost = safePosts[0];
-  }
-
-  const remainingPosts = heroPost ? safePosts.filter((post) => post.id !== heroPost.id) : safePosts;
   const leftColumnPosts = remainingPosts.slice(0, 4);
   const rightColumnPosts = remainingPosts.slice(4, 9);
 
@@ -433,13 +267,13 @@ export default async function Home({
 
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         
-        {/* GRID LAYOUT: 1 Col Mobile -> 3 Col Desktop */}
+        {/* GRID LAYOUT */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 border-t border-black pt-8">
           
-          {/* LEFT SIDEBAR (Hidden on mobile initially, visible on Tablet/Desktop) */}
+          {/* LEFT SIDEBAR */}
           <div className="lg:col-span-3 lg:border-r border-neutral-300 lg:pr-8 order-2 lg:order-1">
             <h4 className="font-sans text-xs font-black uppercase tracking-widest border-b-4 border-black pb-2 mb-4">
-              Последни новости
+              {selectedCategory ? 'Најново' : 'Последни новости'}
             </h4>
             <div className="flex flex-col">
               {leftColumnPosts.map((post) => (
@@ -448,15 +282,15 @@ export default async function Home({
             </div>
           </div>
 
-          {/* CENTER HERO (Main focus) */}
+          {/* CENTER HERO */}
           <div className="lg:col-span-6 px-0 lg:px-8 order-1 lg:order-2">
-            <HeroStory post={heroPost} />
+            {heroPost && <HeroStory post={heroPost} />}
           </div>
 
           {/* RIGHT SIDEBAR */}
           <div className="lg:col-span-3 lg:border-l border-neutral-300 lg:pl-8 order-3">
              <h4 className="font-sans text-xs font-black uppercase tracking-widest border-b-4 border-black pb-2 mb-4">
-              Повеќе приказни
+              {selectedCategory ? 'Повеќе' : 'Останати приказни'}
             </h4>
             <div className="flex flex-col">
               {rightColumnPosts.map((post) => (
