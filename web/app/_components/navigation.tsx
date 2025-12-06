@@ -44,7 +44,7 @@ export const NavBar = () => {
     { label: "Бизнис", href: "/?category=Business" },
     { label: "Спорт", href: "/?category=Sports" },
     { label: "Блог", href: "/?category=Blog" },
-    { label: "Сите приказни", href: "/all" },
+    { label: "Архива", href: "/all" },
   ];
 
   return (
