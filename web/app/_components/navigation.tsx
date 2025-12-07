@@ -203,7 +203,7 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
     { name: "Бизнис", value: "Business" },
     { name: "Спорт", value: "Sports" },
     { name: "Блог", value: "Blog" },
-    { name: "За нас", value: "About", href: "/about" },
+    // { name: "За нас", value: "About", href: "/about" },
   ];
 
   return (
