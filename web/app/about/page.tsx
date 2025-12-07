@@ -67,13 +67,14 @@ export default function AboutPage() {
 
         <hr className="border-neutral-200" />
 
-        {/* SECTION 2: MISIJA & TIM */}
+        {/* SECTION 2: MISIJA & TIM - UPDATED */}
         <section className="space-y-12">
+          {/* Fixed Mission Element */}
           <div className="max-w-3xl">
-            <h3 className="font-serif text-3xl font-bold mb-6">
+            <h3 className="font-serif text-3xl font-bold mb-4">
               Нашата мисија
             </h3>
-            <div className="space-y-4 font-serif text-xl md:text-2xl text-neutral-800 leading-relaxed">
+            <div className="space-y-4 font-sans text-lg text-neutral-700 leading-relaxed">
               <p>Да создадеме дигитално место каде информирањето не исцрпува, туку е корисно и пријатно.</p>
               <p>Да понудиме платформа што ве разбира.</p>
               <p>Да изградиме медиум што нема само да ги пренесува вестите - туку ќе помогне да го живееш денот подобро, со добри вибрации.</p>
@@ -113,32 +114,29 @@ export default function AboutPage() {
         </section>
 
         {/* FOOTER QUOTE */}
-        <section className="text-center py-12 space-y-4">
+        <section className="text-center py-1 space-y-2">
           <p className="font-serif text-2xl md:text-3xl font-bold text-neutral-900">
             vibes.mk не е само место за вести.
           </p>
           <p className="font-serif text-xl md:text-2xl text-neutral-700">
             Тоа е дигитално искуство што расте заедно со тебе.
           </p>
-          <p className="font-sans text-lg text-neutral-500 pt-4">
+          <p className="font-sans text-lg text-neutral-500 pt-1">
             Добродојдовте во медиумскиот простор каде добрите вибрации се новата нормала.
           </p>
         </section>
 
-        {/* CONTACT SECTION */}
+        {/* NEW CONTACT SECTION */}
         <section className="border-t-2 border-black pt-12 pb-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h3 className="font-sans text-xs font-black uppercase tracking-widest mb-2">
-                        Контакт
-                    </h3>
-                    <p className="font-serif text-xl text-neutral-800 max-w-lg">
+                    <p className="font-serif text-2xl md:text-3xl text-neutral-900 font-bold max-w-lg">
                         Имате прашање, предлог или сакате да соработуваме?
                     </p>
                 </div>
                 <Link 
                     href="mailto:contact@vibes.mk" 
-                    className="group flex items-center gap-2 font-sans text-lg font-bold border border-black rounded-full px-6 py-3 hover:bg-black hover:text-white transition-all"
+                    className="group flex items-center gap-2 font-sans text-lg font-bold border-2 border-black rounded-full px-12 py-4 hover:bg-black hover:text-white transition-all"
                 >
                     contact@vibes.mk
                     <span className="group-hover:translate-x-1 transition-transform">→</span>

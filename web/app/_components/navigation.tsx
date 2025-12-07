@@ -148,7 +148,7 @@ export const NavBar = () => {
               <Link
                 href="/about"
                 onClick={() => setIsOpen(false)}
-                className="group flex items-center justify-between border border-neutral-200 bg-white px-4 py-3 text-lg font-serif font-black uppercase tracking-tight transition-all hover:border-black hover:shadow-[4px_4px_0_#00000010]"
+                className="group flex items-center justify-between border-b border-neutral-200 pb-3 text-lg font-serif font-black uppercase tracking-tight hover:border-black transition-all"
               >
                 <span>За нас</span>
                 <span className="text-xs font-mono tracking-[0.3em] text-neutral-500 group-hover:text-neutral-800 transition-colors">
