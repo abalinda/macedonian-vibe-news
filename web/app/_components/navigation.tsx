@@ -165,7 +165,7 @@ export const NavBar = () => {
                   </SignInButton>
                   <SignUpButton mode="modal">
                     <button className="w-full border border-black bg-black text-white px-4 py-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all hover:shadow-[6px_6px_0_#00000010]">
-                      Креирај сметка
+                      Креирај профил
                     </button>
                   </SignUpButton>
                 </div>
