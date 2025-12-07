@@ -1,220 +1,157 @@
 # Macedonian Vibes News 📰
 
-[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?logo=vercel)](https:/vibes.mk)
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python)](https://www.python.org/)
+[![Cloudflare](https://img.shields.io/badge/DNS-Cloudflare-F38020?logo=cloudflare)](https://www.cloudflare.com/)
+[![Turso](https://img.shields.io/badge/DB-Turso-3B82F6?logo=sqlite)](https://turso.tech/)
+[![Clerk](https://img.shields.io/badge/Auth-Clerk-3E2CFF?logo=clerk)](https://clerk.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python)](https://www.python.org/)
+[![Analytics](https://img.shields.io/badge/Analytics-GA_%2B_PostHog-111111?logo=google-analytics)](#analytics)
 
-**AI-curated news aggregator for Macedonia** — Automatically fetches, analyzes, and displays news from top Macedonian RSS feeds using Google Gemini AI for intelligent summarization and categorization.
+**AI-curated Macedonian news aggregator** — Scrapes 30+ RSS feeds, curates with Google Gemini, stores in Turso (libSQL), and serves a Next.js 16 frontend with Clerk auth, blog, and dual analytics (Google Analytics + PostHog).
 
 **Live:** [vibes.mk](https://vibes.mk)
 
 ---
 
-## 🎯 Overview
-
-Macedonian Vibes News is a full-stack news aggregation platform that:
-
-- 🔄 **Automatically scrapes** 13+ Macedonian news sources via RSS feeds
-- 🤖 **AI-analyzes** articles using Google Gemini for summaries and categorization
-- 📊 **Stores** all articles in Supabase PostgreSQL database with metadata
-- 🌐 **Displays** via a modern Next.js frontend with category filtering and featured stories
-- ⚡ **Runs serverlessly** — Zero infrastructure management, fully automated
-
-### Key Features
-
-✅ **Automated News Scraping** — Runs every 4 hours via GitHub Actions  
-✅ **AI-Powered Summaries** — Google Gemini generates teaser text and full summaries  
-✅ **Category Filtering** — Browse by Tech, Culture, Lifestyle, Business  
-✅ **Featured Stories** — Rotating 8-hour featured story slot system  
-✅ **Responsive Design** — Mobile-first UI with Tailwind CSS  
-✅ **Global CDN** — Deployed on Vercel for sub-second response times  
-✅ **Zero Cost** — Free tier for all services (GitHub Actions, Vercel, Supabase, Gemini)  
+## 🎯 What’s Inside (Current State)
+- Turso database via `@libsql/client` on both the scraper and the Next.js app (Supabase removed).
+- Clerk-powered accounts (sign-up/sign-in + profile in the nav drawer).
+- Tracking wired to Google Analytics (`@next/third-parties/google`) and PostHog (JS SDK + proxy).
+- Blog section with per-post pages; admin-only writer UI planned (read-only for now).
+- New Sports category, refreshed feed list (30+ sources), and featured slot rotation.
+- Cloudflare manages DNS; Next.js app configured for edge-friendly DB access.
+- Scraper scheduled via GitHub Actions
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────┐
-│         Your Browser / Mobile               │
-└────────────────────┬────────────────────────┘
-                     │ HTTPS
-         ┌───────────▼──────────┐
-         │   Vercel CDN         │
-         │ (Frontend Hosting)   │
-         └───────────┬──────────┘
-                     │ Fetches Data
-         ┌───────────▼──────────┐
-         │  Supabase PostgreSQL │
-         │  (Article Database)  │
-         └───────────▲──────────┘
-                     │ Writes Data
-         ┌───────────┴──────────┐
-         │  GitHub Actions      │
-         │  (Every 4 hours)     │
-         │                      │
-         │  scraper.py:         │
-         │  • Fetch RSS feeds   │
-         │  • Parse content     │
-         │  • AI summarize      │
-         │  • Save to DB        │
-         └──────────────────────┘
+┌───────────────────────────────────────────────────┐
+│                 Browser / Mobile                  │
+└───────────────┬───────────────────────────────────┘
+                │ HTTPS
+       ┌────────▼────────┐    ┌───────────────────┐
+       │ Cloudflare DNS  │    │ Google Analytics  │
+       │  + Pages host   │    │ PostHog Proxy     │
+       └────────┬────────┘    └───────────────────┘
+                │
+       ┌────────▼────────┐
+       │ Next.js 16 (web)│
+       │ React 19, Tailwind 4
+       │ Clerk Provider (auth)
+       └────────┬────────┘
+                │ libSQL
+       ┌────────▼────────┐
+       │ Turso Database  │
+       └────────▲────────┘
+                │ writes curated posts
+       ┌────────┴────────┐
+       │ GitHub Actions  │  (cron */3h)
+       │ Python Scraper  │
+       │  • RSS ingest   │
+       │  • Gemini curation
+       └─────────────────┘
 ```
 
 ### Technology Stack
 
 | Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Frontend** | Next.js 16, React 19, TypeScript, Tailwind CSS | Web UI with SSR |
-| **Backend** | Python 3.11, BeautifulSoup4, feedparser | Article scraping & parsing |
-| **AI/ML** | Google Gemini API | Content analysis & summarization |
-| **Database** | Supabase (PostgreSQL) | Articles & metadata storage |
-| **Hosting** | Vercel | Frontend deployment & CDN |
-| **Automation** | GitHub Actions | Scheduled scraper execution |
-| **Source Control** | GitHub | Repository & CI/CD 
+|-------|------------|---------|
+| **Frontend** | Next.js 16 (App Router), React 19, Tailwind CSS v4, Clerk | UI, SSR/ISR, authentication |
+| **Backend/Scraper** | Python 3.11, feedparser, cloudscraper, BeautifulSoup4 | RSS ingest & article parsing |
+| **AI** | Google Gemini 2.5 / Gemma fallback | Summaries, categorization, hero selection |
+| **Database** | Turso (libSQL) | Posts, featured slots, blog entries |
+| **Analytics** | Google Analytics, PostHog JS + proxy | User & product analytics |
+| **Automation** | GitHub Actions (cron every 12h) | Runs scraper and writes to Turso |
+| **DNS/Edge** | Cloudflare DNS (Pages config present) | Domain + proxy rules |
 
 ---
-
-
 
 ## 📋 Project Structure
 
 ```
 macedonian-vibes-news/
-├── web/                          # Next.js Frontend
-│   ├── app/
-│   │   ├── page.tsx             # Homepage with categories
-│   │   ├── all/page.tsx         # All articles list view
-│   │   └── layout.tsx           # Root layout
-│   ├── lib/
-│   │   └── supabase.ts          # Supabase client
-│   ├── package.json             # Frontend dependencies
-│   └── next.config.ts           # Next.js config
-│
-├── scraper/                      # Python Backend
-│   ├── scraper.py               # Main scraping logic
-│   ├── curator.py               # AI curation with Gemini
-│   ├── logger.py                # Logging utilities
-│   ├── requirements.txt          # Python dependencies
-│   ├── logs/                    # Scraper logs (JSONL format)
-│   └── .env.example             # Environment template
-│
-├── .github/workflows/            # GitHub Actions Automation
-│   ├── scraper.yml              # Scheduled scraper (every 4h)
-│   └── lint-build.yml           # Frontend CI/CD
-│
-├── docs/                         # Documentation
-│   ├── DEPLOYMENT.md            # Deployment guide
-│   ├── QUICK_START.md           # Quick setup checklist
-│   └── SUPABASE_SCHEMA.md       # Database schema reference
-│
-└── README.md                     # This file
+├── web/                     # Next.js 16 frontend (App Router)
+│   ├── app/                 # Pages, components, providers, blog
+│   ├── lib/                 # DB clients (turso)
+│   ├── instrumentation-client.ts  # PostHog setup
+│   ├── proxy.ts             # Clerk middleware
+│   └── vercel.json          # PostHog proxy rewrites
+├── scraper/                 # Python scraper + Gemini curator
+│   ├── scraper.py           # RSS ingest → Turso writes
+│   ├── curator.py           # Gemini/Gemma summarization
+│   ├── logger.py            # Structured logging helper
+│   └── requirements.txt
+├── .github/workflows/       # GitHub Actions (scraper cron)
+├── wrangler.toml            # Cloudflare Pages build config
+├── my-clerk-app/            # (Playground) Clerk Next.js starter
+└── README.md
 ```
 
 ---
 
-## 🔄 How It Works
+## 🔄 Data Flow
 
-### 1. **Scraper Runs Automatically (Every 4 Hours)**
+1. **Scrape & Curate (GitHub Actions, every 3h)**  
+   `scraper/scraper.py` pulls 30+ RSS feeds, dedupes links, scrapes images, and sends batches to Gemini (`scraper/curator.py`) for categorization, summaries, teaser text, and hero picks. Results are written to Turso tables (`posts`, `featured_slots`).
 
-GitHub Actions trigger `.github/workflows/scraper.yml`:
+2. **Serve (Next.js)**  
+   `web/app/page.tsx` and `web/app/all/page.tsx` query Turso via `@libsql/client/web`. ISR is set to 60s on the homepage and 120s for blog post pages. Featured slots determine the hero story; Sports and Blog are now first-class categories.
 
-```
-Scraper Start
-    ↓
-Fetch RSS feeds (13 Macedonian news sources)
-    ↓
-Parse HTML with BeautifulSoup
-    ↓
-Send to Google Gemini API for:
-  • Content summarization
-  • Category classification
-  • Teaser text generation
-    ↓
-Upsert to Supabase `posts` table
-    ↓
-Log events to scraper_log.jsonl
-```
+3. **Auth & Blog**  
+   Clerk wraps the app layout for sign-in/sign-up/profile. Blog posts are rendered from Turso; an admin-only writer surface is planned but not yet shipped (read-only today).
 
-### 2. **Frontend Fetches & Displays Data**
-
-User visits site:
-```
-Browser → Vercel CDN
-    ↓
-Next.js server fetches from Supabase
-    ↓
-Renders homepage with categories
-    ↓
-User filters by category or browses "All"
-    ↓
-Click article → Opens in new tab
-```
-
-### 3. **Featured Story Rotation (Every 8 Hours)**
-
-A random article from each category is featured:
-- Tech, Culture, Lifestyle, Business each get 1 featured slot
-- Homepage displays featured story prominently
-- Rotates every 8 hours automatically
+4. **Analytics**  
+   Google Analytics is injected via `@next/third-parties/google`. PostHog is initialized in `web/app/providers.tsx` with Clerk identity sync (`web/app/PostHogClerkSync.tsx`) and proxied routes (`vercel.json`) to avoid ad-blockers.
 
 ---
 
-## 📊 RSS Feed Sources
+## 📊 RSS Sources (Sampling)
 
-The scraper aggregates from these Macedonian news sources:
+The scraper currently ingests 30+ feeds, including IT.mk, Конект, A1on, MKD.mk, Радио МОФ, Makfax, Porta3, Sloboden Pechat, Off.net, Fashionel, Sport Plus, and more. See `TARGET_FEEDS` in `scraper/scraper.py` for the live list.
 
-- IT.mk
-- Porta3.mk
-- Telma.mk
-- MKD.mk
-- Dnevnik.mk
-- Vesti.mk
-- 24VESTI.mk
-- Nova.mk
-- TVM.mk
-- Plus.mk
-- MKDNews.mk
-- Faktor.mk
-- Ekonomija.mk
-- Конект.мк
+---
 
-*(Sources defined in `scraper/scraper.py`)*
+## ⚙️ Environment & Deployment
 
-## 🔖 Blog
+**Frontend (Next.js / Cloudflare Pages or Vercel)**  
+- `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`  
+- `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` (proxy host)  
+- `NEXT_PUBLIC_SITE_URL` (for metadata)  
+- Clerk defaults: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` (+ optional sign-in/up URLs)
 
-- We have an in-house blog posts that are being occasionally uploaded by peopele dear to us (me). Contact us (me) if you want to be featured/
+**Scraper (GitHub Actions or local)**  
+- `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`  
+- `GEMINI_API_KEY`
+
+**Ops Notes**  
+- Scraper cron: `*/3h` (`.github/workflows/scraper.yml`).  
+- ISR: homepage 60s, blog pages 120s.  
+- Cloudflare manages DNS for `vibes.mk`; wrangler config is present for Pages.
+
+---
 
 ## 🔐 Security
-
-- ✅ API keys stored in GitHub Actions Secrets (never in code)
-- ✅ Frontend uses Supabase anon key (read-only public)
-- ✅ Scraper uses service role key (private, GitHub-only)
-- ✅ All data in transit encrypted (HTTPS/TLS)
-- ✅ Supabase Row-Level Security (RLS) configured
-- ✅ `.gitignore` prevents `.env` file commits
+- Secrets provided via GitHub Actions and hosting platform env vars (no secrets in repo).  
+- Turso auth tokens are required for all DB writes/reads.  
+- Clerk handles session + identity; PostHog identification is gated on signed-in users.  
+- `.env` is ignored; keep local secrets out of version control.
 
 ---
 
 ## 🤝 Contributing
-
-This is a personal project, but improvements are welcome:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. Fork the repository.  
+2. Create a feature branch (`git checkout -b feature/amazing-feature`).  
+3. Commit (`git commit -m 'Add amazing feature'`).  
+4. Push and open a Pull Request.
 
 ---
 
 ## 📝 License
-
-This project is open source and available under the MIT License.
+MIT
 
 ---
 
-**Made with ❤️ in Macedonia**
-
-*Last Updated: December 2, 2025*
+Made with ❤️ in Macedonia  
+*Last Updated: December 07, 2025*

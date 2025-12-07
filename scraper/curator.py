@@ -10,6 +10,11 @@ from logger import log_event
 from google import genai
 from google.genai import types 
 
+# Custom exception to signal that all models failed for this run
+class ModelExhaustedError(RuntimeError):
+    """Raised when all Gemini/Gemma models fail and no further curation is possible."""
+    pass
+
 # Load environment variables
 load_dotenv()
 
@@ -111,7 +116,7 @@ def generate_with_fallback(prompt: str):
             mark_model_failure(model_name, str(err))
             continue
 
-    raise RuntimeError(f"❌ All models failed after {attempts} attempts. Last error: {last_error}")
+    raise ModelExhaustedError(f"❌ All models failed after {attempts} attempts. Last error: {last_error}")
 
 # -----------------------------------------------------------------------------
 # 2. CURATION LOGIC
@@ -274,6 +279,9 @@ def analyze_news_batch(articles):
         print(f"✨ Vibe Check Complete: Approved {len(final_articles)} out of {len(articles)} articles.")
         return final_articles
 
+    except ModelExhaustedError:
+        # Bubble up so the scraper can stop early (non-curated items already saved)
+        raise
     except Exception as e:
         print(f"🔥 Brain Error: {e}")
         log_event("curator_exception", {"error": str(e)})

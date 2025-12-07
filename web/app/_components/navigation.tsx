@@ -90,7 +90,7 @@ export const NavBar = () => {
         </div>
 
         <h1 className="font-serif text-3xl md:text-5xl font-black tracking-tighter absolute left-1/2 -translate-x-1/2">
-          VIBES.
+          <a href="https://www.vibes.mk/">VIBES.</a>
         </h1>
 
 {/* Date on Right */}
@@ -145,6 +145,17 @@ export const NavBar = () => {
             </div>
 
             <div className="pt-4 border-t border-neutral-200 space-y-3">
+              <Link
+                href="/about"
+                onClick={() => setIsOpen(false)}
+                className="group flex items-center justify-between border border-neutral-200 bg-white px-4 py-3 text-lg font-serif font-black uppercase tracking-tight transition-all hover:border-black hover:shadow-[4px_4px_0_#00000010]"
+              >
+                <span>За нас</span>
+                <span className="text-xs font-mono tracking-[0.3em] text-neutral-500 group-hover:text-neutral-800 transition-colors">
+                  →
+                </span>
+              </Link>
+
               <SignedOut>
                 <div className="space-y-3">
                   <SignInButton mode="modal">
@@ -185,13 +196,14 @@ type CategoryNavProps = {
 
 export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavProps) => {
   const categories = [
-    { name: "Почетна", value: null },
+    { name: "Почетна", value: null, href: "/" },
     { name: "Технологија", value: "Tech" },
     { name: "Култура", value: "Culture" },
     { name: "Животен стил", value: "Lifestyle" },
     { name: "Бизнис", value: "Business" },
     { name: "Спорт", value: "Sports" },
     { name: "Блог", value: "Blog" },
+    { name: "За нас", value: "About", href: "/about" },
   ];
 
   return (
@@ -201,7 +213,7 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
           <div className="flex items-center gap-4 md:gap-6 flex-none md:flex-1 md:justify-center">
             {categories.map((cat) => {
               const isActive = activeCategory === cat.value;
-              const href = cat.value ? `/?category=${cat.value}` : "/";
+              const href = cat.href ?? (cat.value ? `/?category=${cat.value}` : "/");
               
               return (
                 <Link
