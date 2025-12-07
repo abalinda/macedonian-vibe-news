@@ -24,7 +24,7 @@ const formatDate = (value?: string | null) => {
   if (!value) return "Неодамна додадено";
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return "Неодамна додадено";
-  return parsed.toLocaleDateString('mk-MK', { day: "2-digit", month: "short", year: "numeric" });
+  return parsed.toLocaleDateString('mk-MK', { day: "2-digit", month: "short", year: "numeric", hour: "numeric", minute: "numeric" });
 };
 
 const StoryRow = ({ post, index }: { post: any; index: number }) => {

@@ -75,8 +75,11 @@ TARGET_FEEDS = [
 def parse_date(entry):
     if hasattr(entry, 'published_parsed') and entry.published_parsed:
         dt = datetime.fromtimestamp(mktime(entry.published_parsed))
+        # Ensure UTC timezone is applied if not present
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc) 
         return dt.isoformat()
-    return datetime.now().isoformat()
+    return datetime.now(timezone.utc).isoformat() # Use timezone.utc for consistency
 
 def normalize_image_url(url: str | None, base_link: str | None) -> str | None:
     if not url: return None
@@ -361,7 +364,8 @@ def fetch_and_save_feed(feed_config):
 
 def main():
     global feature_states, feature_rotation_allowed
-    print(f"🚀 Scraper started at {datetime.now()}")
+    # Ensure datetime.now uses timezone for consistency
+    print(f"🚀 Scraper started at {datetime.now(timezone.utc)}") 
     
     ensure_feature_slots()
     feature_states = get_feature_state_map()

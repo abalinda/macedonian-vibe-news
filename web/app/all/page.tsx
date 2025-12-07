@@ -99,7 +99,7 @@ export default async function AllStoriesPage({
         ) : (
           <div className="bg-white border border-neutral-200 shadow-[4px_4px_0_#e5e5e5] rounded-sm transition-shadow hover:shadow-[6px_6px_0_#e5e5e5]">
             <div className="divide-y divide-neutral-100">
-              <StoriesList posts={posts} />
+              <StoriesList posts={posts}/>
             </div>
           </div>
         )}
