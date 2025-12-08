@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { CategoryNav, NavBar } from "./_components/navigation";
 import { AdminBlogCTA } from "./_components/admin-blog-cta";
+import { WelcomeModal } from "./_components/welcome-modal";
 
 // Revalidate every 60 seconds (ISR)
 export const revalidate = 60;
@@ -263,6 +264,7 @@ export default async function Home({
 
   return (
     <main className="min-h-screen bg-[#FDFBF7] text-neutral-900 pb-20">
+      <WelcomeModal />
       <NavBar />
       <CategoryNav activeCategory={selectedCategory} />
       <AdminBlogCTA />
