@@ -110,7 +110,8 @@ export const BlogComposer = ({ defaultAuthor }: BlogComposerProps) => {
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data?.error || "Неуспешно зачувување.");
+        const details = data?.details ? ` ${data.details}` : "";
+        throw new Error(data?.error ? `${data.error}${details}` : "Неуспешно зачувување.");
       }
 
       if (data?.id) {

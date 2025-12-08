@@ -145,7 +145,7 @@ export default async function BlogPostPage({
             href="/?category=Blog"
             className="text-xs font-bold uppercase tracking-[0.3em] border border-black px-4 py-2 rounded-full transition-colors hover:bg-black hover:text-white"
           >
-            Назад кон повеќе блого
+            Назад
           </Link>
           {readableDate ? (
             <span className="text-[11px] uppercase tracking-[0.25em] text-neutral-400">

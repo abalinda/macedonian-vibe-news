@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const { title, teaser = "", content = "", imageUrl = null, author = "Blog" } = body || {};
+  const { title, teaser = "", content = "", imageUrl = null, author = "Blog", link } = body || {};
 
   if (!title || !content || !plainText(content)) {
     return NextResponse.json(
@@ -28,6 +28,16 @@ export async function POST(request: Request) {
 
   const now = new Date().toISOString();
   const summary = teaser || plainText(content).slice(0, 240);
+  const slugBase =
+    (title || "")
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "blog";
+  const uniqueSuffix = Math.random().toString(36).slice(2, 8);
+  const internalLink = link || `blog-${slugBase}-${uniqueSuffix}`;
 
   // Prefer inserting content column; fallback without it if the column is missing.
   const insertWithContent = {
@@ -37,7 +47,7 @@ export async function POST(request: Request) {
     `,
     args: [
       title,
-      "",
+      internalLink,
       author || "Blog",
       teaser,
       summary,
@@ -53,7 +63,7 @@ export async function POST(request: Request) {
       INSERT INTO posts (title, link, source, category, teaser, summary, image_url, published_at, scraped_at)
       VALUES (?, ?, ?, 'Blog', ?, ?, ?, ?, ?)
     `,
-    args: [title, "", author || "Blog", teaser, summary, imageUrl, now, now],
+    args: [title, internalLink, author || "Blog", teaser, summary, imageUrl, now, now],
   };
 
   try {
@@ -68,6 +78,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ id, ok: true });
     }
     console.error("Blog create failed:", message);
-    return NextResponse.json({ error: "Неуспешно креирање." }, { status: 500 });
+    const details = /constraint failed|unique/i.test(message)
+      ? "Дупликат запис (проверете да ли веќе постои објава со ист линк/ID)."
+      : message;
+    return NextResponse.json(
+      { error: "Неуспешно креирање.", details },
+      { status: 500 }
+    );
   }
 }
