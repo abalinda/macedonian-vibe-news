@@ -3,6 +3,7 @@ import { posthog } from 'posthog-js'
 import { useUser } from '@clerk/clerk-react'
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import {
   SignInButton,
@@ -73,17 +74,16 @@ export const NavBar = () => {
             aria-label="Отвори мени"
             aria-expanded={isOpen}
             onClick={() => setIsOpen((prev) => !prev)}
-            className="p-2 hover:bg-black hover:text-white transition-colors rounded-full border border-transparent hover:border-black"
+            className="h-11 w-11 p-1 flex items-center justify-center hover:bg-black hover:text-white transition-colors rounded-full border border-transparent hover:border-black"
           >
-            {isOpen ? (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 8.25h16.5m-16.5 7.5h16.5" />
-              </svg>
-            )}
+            <Image
+              src="/logo_homepage.png"
+              alt="Vibes лого"
+              width={40}
+              height={40}
+              className={`h-full w-full object-contain transition-transform ${isOpen ? "scale-95 rotate-6" : ""}`}
+              priority
+            />
           </button>
           <span className="text-[11px] font-bold tracking-[0.3em] uppercase font-sans hidden md:block">
           </span>

@@ -43,7 +43,7 @@ export function SearchBar() {
         </div>
         {isPending && (
            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-             <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-blue-600"></div>
+             <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-[#002CFF]"></div>
            </div>
         )}
       </div>

@@ -38,7 +38,7 @@ const StoryRow = ({ post, index }: { post: any; index: number }) => {
           <span className="text-[10px] font-mono text-neutral-400 select-none">
             #{String(index + 1).padStart(2, "0")}
           </span>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 truncate max-w-[80px]">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[#002CFF] truncate max-w-[80px]">
             {post.source}
           </span>
         </div>
@@ -60,7 +60,7 @@ const StoryRow = ({ post, index }: { post: any; index: number }) => {
           <div className="mt-3 flex items-center gap-3 text-[10px] uppercase tracking-widest text-neutral-400">
             <span className="font-mono text-neutral-500">{formatDate(post?.published_at)}</span>
             <span className="h-px w-8 bg-neutral-300" />
-            <span className="group-hover:text-blue-600 transition-colors">
+            <span className="group-hover:text-[#002CFF] transition-colors">
               Отвори &rarr;
             </span>
           </div>

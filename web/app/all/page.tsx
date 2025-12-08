@@ -54,7 +54,7 @@ export default async function AllStoriesPage({
   }
 
   // Always order by newest first
-  sql += " ORDER BY published_at DESC LIMIT 150";
+  sql += " ORDER BY scraped_at DESC LIMIT 150";
 
   let posts: any[] = [];
   try {
@@ -76,7 +76,7 @@ export default async function AllStoriesPage({
         {/* Header Section */}
         <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-10 pb-6 border-b border-black">
           <div>
-            {/* <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-2">Архива</p> */}
+            {/* <p className="text-xs font-bold uppercase tracking-widest text-[#FFD300] mb-2">Архива</p> */}
             <h1 className="font-serif text-4xl md:text-5xl font-black leading-tight mb-2">
               Архива
             </h1>

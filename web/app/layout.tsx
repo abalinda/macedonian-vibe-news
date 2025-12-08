@@ -17,7 +17,6 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
-
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://vibes.mk";

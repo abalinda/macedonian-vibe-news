@@ -2,8 +2,9 @@ const ADMIN_EMAILS = [
   // Update this list to control who can create blog posts.
   "admin@vibes.mk",
   "team@vibes.mk",
+  "andrej.petrovski@vibes.mk",
   "balinda.centar@gmail.com",
-  
+
 ] as const;
 
 export const isAdminEmail = (email: string | null | undefined) => {

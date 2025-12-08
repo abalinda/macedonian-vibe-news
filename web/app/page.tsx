@@ -133,13 +133,13 @@ const HeroStory = ({ post }: { post: any }) => {
         <span className="inline-block border border-black px-2 py-0.5 text-xs font-bold uppercase tracking-widest mb-4 hover:bg-black hover:text-white transition-colors">
           {post.source}
         </span>
-        <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-black leading-[0.9] mb-4 group-hover:text-blue-800 transition-colors">
+        <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-black leading-[0.9] mb-4 group-hover:text-[#FFD300] transition-colors">
           {post.title}
         </h2>
         <p className="text-sm md:text-base font-mono uppercase tracking-[0.15em] text-neutral-600 mb-6 max-w-2xl mx-auto">
           {teaserText}
         </p>
-        <div className="inline-flex items-center gap-2 text-xs font-bold text-neutral-900 uppercase tracking-widest border-b-2 border-transparent group-hover:border-blue-600">
+        <div className="inline-flex items-center gap-2 text-xs font-bold text-neutral-900 uppercase tracking-widest border-b-2 border-transparent group-hover:border-[#FFD300]">
           Прочитај повеќе <span>&rarr;</span>
         </div>
       </div>
