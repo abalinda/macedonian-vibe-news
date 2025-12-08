@@ -23,8 +23,8 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://vibes.mk";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Vibes - Избрани Вести",
-  description: "Дневна доза на внимателно избрани македонски вести. Брзо, лесно и внимателно избрани написи од најдобрите извори.",
+  title: "Vibes - Твои вести, секој ден",
+  description: "Дневна доза на внимателно избрани македонски вести од најдобрите извори.",
 };
 
 export default function RootLayout({
