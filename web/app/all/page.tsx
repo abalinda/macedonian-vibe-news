@@ -6,6 +6,17 @@ import { StoriesList } from "./stories-list";
 
 export const revalidate = 60;
 
+const CATEGORY_LABELS = {
+  Tech: "Технологија",
+  Culture: "Култура",
+  Lifestyle: "Животен стил",
+  Business: "Бизнис",
+  Sports: "Спорт",
+  Blog: "Блог",
+} as const;
+type CategoryValue = keyof typeof CATEGORY_LABELS;
+const CATEGORY_VALUES = Object.keys(CATEGORY_LABELS) as CategoryValue[];
+
 const EmptyState = () => (
   <div className="py-24 px-6 text-center border-2 border-dashed border-neutral-200 rounded-lg bg-neutral-50">
     <div className="mx-auto w-12 h-12 mb-4 text-neutral-300">
@@ -27,17 +38,27 @@ const EmptyState = () => (
 export default async function AllStoriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; category?: string; cat?: string }>;
 }) {
   const params = await searchParams;
   
   const fromDate = params.from || null;
   const toDate = params.to || null;
+  const requestedCategory = params.category || params.cat || null;
+  const categoryFilter: CategoryValue | null =
+    requestedCategory && CATEGORY_VALUES.includes(requestedCategory as CategoryValue)
+      ? (requestedCategory as CategoryValue)
+      : null;
 
   // Construct SQL dynamically
   let sql = "SELECT * FROM posts";
   const args: any[] = [];
   const conditions: string[] = [];
+
+  if (categoryFilter) {
+    conditions.push("category = ?");
+    args.push(categoryFilter);
+  }
 
   if (fromDate) {
     conditions.push("date(published_at) >= ?");
@@ -65,11 +86,12 @@ export default async function AllStoriesPage({
   }
 
   const storiesLabel = posts.length === 1 ? "приказна" : "приказни";
+  const categoryLabel = categoryFilter ? CATEGORY_LABELS[categoryFilter] : null;
 
   return (
     <main className="min-h-screen bg-[#FDFBF7] text-neutral-900 pb-20">
       <NavBar />
-      <CategoryNav activeCategory={null} isAllPage />
+      <CategoryNav activeCategory={categoryFilter ?? null} isAllPage />
 
       <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8">
         
@@ -89,6 +111,7 @@ export default async function AllStoriesPage({
              <DateFilter />
              <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-400">
                Прикажани: {posts.length} {storiesLabel}
+               {categoryLabel ? ` • Категорија: ${categoryLabel}` : ""}
              </div>
           </div>
         </div>

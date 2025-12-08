@@ -293,9 +293,19 @@ export default async function Home({
 
           {/* RIGHT SIDEBAR */}
           <div className="lg:col-span-3 lg:border-l border-neutral-300 lg:pl-8 order-3">
-             <h4 className="font-sans text-xs font-black uppercase tracking-widest border-b-4 border-black pb-2 mb-4">
-              {selectedCategory ? 'Повеќе' : 'Останати приказни'}
-            </h4>
+             <div className="flex items-center justify-between gap-3 border-b-4 border-black pb-2 mb-4">
+              <h4 className="font-sans text-xs font-black uppercase tracking-widest">
+                {selectedCategory ? 'Повеќе' : 'Останати приказни'}
+              </h4>
+              {selectedCategory && (
+                <Link
+                  href={`/all?category=${encodeURIComponent(selectedCategory)}`}
+                  className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 hover:text-black transition-colors"
+                >
+                  Сите од оваа категорија
+                </Link>
+              )}
+            </div>
             <div className="flex flex-col">
               {rightColumnPosts.map((post) => (
                 <SideStory key={post.id} post={post} />

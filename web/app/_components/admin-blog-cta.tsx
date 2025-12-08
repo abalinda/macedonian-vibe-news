@@ -15,6 +15,7 @@ export const AdminBlogCTA = () => {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const host = window.location.hostname;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLocal(host === "localhost");
   }, []);
 

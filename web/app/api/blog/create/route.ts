@@ -70,8 +70,8 @@ export async function POST(request: Request) {
     const result = await turso.execute(insertWithContent);
     const id = Number(result.lastInsertRowid);
     return NextResponse.json({ id, ok: true });
-  } catch (err: any) {
-    const message = String(err?.message || err);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
     if (/no such column: content/i.test(message)) {
       const result = await turso.execute(insertWithoutContent);
       const id = Number(result.lastInsertRowid);

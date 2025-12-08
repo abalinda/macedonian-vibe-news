@@ -1,45 +1,62 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useRef } from 'react';
+
+const CATEGORY_OPTIONS = [
+  { value: '', label: 'Сите категории' },
+  { value: 'Tech', label: 'Технологија' },
+  { value: 'Culture', label: 'Култура' },
+  { value: 'Lifestyle', label: 'Животен стил' },
+  { value: 'Business', label: 'Бизнис' },
+  { value: 'Sports', label: 'Спорт' },
+  { value: 'Blog', label: 'Блог' },
+] as const;
 
 export function DateFilter() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const paramsKey = searchParams.toString();
+
+  const fromParam = searchParams.get('from') ?? '';
+  const toParam = searchParams.get('to') ?? '';
+  const categoryParam = searchParams.get('category') ?? searchParams.get('cat') ?? '';
+
+  const fromRef = useRef<HTMLInputElement>(null);
+  const toRef = useRef<HTMLInputElement>(null);
+  const categoryRef = useRef<HTMLSelectElement>(null);
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split('T')[0];
 
-  // Initialize state from URL or default to empty
-  const [from, setFrom] = useState(searchParams.get('from') ?? '');
-  const [to, setTo] = useState(searchParams.get('to') ?? '');
-
-  useEffect(() => {
-    setFrom(searchParams.get('from') ?? '');
-    setTo(searchParams.get('to') ?? '');
-  }, [searchParams]);
-
   const handleSearch = () => {
-    if (!from && !to) {
-      router.push('/all');
-      return;
-    }
-
     const params = new URLSearchParams();
-    if (from) params.set('from', from);
-    if (to) params.set('to', to);
-    router.push(`/all?${params.toString()}`);
+    const fromValue = fromRef.current?.value?.trim() ?? '';
+    const toValue = toRef.current?.value?.trim() ?? '';
+    const categoryValue = categoryRef.current?.value ?? '';
+
+    if (fromValue) params.set('from', fromValue);
+    if (toValue) params.set('to', toValue);
+    if (categoryValue) params.set('category', categoryValue);
+
+    const query = params.toString();
+    router.push(query ? `/all?${query}` : '/all');
   };
 
   // Optional: Allow clearing filters to see all history
   const clearFilter = () => {
-    setFrom('');
-    setTo('');
+    if (fromRef.current) fromRef.current.value = '';
+    if (toRef.current) toRef.current.value = '';
+    if (categoryRef.current) categoryRef.current.value = '';
     router.push('/all');
   };
+  const hasFilters = Boolean(fromParam || toParam || categoryParam);
 
   return (
-    <div className="w-full flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 bg-white border border-neutral-300 px-4 py-3 rounded-sm shadow-sm">
+    <div
+      key={paramsKey}
+      className="w-full flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 bg-white border border-neutral-300 px-4 py-3 rounded-sm shadow-sm"
+    >
       <div className="flex flex-col gap-1 w-full sm:w-auto flex-1 min-w-[140px]">
         <label htmlFor="date-from" className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
           Од:
@@ -47,9 +64,9 @@ export function DateFilter() {
         <input
           type="date"
           id="date-from"
-          value={from}
+          defaultValue={fromParam}
           max={today}
-          onChange={(e) => setFrom(e.target.value)}
+          ref={fromRef}
           className="font-mono text-sm bg-transparent outline-none text-neutral-900 cursor-pointer border-b border-neutral-200 focus:border-black transition-colors w-full"
         />
       </div>
@@ -61,11 +78,32 @@ export function DateFilter() {
         <input
           type="date"
           id="date-to"
-          value={to}
+          defaultValue={toParam}
           max={today}
-          onChange={(e) => setTo(e.target.value)}
+          ref={toRef}
           className="font-mono text-sm bg-transparent outline-none text-neutral-900 cursor-pointer border-b border-neutral-200 focus:border-black transition-colors w-full"
         />
+      </div>
+
+      <div className="flex flex-col gap-1 w-full sm:w-auto flex-1 min-w-[180px]">
+        <label htmlFor="category" className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
+          Категорија:
+        </label>
+        <div className="relative">
+          <select
+            id="category"
+            defaultValue={categoryParam}
+            ref={categoryRef}
+            className="font-mono text-sm bg-transparent outline-none text-neutral-900 cursor-pointer border-b border-neutral-200 focus:border-black transition-colors w-full appearance-none pr-6"
+          >
+            {CATEGORY_OPTIONS.map((option) => (
+              <option key={option.value || 'all'} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-neutral-400 text-xs">▾</span>
+        </div>
       </div>
 
       <button
@@ -75,7 +113,7 @@ export function DateFilter() {
         Барај
       </button>
 
-      {(from || to) && (
+      {hasFilters && (
         <button
           onClick={clearFilter}
           className="h-10 w-full sm:w-auto px-3 text-red-500 hover:text-red-700 text-xs font-bold uppercase tracking-widest transition-colors"

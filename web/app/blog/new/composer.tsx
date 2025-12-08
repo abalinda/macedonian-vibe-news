@@ -120,8 +120,9 @@ export const BlogComposer = ({ defaultAuthor }: BlogComposerProps) => {
       } else {
         setSuccess("Успешно креирана објава.");
       }
-    } catch (err: any) {
-      setError(err?.message || "Настана грешка. Обидете се повторно.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Настана грешка. Обидете се повторно.";
+      setError(message);
     } finally {
       setSaving(false);
     }

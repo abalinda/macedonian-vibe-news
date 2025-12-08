@@ -9,6 +9,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   Lifestyle: "Животен стил",
   Business: "Бизнис",
   Sports: "Спорт",
+  Blog: "Блог",
 };
 
 const stripHtml = (value: string) => value.replace(/<[^>]*>/g, "");

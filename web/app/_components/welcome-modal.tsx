@@ -43,6 +43,7 @@ export const WelcomeModal = () => {
 
   useEffect(() => {
     if (!hasSeenWelcome()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsOpen(true);
     }
   }, []);
