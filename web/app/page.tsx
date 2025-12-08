@@ -3,6 +3,7 @@ import { turso } from "@/lib/turso";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { CategoryNav, NavBar } from "./_components/navigation";
+import { AdminBlogCTA } from "./_components/admin-blog-cta";
 
 // Revalidate every 60 seconds (ISR)
 export const revalidate = 60;
@@ -264,6 +265,7 @@ export default async function Home({
     <main className="min-h-screen bg-[#FDFBF7] text-neutral-900 pb-20">
       <NavBar />
       <CategoryNav activeCategory={selectedCategory} />
+      <AdminBlogCTA />
 
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         
