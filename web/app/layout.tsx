@@ -32,10 +32,25 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Vibes.mk",
+    "url": "https://vibes.mk",
+    "logo": "https://www.vibes.mk/_next/image?url=%2Flogo_homepage.png&w=96&q=75",
+    "sameAs": [
+      "https://www.linkedin.com/company/vibes-mk/",
+      "https://instagram.com/vibes.mkd"
+    ]
+  };
   return (
   <ClerkProvider>
     <html lang="mk">
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <meta name="apple-mobile-web-app-title" content="Vibes" />
         <meta name="google-adsense-account" content="ca-pub-6000374890506320"></meta>
       </head>
