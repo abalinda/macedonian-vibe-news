@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { CategoryNav, NavBar } from "./_components/navigation";
 import { AdminBlogCTA } from "./_components/admin-blog-cta";
 import { WelcomeModal } from "./_components/welcome-modal";
+import { AdminHeroOverride } from "./_components/admin-hero-override";
 
 // Revalidate every 60 seconds (ISR)
 export const revalidate = 60;
@@ -37,6 +38,8 @@ const CATEGORY_LABELS = {
   Sports: "Спорт",
   Blog: "Блог",
 } as const;
+
+const toPlain = (value: any) => JSON.parse(JSON.stringify(value));
 
 // -- HELPER COMPONENTS --
 
@@ -194,6 +197,7 @@ export default async function Home({
 
   let posts: any[] = [];
   let heroPost: any = null;
+  let heroSlotMeta: Record<string, any> = {};
 
   try {
     // 2. Parallel Fetching: Get Posts + Get Hero ID
@@ -205,16 +209,30 @@ export default async function Home({
           : "SELECT * FROM posts ORDER BY published_at DESC LIMIT 20",
         args: selectedCategory ? [selectedCategory] : [],
       }),
-      turso.execute({
-        sql: "SELECT post_id FROM featured_slots WHERE slot_id = ?",
-        args: [heroSlotId],
-      }),
+      (async () => {
+        try {
+          return await turso.execute({
+            sql: "SELECT post_id, locked_until, admin_choice, updated_at FROM featured_slots WHERE slot_id = ?",
+            args: [heroSlotId],
+          });
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          if (/no such column: admin_choice/i.test(message)) {
+            return turso.execute({
+              sql: "SELECT post_id, locked_until, updated_at FROM featured_slots WHERE slot_id = ?",
+              args: [heroSlotId],
+            });
+          }
+          throw err;
+        }
+      })(),
     ]);
 
     posts = postsResult.rows;
     
     // 3. Resolve Hero Post
-    const featuredId = featuredResult.rows[0]?.post_id;
+    heroSlotMeta = toPlain(featuredResult.rows[0] || {});
+    const featuredId = heroSlotMeta?.post_id;
 
     if (featuredId) {
       // Check if the hero is already in our list of 20
@@ -261,6 +279,13 @@ export default async function Home({
 
   const leftColumnPosts = remainingPosts.slice(0, 4);
   const rightColumnPosts = remainingPosts.slice(4, 9);
+  const overridePosts: any[] = [];
+  const seen = new Set<number>();
+  [heroPost, ...remainingPosts].forEach((post) => {
+    if (!post || seen.has(post.id)) return;
+    seen.add(post.id);
+    overridePosts.push(toPlain(post));
+  });
 
   return (
     <main className="min-h-screen bg-[#FDFBF7] text-neutral-900 pb-20">
@@ -270,6 +295,15 @@ export default async function Home({
       <AdminBlogCTA />
 
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+
+        <AdminHeroOverride
+          slotId={heroSlotId}
+          currentHeroId={heroPost?.id ?? null}
+          lockedUntil={heroSlotMeta?.locked_until}
+          updatedAt={heroSlotMeta?.updated_at}
+          adminChoice={heroSlotMeta?.admin_choice}
+          posts={overridePosts}
+        />
         
         {/* GRID LAYOUT */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 border-t border-black pt-8">

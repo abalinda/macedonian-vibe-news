@@ -1,14 +1,14 @@
 'use client'
 
 import type { FormEvent } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { normalizeImageUrl } from "@/lib/images";
+import { sanitizeRichText, stripHtml } from "@/lib/rich-text";
 
 type BlogComposerProps = {
   defaultAuthor: string;
 };
-
-const stripHtml = (value: string) => value.replace(/<[^>]*>/g, "").trim();
 
 const RichTextEditor = ({
   value,
@@ -83,13 +83,22 @@ export const BlogComposer = ({ defaultAuthor }: BlogComposerProps) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [imagePreviewError, setImagePreviewError] = useState(false);
+  const normalizedCoverUrl = useMemo(() => normalizeImageUrl(imageUrl), [imageUrl]);
+  const previewHtml = useMemo(() => sanitizeRichText(content), [content]);
+
+  useEffect(() => {
+    setImagePreviewError(false);
+  }, [normalizedCoverUrl]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
     setSuccess(null);
 
-    if (!title.trim() || !stripHtml(content)) {
+    const cleanContent = sanitizeRichText(content);
+
+    if (!title.trim() || !stripHtml(cleanContent)) {
       setError("Наслов и содржина се задолжителни.");
       return;
     }
@@ -102,8 +111,8 @@ export const BlogComposer = ({ defaultAuthor }: BlogComposerProps) => {
         body: JSON.stringify({
           title: title.trim(),
           teaser: teaser.trim(),
-          content,
-          imageUrl: imageUrl.trim() || null,
+          content: cleanContent,
+          imageUrl: normalizedCoverUrl || null,
           author: author.trim() || "Blog",
         }),
       });
@@ -181,6 +190,35 @@ export const BlogComposer = ({ defaultAuthor }: BlogComposerProps) => {
             className="w-full border border-neutral-300 rounded-lg px-3 py-2 bg-white shadow-sm focus:border-black focus:outline-none"
             placeholder="https://..."
           />
+          {imageUrl ? (
+            <div className="space-y-2">
+              <div className="w-full aspect-[16/9] rounded-xl border border-neutral-200 bg-neutral-100 overflow-hidden shadow-sm">
+                {imagePreviewError ? (
+                  <div className="flex h-full items-center justify-center px-4 text-center text-[12px] text-neutral-500">
+                    Не можеме да ја прикажеме сликата. Проверете дали линкот е јавно достапен.
+                  </div>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={normalizedCoverUrl}
+                    alt="Преглед на насловна слика"
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                    onError={() => setImagePreviewError(true)}
+                    onLoad={() => setImagePreviewError(false)}
+                  />
+                )}
+              </div>
+              <p className="text-[11px] text-neutral-500 break-all">{normalizedCoverUrl}</p>
+            </div>
+          ) : (
+            <p className="text-[11px] text-neutral-500">
+              Повеќето формати се прифаќаат (директен линк, Google Drive/Dropbox share линк). Го нормализираме
+              автоматски за читачите.
+            </p>
+          )}
         </label>
       </div>
 
@@ -194,6 +232,27 @@ export const BlogComposer = ({ defaultAuthor }: BlogComposerProps) => {
           </span>
         </div>
         <RichTextEditor value={content} onChange={setContent} />
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-[0.3em] text-neutral-600">
+            Преглед за читачи
+          </span>
+          <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-neutral-400">
+            Како ќе изгледа на страницата
+          </span>
+        </div>
+        <div className="bg-white border border-neutral-200 rounded-2xl shadow-sm p-4">
+          {previewHtml ? (
+            <div
+              className="blog-body text-base text-neutral-900"
+              dangerouslySetInnerHTML={{ __html: previewHtml }}
+            />
+          ) : (
+            <p className="text-sm text-neutral-500">Содржината ќе се појави тука.</p>
+          )}
+        </div>
       </div>
 
       {error ? (

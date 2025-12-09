@@ -285,6 +285,13 @@ def filter_existing_links(articles: List[Dict[str, Any]]) -> List[Dict[str, Any]
 
 def ensure_feature_slots():
     """Ensure the featured_slots table has the required rows."""
+    try:
+        client.execute("ALTER TABLE featured_slots ADD COLUMN admin_choice INTEGER DEFAULT 0")
+        print("ℹ️ Added admin_choice column to featured_slots")
+    except Exception as e:  # noqa: BLE001
+        if "duplicate column name" not in str(e).lower():
+            print(f"⚠️ Failed to ensure admin_choice column: {e}")
+
     for slot_id, meta in FEATURE_SLOTS.items():
         client.execute(
             "INSERT OR IGNORE INTO featured_slots (slot_id, label, post_id) VALUES (?, ?, ?)",
@@ -338,7 +345,7 @@ def lock_feature_story(slot: str, article_link: str):
         client.execute(
             """
             UPDATE featured_slots
-            SET post_id = ?, locked_until = ?, updated_at = CURRENT_TIMESTAMP
+            SET post_id = ?, locked_until = ?, updated_at = CURRENT_TIMESTAMP, manual_override = 0, admin_choice = 0
             WHERE slot_id = ?
             """,
             [post_id, new_lock_time, slot],

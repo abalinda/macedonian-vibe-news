@@ -5,6 +5,7 @@ import { useUser } from '@clerk/clerk-react'
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import {
   SignInButton,
   SignUpButton,
@@ -12,6 +13,7 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
+import { isAdminEmail } from "@/lib/admins";
 
 export default function PostHogClerkSync() {
   const { isLoaded, user } = useUser();
@@ -31,11 +33,20 @@ export default function PostHogClerkSync() {
 }
 export const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLocal, setIsLocal] = useState(false);
+  const { user, isLoaded } = useUser();
   const currentDate = new Date().toLocaleDateString("mk-MK", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const host = window.location.hostname;
+      setIsLocal(host === "localhost" || host === "127.0.0.1");
+    }
+  }, []);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -54,6 +65,12 @@ export const NavBar = () => {
       window.removeEventListener("keydown", handleEsc);
     };
   }, [isOpen]);
+
+  const email =
+    user?.primaryEmailAddress?.emailAddress ||
+    user?.emailAddresses?.[0]?.emailAddress ||
+    "";
+  const showAdminLink = (isLoaded && isAdminEmail(email)) || isLocal;
 
   const menuLinks = [
     { label: "Почетна", href: "/" },
@@ -114,8 +131,25 @@ export const NavBar = () => {
         >
           <div className="flex flex-col h-full p-6 gap-6">
             <div className="flex items-center justify-between">
-              <div className="text-[11px] uppercase tracking-[0.35em] font-bold text-neutral-700">
-                Навигација
+              <div className="flex items-center gap-2">
+                <IconButton href="https://www.instagram.com/vibes.mkd" label="Instagram">
+                  <InstagramIcon />
+                {/* </IconButton>
+                <IconButton href="https://www.facebook.com/vibes.mkd" label="Facebook">
+                  <FacebookIcon /> */}
+                </IconButton>
+                <IconButton href="https://www.linkedin.com/company/vibes-mk" label="LinkedIn">
+                  <LinkedInIcon />
+                </IconButton>
+                {showAdminLink && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setIsOpen(false)}
+                    className="ml-1 inline-flex items-center gap-2 rounded-full border border-black bg-[#FFD300] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-black shadow-[4px_4px_0_#00000010] transition-colors hover:bg-black hover:text-white"
+                  >
+                    Admin page
+                  </Link>
+                )}
               </div>
               <button
                 aria-label="Затвори мени"
@@ -252,3 +286,33 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
     </div>
   );
 };
+
+const IconButton = ({ href, label, children }: { href: string; label: string; children: ReactNode }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noreferrer"
+    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black bg-white text-black transition-all hover:bg-[#FFD300] hover:shadow-[4px_4px_0_#00000012]"
+  >
+    <span className="sr-only">{label}</span>
+    {children}
+  </a>
+);
+
+const InstagramIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+    <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7Zm5 3.5A5.5 5.5 0 1 1 6.5 13 5.5 5.5 0 0 1 12 7.5Zm0 2a3.5 3.5 0 1 0 3.5 3.5A3.5 3.5 0 0 0 12 9.5Zm5.75-3.75a1.25 1.25 0 1 1-1.25 1.25 1.25 1.25 0 0 1 1.25-1.25Z" />
+  </svg>
+);
+
+const FacebookIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+    <path d="M13.5 9H15V6h-1.5C11.57 6 10 7.57 10 9.5V11H8v3h2v6h3v-6h2.086L15 11h-2v-.927C13 9.48 13.229 9 13.5 9Z" />
+  </svg>
+);
+
+const LinkedInIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+    <path d="M4.98 3.5A2.25 2.25 0 1 1 2.73 5.75 2.25 2.25 0 0 1 4.98 3.5ZM3 8h4v13H3zm7.5 0h3.83v1.78h.05A4.2 4.2 0 0 1 18.9 8c3.05 0 3.61 2 3.61 4.6V21h-4v-6.07c0-1.45 0-3.31-2-3.31s-2.3 1.58-2.3 3.22V21h-4Z" />
+  </svg>
+);

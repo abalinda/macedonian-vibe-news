@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { turso } from "@/lib/turso";
 import { currentUser } from "@clerk/nextjs/server";
 import { isAdminEmail } from "@/lib/admins";
-
-const plainText = (html: string) => html.replace(/<[^>]*>/g, "").trim();
+import { normalizeImageUrl } from "@/lib/images";
+import { sanitizeRichText, stripHtml } from "@/lib/rich-text";
 
 export async function POST(request: Request) {
   const user = await currentUser();
@@ -17,9 +17,22 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const { title, teaser = "", content = "", imageUrl = null, author = "Blog", link } = body || {};
+  const {
+    title,
+    teaser = "",
+    content = "",
+    imageUrl = null,
+    author = "Blog",
+    link,
+  } = body || {};
 
-  if (!title || !content || !plainText(content)) {
+  const trimmedTitle = typeof title === "string" ? title.trim() : "";
+  const teaserText = typeof teaser === "string" ? teaser.trim() : "";
+  const normalizedContent = sanitizeRichText(typeof content === "string" ? content : "");
+  const contentPlainText = stripHtml(normalizedContent);
+  const normalizedImage = normalizeImageUrl(typeof imageUrl === "string" ? imageUrl : "");
+
+  if (!trimmedTitle || !contentPlainText) {
     return NextResponse.json(
       { error: "Недостигаат задолжителни полиња: наслов и содржина." },
       { status: 400 }
@@ -27,9 +40,9 @@ export async function POST(request: Request) {
   }
 
   const now = new Date().toISOString();
-  const summary = teaser || plainText(content).slice(0, 240);
+  const summary = teaserText || contentPlainText.slice(0, 240);
   const slugBase =
-    (title || "")
+    (trimmedTitle || "")
       .toLowerCase()
       .normalize("NFKD")
       .replace(/[\u0300-\u036f]/g, "")
@@ -37,7 +50,8 @@ export async function POST(request: Request) {
       .replace(/^-+|-+$/g, "")
       .slice(0, 60) || "blog";
   const uniqueSuffix = Math.random().toString(36).slice(2, 8);
-  const internalLink = link || `blog-${slugBase}-${uniqueSuffix}`;
+  const internalLink =
+    (typeof link === "string" && link.trim()) || `blog-${slugBase}-${uniqueSuffix}`;
 
   // Prefer inserting content column; fallback without it if the column is missing.
   const insertWithContent = {
@@ -46,13 +60,13 @@ export async function POST(request: Request) {
       VALUES (?, ?, ?, 'Blog', ?, ?, ?, ?, ?, ?)
     `,
     args: [
-      title,
+      trimmedTitle,
       internalLink,
-      author || "Blog",
-      teaser,
+      (typeof author === "string" && author.trim()) || "Blog",
+      teaserText,
       summary,
-      content,
-      imageUrl,
+      normalizedContent,
+      normalizedImage || null,
       now,
       now,
     ],
@@ -63,7 +77,16 @@ export async function POST(request: Request) {
       INSERT INTO posts (title, link, source, category, teaser, summary, image_url, published_at, scraped_at)
       VALUES (?, ?, ?, 'Blog', ?, ?, ?, ?, ?)
     `,
-    args: [title, internalLink, author || "Blog", teaser, summary, imageUrl, now, now],
+    args: [
+      trimmedTitle,
+      internalLink,
+      (typeof author === "string" && author.trim()) || "Blog",
+      teaserText,
+      summary,
+      normalizedImage || null,
+      now,
+      now,
+    ],
   };
 
   try {

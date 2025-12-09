@@ -3,12 +3,12 @@ import { turso } from "@/lib/turso";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { normalizeImageUrl } from "@/lib/images";
+import { sanitizeRichText, stripHtml, toParagraphHtml } from "@/lib/rich-text";
 import { CategoryNav, NavBar } from "../../_components/navigation";
 
 // Revalidate every 2 minutes
 export const revalidate = 120;
-
-const stripHtml = (value: string) => value.replace(/<[^>]*>/g, "");
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -28,9 +28,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const title = ("Vibes - " + data.title) || "Блог";
     const description =
       (data.teaser && String(data.teaser)) ||
-      (data.summary && stripHtml(String(data.summary)).slice(0, 160)) ||
+      (data.summary && stripHtml(String(data.summary || "")).slice(0, 160)) ||
       "Блог објава од Vibes.";
-    const image = data.image_url;
+    const image = normalizeImageUrl(typeof data.image_url === "string" ? data.image_url : "");
 
     const meta: Metadata = {
       title,
@@ -93,12 +93,21 @@ export default async function BlogPostPage({
     : "";
   
   const teaserText = post?.teaser ? String(post.teaser).toUpperCase() : "";
-  
-  // Turso returns columns as is. Assuming 'summary' holds the text if 'content' column doesn't exist yet.
-  const body =
-    post?.content ||
-    (post?.summary ? stripHtml(post.summary) : "") ||
-    (post?.teaser ? stripHtml(post.teaser) : "");
+  const coverImageUrl = normalizeImageUrl(post?.image_url ? String(post.image_url) : "");
+
+  // Prefer the stored HTML content; fall back to summary/teaser as paragraphs.
+  const rawBodyHtml =
+    (typeof post?.content === "string" && post.content) ||
+    (typeof post?.summary === "string" && post.summary) ||
+    (typeof post?.teaser === "string" && post.teaser) ||
+    "";
+  const sanitizedBody = sanitizeRichText(String(rawBodyHtml || ""));
+  const fallbackPlainText =
+    (typeof post?.summary === "string" && stripHtml(post.summary)) ||
+    (typeof post?.teaser === "string" && stripHtml(post.teaser)) ||
+    "";
+  const renderedBodyHtml =
+    sanitizedBody || toParagraphHtml(fallbackPlainText) || "<p>Нема содржина за оваа објава.</p>";
   return (
     <main className="min-h-screen bg-[#FDFBF7] text-neutral-900">
       <NavBar />
@@ -120,11 +129,11 @@ export default async function BlogPostPage({
           </p>
         ) : null}
 
-        {post?.image_url ? (
+        {coverImageUrl ? (
           <div className="w-full aspect-[16/9] bg-neutral-200 border border-black overflow-hidden rounded-[18px] shadow-[8px_8px_0_#00000010] mb-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={post.image_url}
+              src={coverImageUrl}
               alt={post?.title || "Слика за блог објавата"}
               className="w-full h-full object-cover"
               loading="eager"
@@ -135,9 +144,10 @@ export default async function BlogPostPage({
         ) : null}
 
         <div className="bg-white/70 backdrop-blur border border-neutral-200 rounded-2xl shadow-sm p-6 md:p-8">
-          <div className="font-serif text-lg leading-relaxed text-neutral-900 whitespace-pre-wrap">
-            {body || "Нема содржина за оваа објава."}
-          </div>
+          <div
+            className="blog-body text-lg text-neutral-900"
+            dangerouslySetInnerHTML={{ __html: renderedBodyHtml }}
+          />
         </div>
 
         <div className="mt-10 flex justify-between items-center gap-4">
