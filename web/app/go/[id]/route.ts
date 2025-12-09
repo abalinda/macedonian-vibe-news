@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { turso } from "@/lib/turso";
 
 export const runtime = "edge";
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } },
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const postId = Number(params.id);
+  const { id } = await params;
+  const postId = Number(id);
 
   if (!Number.isFinite(postId)) {
     return NextResponse.redirect(new URL("/", request.url));
