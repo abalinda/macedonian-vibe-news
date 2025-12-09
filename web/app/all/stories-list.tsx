@@ -1,6 +1,7 @@
 'use client';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -31,42 +32,60 @@ const formatDate = (value?: string | null) => {
 const StoryRow = ({ post, index }: { post: any; index: number }) => {
   const teaserText = getTeaserText(post);
   const categoryLabel = CATEGORY_LABELS[post?.category] ?? post?.category ?? "Вести";
+  const isBlog = post?.category === "Blog";
+  const href = isBlog
+    ? `/blog/${post.id}`
+    : post?.id
+      ? `/go/${post.id}`
+      : post?.link || "#";
+  const wrapperClass = "group block px-4 py-5 md:px-6 hover:bg-neutral-50 transition-colors";
+  const content = (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
+      <div className="flex items-center gap-3 sm:w-24 flex-shrink-0">
+        <span className="text-[10px] font-mono text-neutral-400 select-none">
+          #{String(index + 1).padStart(2, "0")}
+        </span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-[#002CFF] truncate max-w-[80px]">
+          {post.source}
+        </span>
+      </div>
 
-  return (
-    <a href={post.link} target="_blank" rel="noreferrer" className="group block px-4 py-5 md:px-6 hover:bg-neutral-50 transition-colors">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
-        <div className="flex items-center gap-3 sm:w-24 flex-shrink-0">
-          <span className="text-[10px] font-mono text-neutral-400 select-none">
-            #{String(index + 1).padStart(2, "0")}
-          </span>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-[#002CFF] truncate max-w-[80px]">
-            {post.source}
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-col md:flex-row md:items-start gap-2 md:justify-between mb-2">
+          <h3 className="font-serif text-xl font-bold leading-snug group-hover:underline decoration-2 underline-offset-4 text-neutral-900">
+            {post.title}
+          </h3>
+          <span className="self-start text-[10px] font-bold uppercase tracking-widest text-neutral-500 bg-white border border-neutral-200 rounded px-2 py-0.5 whitespace-nowrap">
+            {categoryLabel}
           </span>
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-col md:flex-row md:items-start gap-2 md:justify-between mb-2">
-            <h3 className="font-serif text-xl font-bold leading-snug group-hover:underline decoration-2 underline-offset-4 text-neutral-900">
-              {post.title}
-            </h3>
-            <span className="self-start text-[10px] font-bold uppercase tracking-widest text-neutral-500 bg-white border border-neutral-200 rounded px-2 py-0.5 whitespace-nowrap">
-              {categoryLabel}
-            </span>
-          </div>
+        <p className="text-xs md:text-sm text-neutral-600 font-mono uppercase tracking-wider line-clamp-2 leading-relaxed opacity-80">
+          {teaserText}
+        </p>
 
-          <p className="text-xs md:text-sm text-neutral-600 font-mono uppercase tracking-wider line-clamp-2 leading-relaxed opacity-80">
-            {teaserText}
-          </p>
-
-          <div className="mt-3 flex items-center gap-3 text-[10px] uppercase tracking-widest text-neutral-400">
-            <span className="font-mono text-neutral-500">{formatDate(post?.published_at)}</span>
-            <span className="h-px w-8 bg-neutral-300" />
-            <span className="group-hover:text-[#002CFF] transition-colors">
-              Отвори &rarr;
-            </span>
-          </div>
+        <div className="mt-3 flex items-center gap-3 text-[10px] uppercase tracking-widest text-neutral-400">
+          <span className="font-mono text-neutral-500">{formatDate(post?.published_at)}</span>
+          <span className="h-px w-8 bg-neutral-300" />
+          <span className="group-hover:text-[#002CFF] transition-colors">
+            Отвори &rarr;
+          </span>
         </div>
       </div>
+    </div>
+  );
+
+  if (isBlog) {
+    return (
+      <Link href={href} className={wrapperClass}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <a href={href} target="_blank" rel="noreferrer" className={wrapperClass}>
+      {content}
     </a>
   );
 };
