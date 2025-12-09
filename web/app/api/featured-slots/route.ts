@@ -55,13 +55,14 @@ const mapSlotRow = (row: Record<string, unknown>) => {
   };
 };
 
-const isLocalRequest = () => {
-  const host = headers().get("host") || "";
+const isLocalRequest = async() => {
+  const headerList = await headers();
+  const host = headerList.get("host") || "";
   return host.startsWith("localhost") || host.startsWith("127.0.0.1");
 };
 
 const requireAdmin = async () => {
-  if (isLocalRequest()) return { allowed: true, isLocal: true };
+  if (await isLocalRequest()) return { allowed: true, isLocal: true };
 
   const user = await currentUser();
   const email =
