@@ -645,10 +645,10 @@ def process_feeds():
         persist_queue.join()
         persist_stop_event.set()
         worker.join()
-        # try:
-        #     backfill_images_for_recent_posts()
-        # except Exception as e:
-        #     print(f"⚠️ Image backfill encountered an error: {e}")
+        try:
+            backfill_images_for_recent_posts()
+        except Exception as e:
+            print(f"⚠️ Image backfill encountered an error: {e}")
 
 if __name__ == "__main__":
     process_feeds()

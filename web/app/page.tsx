@@ -53,7 +53,11 @@ const StoryLink = ({
   children: ReactNode;
 }) => {
   const isBlog = post?.category === "Blog";
-  const href = isBlog ? `/blog/${post.id}` : post?.link || "#";
+  const href = isBlog
+    ? `/blog/${post.id}`
+    : post?.id
+      ? `/go/${post.id}`
+      : post?.link || "#";
 
   if (isBlog) {
     return (
