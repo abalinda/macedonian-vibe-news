@@ -99,11 +99,11 @@ const SideStory = ({ post }: { post: any }) => {
           )}
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1 block">
             {post.source}
           </span>
-          <h3 className="font-serif text-lg leading-tight font-bold group-hover:underline decoration-2 underline-offset-4 mb-2">
+          <h3 className="font-serif text-lg leading-tight font-bold group-hover:underline decoration-2 underline-offset-4 mb-2 break-words">
             {post.title}
           </h3>
           <p className="text-xs text-neutral-800 font-mono uppercase tracking-[0.3em] line-clamp-2">
@@ -141,7 +141,7 @@ const HeroStory = ({ post }: { post: any }) => {
         <span className="inline-block border border-black px-2 py-0.5 text-xs font-bold uppercase tracking-widest mb-4 hover:bg-black hover:text-white transition-colors">
           {post.source}
         </span>
-        <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-black leading-[0.9] mb-4 group-hover:text-[#FFD300] transition-colors">
+        <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-black leading-[0.9] mb-4 group-hover:text-[#FFD300] transition-colors break-words">
           {post.title}
         </h2>
         <p className="text-sm md:text-base font-mono uppercase tracking-[0.15em] text-neutral-600 mb-6 max-w-2xl mx-auto">

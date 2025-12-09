@@ -6,6 +6,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { PostHogProvider } from './providers'
 import PostHogClerkSync from './PostHogClerkSync'
+import { PwaInstaller } from "./_components/pwa-installer";
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -25,6 +26,17 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "Vibes - Твои вести, секој ден",
   description: "Дневна доза на внимателно избрани македонски вести од најдобрите извори.",
+  applicationName: "Vibes",
+  manifest: "/manifest.json",
+  themeColor: "#FDFBF7",
+  appleWebApp: {
+    capable: true,
+    title: "Vibes",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -51,7 +63,12 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Vibes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="theme-color" content="#FDFBF7" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
         <meta name="google-adsense-account" content="ca-pub-6000374890506320"></meta>
       </head>
         <GoogleAnalytics gaId="G-VG899CFSWV" />
@@ -59,6 +76,7 @@ export default function RootLayout({
           {/* slight off-white background (#FDFBF7) for 'paper' feel */}
           <PostHogProvider>
             <PostHogClerkSync />
+            <PwaInstaller />
             {children}
           </PostHogProvider>
         </body>
