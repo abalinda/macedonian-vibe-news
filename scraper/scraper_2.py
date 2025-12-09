@@ -74,7 +74,10 @@ def format_article_for_log(article: Dict[str, Any]) -> Dict[str, Any]:
 
 # --- FEEDS CONFIGURATION ---
 TARGET_FEEDS = [
-    # --- TECH & SCIENCE ---
+    # ==========================================
+    # 1. TECH & SCIENCE
+    # ==========================================
+    {"url": "https://mk.voanews.com/api/z-myil-vomx-tperbtm", "source": "Voice of America", "category": "Tech"},
     {"url": "https://bulevar.mk/category/tech/feed", "source": "Bulevar", "category": "Tech"},
     {"url": "https://it.mk/feed/", "source": "IT.mk", "category": "Tech"},
     {"url": "https://smartportal.mk/feed/", "source": "Smart Portal", "category": "Tech"},
@@ -86,11 +89,16 @@ TARGET_FEEDS = [
     {"url": "https://konekt.mk/category/рецензии/feed", "source": "Конект", "category": "Tech"},
     {"url": "https://konekt.mk/category/мултимедија/feed", "source": "Конект", "category": "Tech"},
     {"url": "https://avtoplus.mk/category/noviteti/feed/", "source": "Авто Плус", "category": "Tech"},
-    {"url": "https://trn.mk/category/ha%d1%98tek/feed/", "source": "Трн", "category": "Tech"},
     {"url": "https://24auto.mk/feed/", "source": "24auto", "category": "Tech"},
     {"url": "https://www.fakulteti.mk/rss/rss.ashx?cat=nauka", "source": "Факултети", "category": "Tech"},
+    # New Tech Additions
+    {"url": "https://gsm.mk/feed/", "source": "GSM.mk", "category": "Tech"},
+    {"url": "https://usb.mk/feed/", "source": "USB.mk", "category": "Tech"},
 
-    # --- CULTURE & LIFESTYLE ---
+    # ==========================================
+    # 2. CULTURE & LIFESTYLE
+    # ==========================================
+    {"url": "https://sdk.mk/index.php/category/kultura/", "source": "SDK", "category": "Culture"},
     {"url": "https://www.porta3.mk/feed/", "source": "Porta3", "category": "Culture"},
     {"url": "https://gradska.mk/category/kultura/feed/", "source": "Градска", "category": "Culture"},
     {"url": "https://umno.mk/feed/", "source": "Умно", "category": "Culture"},
@@ -99,9 +107,8 @@ TARGET_FEEDS = [
     {"url": "https://www.kafepauza.mk/feed/", "source": "Кафе Пауза", "category": "Lifestyle"},
     {"url": "https://off.net.mk/feed", "source": "Off.net", "category": "Lifestyle"},
     {"url": "https://pedijatar.mk/feed/", "source": "Педијатар", "category": "Lifestyle"},
-    {"url": "https://trn.mk/category/kult-art/feed/", "source": "Трн", "category": "Lifestyle"},
-    {"url": "https://trn.mk/category/zeleno/feed/", "source": "Трн", "category": "Lifestyle"},
     {"url": "https://fashionel.mk/feed/", "source": "Fashionel", "category": "Lifestyle"},
+    {"url": "https://mk.voanews.com/api/ztmyvl-vomx-tpek-tt", "source": "Voice of America", "category": "Lifestyle"},
     {"url": "https://www.ubavinaizdravje.mk/rubriki/zdravje/feed/", "source": "Убавина и Здравје", "category": "Lifestyle"},
     {"url": "https://www.ubavinaizdravje.mk/rubriki/gastro/feed/", "source": "Убавина и Здравје", "category": "Lifestyle"},
     {"url": "https://www.ubavinaizdravje.mk/rubriki/fitnes/feed/", "source": "Убавина и Здравје", "category": "Lifestyle"},
@@ -114,28 +121,61 @@ TARGET_FEEDS = [
     {"url": "https://www.fakulteti.mk/rss/rss.ashx?cat=umetnost", "source": "Факултети", "category": "Culture"},
     {"url": "https://www.fakulteti.mk/rss/rss.ashx?cat=kolumni", "source": "Факултети", "category": "Culture"},
     {"url": "https://www.fakulteti.mk/rss/rss.ashx?cat=kultura", "source": "Факултети", "category": "Culture"},
+    # New Culture/Lifestyle Additions
+    {"url": "https://popara.mk/feed/", "source": "Popara", "category": "Lifestyle"},
+    {"url": "https://motika.com.mk/feed/", "source": "Motika", "category": "Lifestyle"},
+    {"url": "https://vidivaka.mk/feed/", "source": "Vidi Vaka", "category": "Culture"},
+    {"url": "https://gledaj.mk/feed/", "source": "Gledaj.mk", "category": "Culture"},
+    {"url": "https://plagij.at/feed/", "source": "Plagijat", "category": "Culture"},
 
-    #--- Sports ---
+    # ==========================================
+    # 3. SPORTS (Filtered)
+    # ==========================================
     {"url": "https://sportplus.mk/feed/", "source": "Sport Plus", "category": "Sports"},
     {"url": "https://topsport.mk/feed/", "source": "Top Sport", "category": "Sports"},
     {"url": "https://ipon.mk/feed/", "source": "Ipon", "category": "Sports"},
     {"url": "https://www.fakulteti.mk/rss/rss.ashx?cat=sport", "source": "Факултети", "category": "Sports"},
+    # Keeping this section small as most major sports sites are in your Exclusion List.
 
-    # --- BUSINESS & FINANCE ---
+    # ==========================================
+    # 4. BUSINESS & FINANCE
+    # ==========================================
+    {"url": "https://mk.voanews.com/api/zymyml-vomx-tpet-ty", "source": "Voice of America", "category": "Business"},
     {"url": "https://inovativnost.mk/category/makedonija/feed/", "source": "Иновативност", "category": "Business"},
     {"url": "https://zelenaberza.com.mk/feed/", "source": "Зелена Берза", "category": "Business"},
+    # New Business Additions
+    {"url": "https://pari.com.mk/feed/", "source": "Pari", "category": "Business"},
+    {"url": "https://bankarstvo.mk/feed/", "source": "Bankarstvo", "category": "Business"},
+    {"url": "https://biznisinfo.mk/feed/", "source": "Biznis Info", "category": "Business"},
+    {"url": "https://bi.mk/feed/", "source": "Biznis Vesti", "category": "Business"},
 
-    # --- GENERAL NEWS (curated) ---
+    # ==========================================
+    # 5. GENERAL NEWS (Independent/Curated)
+    # ==========================================
     {"url": "https://kajgana.com/rss.xml", "source": "Кајгана", "curate": True},
-    {"url": "https://a1on.mk/feed/", "source": "A1on", "curate": True},
-    {"url": "https://www.crnobelo.com/latest-rss?format=feed&type=rss", "source": "Црно Бело", "curate": True},
     {"url": "https://makfax.com.mk/feed/", "source": "Makfax", "curate": True},
-    {"url": "https://kanal5.com.mk/rss.aspx", "source": "Канал 5", "curate": True},
-    {"url": "https://www.slobodenpecat.mk/feed/", "source": "Слободен Печат", "curate": True},
     {"url": "https://glamur.mk/fashion/feed/", "source": "Glamur", "curate": True},
-    {"url": "https://mkd.mk/feed/", "source": "MKD.mk", "curate": True},
     {"url": "https://www.slobodnaevropa.mk/api/z_poml-vomx-tpevjpy", "source": "Радио Слободна Европа", "curate": True},
+    # Independent Journalism
+    {"url": "https://sdk.mk/index.php/category/dopisna-mrezha/feed", "source": "SDK.mk", "curate": True},
+    {"url": "https://sdk.mk/index.php/category/svet/feed/", "source": "SDK.mk", "curate": True},
+    {"url": "https://meta.mk/feed/", "source": "Meta", "curate": True},
+    {"url": "https://pari.com.mk/feed/", "source": "Pari", "curate": True}, # Also good for general news
+    {"url": "https://prizma.mk/feed/", "source": "Prizma", "curate": True},
+    {"url": "https://rss.dw.com/rdf/rss-maz-all", "source": "Deutsche Welle", "curate": True},
+    {"url": "https://mk.voanews.com/api/zimyql-vomx-tpem-ti", "source": "Voice of America", "curate": True},
+
+    # ==========================================
+    # 6. LOCAL NEWS (City Specific)
+    # ==========================================
     {"url": "https://bitolanews.mk/feed/", "source": "Битола Њуз", "curate": True},
+    # New Local Additions
+    {"url": "http://skopjeinfo.mk/rss.xml", "source": "Skopje Info", "curate": True},
+    {"url": "https://www.ohridnews.com/feed/", "source": "Ohrid News", "curate": True},
+    {"url": "https://strugaonline.com/feed/", "source": "Struga Online", "curate": True},
+    {"url": "https://gostivarpress.mk/feed/", "source": "Gostivar Press", "curate": True},
+    {"url": "https://kumanovonews.mk/rss", "source": "Kumanovo News", "curate": True},
+    {"url": "https://strumicadenes.mk/feed/", "source": "Strumica Denes", "curate": True},
 ]
 
 # ---- Helpers ----

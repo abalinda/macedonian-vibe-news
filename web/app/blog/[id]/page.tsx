@@ -124,7 +124,7 @@ export default async function BlogPostPage({
         </h1>
 
         {teaserText ? (
-          <p className="text-sm font-mono uppercase tracking-[0.35em] text-neutral-600 mb-6">
+          <p className="text-sm text-center font-mono uppercase tracking-[0.35em] text-neutral-600 mb-6">
             {teaserText}
           </p>
         ) : null}

@@ -37,6 +37,7 @@ export default function RootLayout({
     <html lang="mk">
       <head>
         <meta name="apple-mobile-web-app-title" content="Vibes" />
+        <meta name="google-adsense-account" content="ca-pub-6000374890506320"></meta>
       </head>
         <GoogleAnalytics gaId="G-VG899CFSWV" />
         <body className={`${inter.variable} ${playfair.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-[#FDFBF7] text-neutral-900 antialiased`}>
