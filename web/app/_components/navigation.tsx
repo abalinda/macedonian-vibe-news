@@ -4,7 +4,7 @@ import { useUser } from '@clerk/clerk-react'
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import {
   SignInButton,
@@ -73,6 +73,7 @@ export const NavBar = () => {
   const showAdminLink = (isLoaded && isAdminEmail(email)) || isLocal;
 
   const menuLinks = [
+    { label: "Најново", href: "/najnovo" },
     { label: "Почетна", href: "/" },
     { label: "Технологија", href: "/?category=Tech" },
     { label: "Култура", href: "/?category=Culture" },
@@ -229,7 +230,9 @@ type CategoryNavProps = {
 };
 
 export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavProps) => {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
   const categories = [
+    { name: "Најново", value: "Latest", href: "/najnovo" },
     { name: "Почетна", value: null, href: "/" },
     { name: "Технологија", value: "Tech" },
     { name: "Култура", value: "Culture" },
@@ -240,27 +243,50 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
     // { name: "За нас", value: "About", href: "/about" },
   ];
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.innerWidth > 768) return;
+    if (activeCategory === "Latest") return;
+
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const firstLink = el.querySelector("a");
+    if (!(firstLink instanceof HTMLElement)) return;
+
+    const offset = firstLink.offsetWidth + 16; // hide the first chip just off-screen
+    el.scrollTo({ left: offset, behavior: "instant" as ScrollBehavior });
+  }, [activeCategory]);
+
   return (
     <div className="bg-[#FDFBF7]">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-        <nav className="flex items-center gap-4 md:gap-6 py-4 overflow-x-auto scrollbar-hide justify-start md:justify-center px-1 md:px-0">
+        <nav
+          ref={scrollRef}
+          className="flex items-center gap-4 md:gap-6 py-4 overflow-x-auto scrollbar-hide justify-start md:justify-center px-1 md:px-0"
+        >
           <div className="flex items-center gap-4 md:gap-6 flex-none md:flex-1 md:justify-center">
             {categories.map((cat) => {
               const isActive = activeCategory === cat.value;
+              const isLatest = cat.value === "Latest";
               const href = cat.href ?? (cat.value ? `/?category=${cat.value}` : "/");
-              
+
+              const baseClasses = `
+                    text-sm md:text-base font-bold uppercase tracking-widest whitespace-nowrap
+                    transition-colors hover:text-black
+                  `;
+              const activeClasses = isActive
+                ? "text-black border-b-2 border-black pb-1"
+                : "text-neutral-500";
+              const latestAccent = isLatest
+                ? "pl-3 pr-3 py-1 rounded-full border border-black bg-[#FFD300] text-black shadow-[3px_3px_0_#00000012] md:animate-pulse"
+                : "";
+
               return (
                 <Link
                   key={cat.name}
                   href={href}
-                  className={`
-                    text-sm md:text-base font-bold uppercase tracking-widest whitespace-nowrap
-                    transition-colors hover:text-black
-                    ${isActive 
-                      ? "text-black border-b-2 border-black pb-1" 
-                      : "text-neutral-500"
-                    }
-                  `}
+                  className={`${baseClasses} ${activeClasses} ${latestAccent}`}
                 >
                   {cat.name}
                 </Link>
