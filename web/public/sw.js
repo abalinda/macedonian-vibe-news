@@ -1,6 +1,5 @@
 const CACHE_NAME = "vibes-pwa-v1";
 const PRECACHE_URLS = [
-  "/",
   "/manifest.json",
   "/apple-touch-icon.png",
   "/web-app-manifest-192x192.png",

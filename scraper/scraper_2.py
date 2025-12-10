@@ -174,6 +174,7 @@ TARGET_FEEDS = [
     {"url": "https://sdk.mk/index.php/category/dopisna-mrezha/feed", "source": "SDK.mk", "curate": True},
     {"url": "https://sdk.mk/index.php/category/svet/feed/", "source": "SDK.mk", "curate": True},
     {"url": "https://meta.mk/feed/", "source": "Meta", "curate": True},
+    {"url": "https://utro.mk/rss", "source": "Утро", "curate": True},
     {"url": "https://antropol.mk/feed/", "source": "Антропол", "curate": True},
     {"url": "https://pari.com.mk/feed/", "source": "Pari", "curate": True}, # Also good for general news
     {"url": "https://prizma.mk/feed/", "source": "Prizma", "curate": True},
