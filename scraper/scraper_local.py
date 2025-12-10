@@ -302,7 +302,7 @@ TARGET_FEEDS = [
     {"url": "https://www.fakulteti.mk/rss/rss.ashx?cat=kultura", "source": "Факултети", "category": "Culture"},
     # New Culture/Lifestyle Additions
     {"url": "https://popara.mk/feed/", "source": "Popara", "category": "Lifestyle"},
-    {"url": "https://motika.com.mk/feed/", "source": "Motika", "category": "Lifestyle"},
+    # {"url": "https://motika.com.mk/feed/", "source": "Motika", "category": "Lifestyle"}, DO NOT DEAL
     {"url": "https://vidivaka.mk/feed/", "source": "Vidi Vaka", "category": "Culture"},
     {"url": "https://gledaj.mk/feed/", "source": "Gledaj.mk", "category": "Culture"},
     {"url": "https://plagij.at/feed/", "source": "Plagijat", "category": "Culture"},
