@@ -191,8 +191,6 @@ export const NavBar = () => {
                   →
                 </span>
               </Link>
-
-              <ClerkProvider localization={localization}></ClerkProvider>
               <SignedOut>
                 <div className="space-y-4 rounded-2xl border border-black/70 bg-[radial-gradient(circle_at_16%_20%,#ffe86a_0,rgba(255,232,106,0.18)_32%,transparent_55%),radial-gradient(circle_at_86%_0,#ffd300_0,rgba(255,211,0,0.2)_36%,transparent_55%),#FDFBF7] p-4 shadow-[10px_10px_0_#00000012]">
                   <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.28em] text-neutral-600">
