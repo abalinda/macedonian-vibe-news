@@ -8,6 +8,36 @@ import { PostHogProvider } from './providers'
 import PostHogClerkSync from './PostHogClerkSync'
 import { PwaInstaller } from "./_components/pwa-installer";
 
+const localization = {
+  action__manageAccount: "Управувај со профилот",
+  action__signOut: "Одјави се",
+   profileSection: {
+        primaryButton: 'Зачувај промени',
+        title: 'Профил',
+   },
+   emailAddressesSection: {
+        destructiveAction: 'Избриши емаил',
+        detailsAction__nonPrimary: 'Постави како примарен',
+        detailsAction__primary: 'Изврши верификација',
+        detailsAction__unverified: 'Верификувај',
+        primaryButton: 'Додади емаил адреса',
+        title: 'Емаил адреси',
+  },
+  connectedAccountsSection: {
+        actionLabel__connectionFailed: 'Поврзи повторно',
+        actionLabel__reauthorize: 'Авторизирај сега',
+        destructiveActionTitle: 'Отстрани',
+        primaryButton: 'Поврзи профил',
+        subtitle__disconnected: 'Овој профил е исклучен.',
+        subtitle__reauthorize:
+          'Потребните дозволи се ажурирани, и можеби имате ограничена функционалност. Ве молиме повторно авторизирајте ја оваа апликација за да избегнете проблеми',
+        title: 'Поврзани профили',
+      },
+  headerTitle__account: "Поставки на профилот",
+  headerTitle__security: "Безбедност на профилот",
+}
+
+
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
@@ -56,7 +86,7 @@ export default function RootLayout({
     ]
   };
   return (
-  <ClerkProvider>
+  <ClerkProvider localization={localization}>
     <html lang="mk">
       <head>
         <script

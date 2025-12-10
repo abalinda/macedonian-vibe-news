@@ -1,6 +1,6 @@
 'use client'
 import { posthog } from 'posthog-js'
-import { useUser } from '@clerk/clerk-react'
+import { ClerkProvider, useUser } from '@clerk/clerk-react'
 
 import Link from "next/link";
 import Image from "next/image";
@@ -14,6 +14,7 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 import { isAdminEmail } from "@/lib/admins";
+
 
 export default function PostHogClerkSync() {
   const { isLoaded, user } = useUser();
@@ -137,7 +138,7 @@ export const NavBar = () => {
                   <InstagramIcon />
                 {/* </IconButton>
                 <IconButton href="https://www.facebook.com/vibes.mkd" label="Facebook">
-                  <FacebookIcon /> */}
+                <FacebookIcon /> */}
                 </IconButton>
                 <IconButton href="https://www.linkedin.com/company/vibes-mk" label="LinkedIn">
                   <LinkedInIcon />
@@ -191,29 +192,49 @@ export const NavBar = () => {
                 </span>
               </Link>
 
+              <ClerkProvider localization={localization}></ClerkProvider>
               <SignedOut>
-                <div className="space-y-3">
+                <div className="space-y-4 rounded-2xl border border-black/70 bg-[radial-gradient(circle_at_16%_20%,#ffe86a_0,rgba(255,232,106,0.18)_32%,transparent_55%),radial-gradient(circle_at_86%_0,#ffd300_0,rgba(255,211,0,0.2)_36%,transparent_55%),#FDFBF7] p-4 shadow-[10px_10px_0_#00000012]">
+                  <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.28em] text-neutral-600">
+                    <span>Вклучи се</span>
+                    <span className="font-mono text-[10px] text-neutral-500">читач</span>
+                  </div>
+                  <p className="text-sm font-serif text-neutral-800 leading-snug">
+                    Управувај со твоите вести, сочувај написи и добиј персонализирани вибрации.
+                  </p>
                   <SignInButton mode="modal">
-                    <button className="w-full border border-black bg-white px-4 py-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-colors hover:bg-black hover:text-white">
-                      Најава
+                    <button className="group w-full flex items-center justify-between border border-black/80 bg-white px-4 py-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all hover:bg-black hover:text-[#FFD300] hover:shadow-[6px_6px_0_#00000012]">
+                      <span>Најава</span>
+                      <span className="text-[10px] font-mono tracking-[0.2em] group-hover:text-[#FFD300]">
+                        →
+                      </span>
                     </button>
                   </SignInButton>
                   <SignUpButton mode="modal">
-                    <button className="w-full border border-black bg-black text-white px-4 py-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all hover:shadow-[6px_6px_0_#00000010]">
-                      Креирај профил
+                    <button className="w-full flex items-center justify-between border border-black bg-[#FFD300] text-black px-4 py-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all shadow-[6px_6px_0_#00000012] hover:-translate-y-0.5 hover:shadow-[10px_10px_0_#00000012]">
+                      <span>Креирај профил</span>
+                      <span className="text-[10px] font-mono tracking-[0.2em]">+</span>
                     </button>
                   </SignUpButton>
                 </div>
               </SignedOut>
 
               <SignedIn>
-                <div className="flex items-center justify-between gap-3 bg-white/70 backdrop-blur border border-neutral-200 rounded-xl px-4 py-3">
-                  <div>
-                    
-                    <p className="text-[11px] uppercase tracking-[0.28em] text-neutral-500">Сметка</p>
-                    <p className="text-sm font-semibold text-neutral-900">Управувај профил</p>
+                <div className="flex items-center gap-4 rounded-2xl border border-black/70 bg-[linear-gradient(120deg,#FFF8D8,#FDFBF7)] px-4 py-3 shadow-[10px_10px_0_#00000012]">
+                  <div className="flex-1">
+                    <p className="text-[11px] uppercase tracking-[0.28em] text-neutral-600">Сметка</p>
+                    <p className="text-sm font-semibold text-neutral-900 leading-tight">Vibes профил</p>
+                    <p className="text-xs text-neutral-600">Управувај со подесувања и зачувани написи</p>
                   </div>
-                  <UserButton appearance={{ elements: { avatarBox: "w-10 h-10" } }} />
+                  <UserButton
+                    appearance={{
+                      elements: {
+                        avatarBox: "w-12 h-12 border border-black/70 rounded-full shadow-[4px_4px_0_#00000010]",
+                        userButtonPopoverCard: "border border-black/10 shadow-[12px_12px_0_#00000012] bg-[#FFFBEE]",
+                        userButtonPopoverActionButton: "hover:bg-black hover:text-[#FFD300]",
+                      },
+                    }}
+                  />
                 </div>
               </SignedIn>
             </div>
