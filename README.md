@@ -1,157 +1,155 @@
 # Macedonian Vibes News 📰
 
-[![Cloudflare](https://img.shields.io/badge/DNS-Cloudflare-F38020?logo=cloudflare)](https://www.cloudflare.com/)
+[![Cloudflare](https://img.shields.io/badge/Pages-Cloudflare-F38020?logo=cloudflare)](https://pages.cloudflare.com/)
 [![Turso](https://img.shields.io/badge/DB-Turso-3B82F6?logo=sqlite)](https://turso.tech/)
 [![Clerk](https://img.shields.io/badge/Auth-Clerk-3E2CFF?logo=clerk)](https://clerk.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js)](https://nextjs.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python)](https://www.python.org/)
-[![Analytics](https://img.shields.io/badge/Analytics-GA_%2B_PostHog-111111?logo=google-analytics)](#analytics)
+[![Analytics](https://img.shields.io/badge/Analytics-GA_%2B_PostHog-111111?logo=google-analytics)](#analytics--pwa)
 
-**AI-curated Macedonian news aggregator** — Scrapes 30+ RSS feeds, curates with Google Gemini, stores in Turso (libSQL), and serves a Next.js 16 frontend with Clerk auth, blog, and dual analytics (Google Analytics + PostHog).
+AI-curated Macedonian news aggregator. A Python scraper ingests 70+ RSS feeds, filters with Gemini/Gemma, writes to Turso, and a Next.js 16 + Clerk frontend serves category views, a latest feed, blog posts, PWA shell, and admin controls.
 
 **Live:** [vibes.mk](https://vibes.mk)
 
 ---
 
-## 🎯 What’s Inside (Current State)
-- Turso database via `@libsql/client` on both the scraper and the Next.js app (Supabase removed).
-- Clerk-powered accounts (sign-up/sign-in + profile in the nav drawer).
-- Tracking wired to Google Analytics (`@next/third-parties/google`) and PostHog (JS SDK + proxy).
-- Blog section with per-post pages; admin-only writer UI planned (read-only for now).
-- New Sports category, refreshed feed list (30+ sources), and featured slot rotation.
-- Cloudflare manages DNS; Next.js app configured for edge-friendly DB access.
-- Scraper scheduled via GitHub Actions
+## What’s Here Right Now
+- Next.js 16 / React 19 App Router UI in Macedonian with categories (Tech, Culture, Lifestyle, Business, Sports, Blog) and a dedicated `/najnovo` page ordered by `scraped_at`.
+- Turso as the single source of truth via `@libsql/client/web`; hero slots rotate automatically every 8h and can be overridden by admins.
+- Clerk authentication in the nav drawer; admin-only blog composer and hero override surfaces gated by `web/lib/admins.ts`.
+- Blog: rich-text composer (`/blog/new`), sanitized HTML storage in `posts.content`, and reader pages under `/blog/[id]`.
+- Analytics: Google Analytics (`G-VG899CFSWV`) + PostHog JS, proxied through `/relay-Z6aO` with Clerk identity sync.
+- PWA: manifest + `/public/sw.js` pre-cache shell, install prompt on load, and edge `/go/:id` redirect that increments click counts.
+- Scraper GitHub Action runs every ~3h (01:30, 04:30, ...), batches writes to Turso, and keeps JSONL logs in `scraper/logs/`.
 
 ---
 
-## 🏗️ Architecture
-
+## Architecture (Current)
 ```
-┌───────────────────────────────────────────────────┐
-│                 Browser / Mobile                  │
-└───────────────┬───────────────────────────────────┘
-                │ HTTPS
-       ┌────────▼────────┐    ┌───────────────────┐
-       │ Cloudflare DNS  │    │ Google Analytics  │
-       │  + Pages host   │    │ PostHog Proxy     │
-       └────────┬────────┘    └───────────────────┘
-                │
-       ┌────────▼────────┐
-       │ Next.js 16 (web)│
-       │ React 19, Tailwind 4
-       │ Clerk Provider (auth)
-       └────────┬────────┘
-                │ libSQL
-       ┌────────▼────────┐
-       │ Turso Database  │
-       └────────▲────────┘
-                │ writes curated posts
-       ┌────────┴────────┐
-       │ GitHub Actions  │  (cron */3h)
-       │ Python Scraper  │
-       │  • RSS ingest   │
-       │  • Gemini curation
-       └─────────────────┘
+Browser/PWA ─┬─ Cloudflare Pages (Next.js 16, Edge-ready)
+             ├─ Google Analytics + PostHog proxy (/relay-Z6aO)
+             └─ Clerk (auth) middleware in web/proxy.ts
+                 │
+                 ▼
+            Turso (libSQL)
+                 ▲
+      GitHub Actions cron (3h)
+      scraper/scraper_2.py
+      • cloudscraper + feedparser
+      • Gemini/Gemma curation + hero scoring
+      • Batch insert + feature slot locks (8h)
 ```
 
-### Technology Stack
-
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| **Frontend** | Next.js 16 (App Router), React 19, Tailwind CSS v4, Clerk | UI, SSR/ISR, authentication |
-| **Backend/Scraper** | Python 3.11, feedparser, cloudscraper, BeautifulSoup4 | RSS ingest & article parsing |
-| **AI** | Google Gemini 2.5 / Gemma fallback | Summaries, categorization, hero selection |
-| **Database** | Turso (libSQL) | Posts, featured slots, blog entries |
-| **Analytics** | Google Analytics, PostHog JS + proxy | User & product analytics |
-| **Automation** | GitHub Actions (cron every 12h) | Runs scraper and writes to Turso |
-| **DNS/Edge** | Cloudflare DNS (Pages config present) | Domain + proxy rules |
+### Data Model (Turso)
+- `posts`: `id`, `title`, `link`, `source`, `category`, `teaser`, `summary`, optional `content`, `image_url`, `published_at`, `scraped_at`, `clicks`, `updated_at`.
+- `featured_slots`: `slot_id` (`main`, `tech`, `culture`, `lifestyle`, `business`, `sports`), `label`, `post_id`, `locked_until`, `updated_at`, `manual_override`, `admin_choice`.
 
 ---
 
-## 📋 Project Structure
+## Frontend (web/)
+- Home + categories: `web/app/page.tsx` (ISR 60s) with hero + sidebars; category filter drives hero slot selection.
+- Latest feed: `web/app/najnovo/page.tsx` + `latest-feed.tsx` (client grid with infinite scroll on mobile).
+- Archive: `web/app/all/page.tsx` with date/category filters and paged list.
+- Blog: reader `web/app/blog/[id]/page.tsx`, composer `web/app/blog/new/page.tsx` (+ `composer.tsx`), normalize/clean rich text via `web/lib/rich-text.ts` and `web/lib/images.ts`.
+- Admin: hero manager `web/app/admin` uses `/api/featured-slots` (4h lock warnings) and inline override on the homepage (`AdminHeroOverride`).
+- Auth & middleware: Clerk provider in `web/app/layout.tsx`, middleware in `web/proxy.ts`, admin emails in `web/lib/admins.ts`.
+- Analytics & PWA: GA and PostHog init in `web/app/layout.tsx`, `web/instrumentation-client.ts`, proxy rules in `web/vercel.json`, service worker in `web/public/sw.js`, installer in `web/app/_components/pwa-installer.tsx`.
+- Edge redirect: `/go/[id]` (edge runtime) increments `clicks` then 307 redirects to the source link.
 
+### Notable Defaults
+- Revalidate: home 60s, blog 120s.
+- Hero lock window: 4h for manual overrides; scraper rotates heroes every 8h when unlocked.
+- PostHog proxy prefix: `/relay-Z6aO`.
+
+---
+
+## Scraper (scraper/scraper_2.py)
+- Feeds: 70+ RSS sources across Tech, Culture/Lifestyle, Business, Sports, Local, and curated general news (see `TARGET_FEEDS`).
+- Pipeline: cloudscraper fetch → feedparser parse → dedupe → coarse reject (politics/crime/weather) → AI budgeted queue (max 20 per run) → Gemini/Gemma JSON classification (category, hero flag/score, summary) → batch insert into Turso with `libsql-client`.
+- Feature slots: ensures rows + `admin_choice` column exist; reserves hero slots before writing; locks slots for 8h after rotation unless manually overridden.
+- Persistence: background writer thread consumes a queue, batches inserts, and updates `featured_slots`; failures release reservations.
+- Logging: structured JSONL in `scraper/logs/scraper_log.jsonl`.
+- Schedule: `.github/workflows/scraper.yml` runs every 3h on `ubuntu-latest` with Python 3.11 and `pip install -r requirements.txt`.
+
+---
+
+## Project Layout
 ```
 macedonian-vibes-news/
-├── web/                     # Next.js 16 frontend (App Router)
-│   ├── app/                 # Pages, components, providers, blog
-│   ├── lib/                 # DB clients (turso)
-│   ├── instrumentation-client.ts  # PostHog setup
-│   ├── proxy.ts             # Clerk middleware
-│   └── vercel.json          # PostHog proxy rewrites
-├── scraper/                 # Python scraper + Gemini curator
-│   ├── scraper.py           # RSS ingest → Turso writes
-│   ├── curator.py           # Gemini/Gemma summarization
-│   ├── logger.py            # Structured logging helper
+├── web/                    # Next.js 16 app
+│   ├── app/                # Pages, API routes, PWA assets
+│   ├── lib/                # Turso client, admins, rich-text helpers
+│   ├── instrumentation-client.ts
+│   ├── proxy.ts            # Clerk middleware matcher
+│   └── vercel.json         # PostHog proxy rewrites
+├── scraper/                # Python scraper + Gemini/Gemma curator
+│   ├── scraper_2.py        # Main entry used by GitHub Actions
+│   ├── curator_2.py        # AI classification + hero scoring
+│   ├── logger.py           # JSONL logging helper
 │   └── requirements.txt
-├── .github/workflows/       # GitHub Actions (scraper cron)
-├── wrangler.toml            # Cloudflare Pages build config
-├── my-clerk-app/            # (Playground) Clerk Next.js starter
+├── .github/workflows/      # scraper cron
+├── wrangler.toml           # Cloudflare Pages (nodejs_compat, web/.next)
+├── my-clerk-app/           # Clerk starter sandbox
 └── README.md
 ```
 
 ---
 
-## 🔄 Data Flow
+## Local Development
+Prereqs: Node 20+ (Next.js 16 supports 18.18+, 20+ recommended), Python 3.11, Turso auth token, Gemini API key (for scraper), Clerk keys, PostHog key/host.
 
-1. **Scrape & Curate (GitHub Actions, every 3h)**  
-   `scraper/scraper.py` pulls 30+ RSS feeds, dedupes links, scrapes images, and sends batches to Gemini (`scraper/curator.py`) for categorization, summaries, teaser text, and hero picks. Results are written to Turso tables (`posts`, `featured_slots`).
+### Frontend
+```bash
+cd web
+npm install
+# set env (see below)
+npm run dev
+```
+Visit http://localhost:3000. Clerk auth works once `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are set. Turso keys are required for any data fetch.
 
-2. **Serve (Next.js)**  
-   `web/app/page.tsx` and `web/app/all/page.tsx` query Turso via `@libsql/client/web`. ISR is set to 60s on the homepage and 120s for blog post pages. Featured slots determine the hero story; Sports and Blog are now first-class categories.
-
-3. **Auth & Blog**  
-   Clerk wraps the app layout for sign-in/sign-up/profile. Blog posts are rendered from Turso; an admin-only writer surface is planned but not yet shipped (read-only today).
-
-4. **Analytics**  
-   Google Analytics is injected via `@next/third-parties/google`. PostHog is initialized in `web/app/providers.tsx` with Clerk identity sync (`web/app/PostHogClerkSync.tsx`) and proxied routes (`vercel.json`) to avoid ad-blockers.
+### Scraper
+```bash
+cd scraper
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+# add .env with TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, GEMINI_API_KEY
+python scraper_2.py
+```
+Logs write to `scraper/logs/scraper_log.jsonl`. The script exits after one run (the GitHub Action schedule repeats it).
 
 ---
 
-## 📊 RSS Sources (Sampling)
+## Environment Variables
+**Frontend (`web/`):**
+- `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`
+- `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` (use the `/relay-Z6aO` proxy host)
+- `NEXT_PUBLIC_SITE_URL` (for metadata, default https://vibes.mk)
 
-The scraper currently ingests 30+ feeds, including IT.mk, Конект, A1on, MKD.mk, Радио МОФ, Makfax, Porta3, Sloboden Pechat, Off.net, Fashionel, Sport Plus, and more. See `TARGET_FEEDS` in `scraper/scraper.py` for the live list.
-
----
-
-## ⚙️ Environment & Deployment
-
-**Frontend (Next.js / Cloudflare Pages or Vercel)**  
-- `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`  
-- `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` (proxy host)  
-- `NEXT_PUBLIC_SITE_URL` (for metadata)  
-- Clerk defaults: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` (+ optional sign-in/up URLs)
-
-**Scraper (GitHub Actions or local)**  
-- `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`  
+**Scraper (`scraper/`):**
+- `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
 - `GEMINI_API_KEY`
 
-**Ops Notes**  
-- Scraper cron: `*/3h` (`.github/workflows/scraper.yml`).  
-- ISR: homepage 60s, blog pages 120s.  
-- Cloudflare manages DNS for `vibes.mk`; wrangler config is present for Pages.
+Google Analytics is currently hardcoded as `G-VG899CFSWV` in `web/app/layout.tsx`—change there if needed.
 
 ---
 
-## 🔐 Security
-- Secrets provided via GitHub Actions and hosting platform env vars (no secrets in repo).  
-- Turso auth tokens are required for all DB writes/reads.  
-- Clerk handles session + identity; PostHog identification is gated on signed-in users.  
-- `.env` is ignored; keep local secrets out of version control.
+## Deployment & Ops
+- **Frontend:** Cloudflare Pages with `pages_build_output_dir = web/.next` and `nodejs_compat` (see `wrangler.toml`). Works on Vercel as well; PostHog rewrites live in `web/vercel.json`.
+- **Cron:** `.github/workflows/scraper.yml` runs every 3h, single concurrency group to avoid overlapping scrapes.
+- **Admin controls:** `/admin` shows hero slot status and lock countdowns; homepage override widget appears for admin emails/localhost. Admin list is in `web/lib/admins.ts`.
+- **Redirects:** `/go/:id` uses the edge runtime to count clicks then forward to `posts.link`.
 
 ---
 
-## 🤝 Contributing
-1. Fork the repository.  
-2. Create a feature branch (`git checkout -b feature/amazing-feature`).  
-3. Commit (`git commit -m 'Add amazing feature'`).  
-4. Push and open a Pull Request.
+## Notes
+- A legacy Supabase helper (`web/lib/supabase.ts`) and `web/scripts/inject-env.sh` remain from an older setup but are unused by the live app; Turso is the active DB for both web and scraper.
+- `.env` files are ignored; keep secrets in platform/env vars.
 
 ---
 
-## 📝 License
+## License
 MIT
 
----
-
 Made with ❤️ in Macedonia  
-*Last Updated: December 07, 2025*
+*Last Updated: December 10, 2025*
