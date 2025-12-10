@@ -6,16 +6,19 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { PostHogProvider } from './providers'
 import PostHogClerkSync from './PostHogClerkSync'
+
 import { PwaInstaller } from "./_components/pwa-installer";
 
 const localization = {
+  formButtonPrimary: 'Ајде!',
+  lastUsed__seconds: 'пред {{seconds}} секунди',
   action__manageAccount: "Управувај со профилот",
   action__signOut: "Одјави се",
-   profileSection: {
+  profileSection: {
         primaryButton: 'Зачувај промени',
         title: 'Профил',
    },
-   emailAddressesSection: {
+  emailAddressesSection: {
         destructiveAction: 'Избриши емаил',
         detailsAction__nonPrimary: 'Постави како примарен',
         detailsAction__primary: 'Изврши верификација',
