@@ -31,7 +31,7 @@ const formatRelativeScrapedAt = (value?: string | null, nowValue?: number) => {
   const now = nowValue ?? Date.now();
   const diffMinutes = Math.max(0, Math.floor((now - timestamp) / (1000 * 60)));
 
-  if (diffMinutes < 15) return "Свежо";
+  if (diffMinutes < 15) return "Тазе";
   if (diffMinutes < 60) return `пред ${diffMinutes} минути`;
   if (diffMinutes < 120) return "пред 1 час";
 
@@ -100,7 +100,7 @@ const LatestCard = ({ post, index, now }: { post: any; index: number; now: numbe
           <div className="absolute left-3 top-3 flex flex-wrap items-center gap-2">
             <span
               className={`text-[10px] font-black uppercase tracking-widest rounded-full px-2 py-1 shadow-sm ${
-                finalTimeLabel === "Свежо"
+                finalTimeLabel === "Тазе"
                   ? "bg-[#FFD300] text-black"
                   : "bg-black text-white"
               }`}
@@ -120,7 +120,7 @@ const LatestCard = ({ post, index, now }: { post: any; index: number; now: numbe
             <span className="text-neutral-600">{finalTimeLabel}</span>
           </div> */}
 
-          <h3 className="font-serif text-xl font-bold leading-tight text-neutral-900 group-hover:text-[#FFD300] transition-colors">
+          <h3 className="font-serif text-xl font-bold leading-tight text-neutral-900 group-hover:underline transition-colors">
             {post.title}
           </h3>
 
@@ -130,7 +130,7 @@ const LatestCard = ({ post, index, now }: { post: any; index: number; now: numbe
                 {teaserWithEllipsis}
               </p>
               <div className="flex justify-end">
-                <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-neutral-400 group-hover:text-[#FFD300] transition-colors">
+                <span className="text-[11px] font-bold text-neutral-900 uppercase tracking-widest border-b-2 border-transparent group-hover:border-[#FFD300]">
                   Прочитај повеќе →
                 </span>
               </div>

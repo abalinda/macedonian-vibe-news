@@ -44,7 +44,7 @@ export default async function LatestStoriesPage() {
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-0 mb-10 pb-6 border-b border-black">
           <div>
             <h1 className="text-center font-serif text-4xl md:text-5xl font-black leading-tight mb-2">
-              Свежо избрани вести
+              Тазе избрани вести
             </h1>
         </div>
         </header>

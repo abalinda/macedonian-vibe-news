@@ -84,6 +84,7 @@ TARGET_FEEDS = [
     {"url": "https://emiter.com.mk/emiter-rss-feed.xml", "source": "Emiter", "category": "Tech"},
     {"url": "https://konekt.mk/category/смартфони/feed", "source": "Конект", "category": "Tech"},
     {"url": "https://konekt.mk/category/софтвер-веб/feed", "source": "Конект", "category": "Tech"},
+    {"url": "https://provereno.mk/category/технологии/feed/", "source": "Проверено", "category": "Tech"},
     {"url": "https://konekt.mk/category/футуризам/feed", "source": "Конект", "category": "Tech"},
     {"url": "https://konekt.mk/category/паметни-уреди/feed", "source": "Конект", "category": "Tech"},
     {"url": "https://konekt.mk/category/рецензии/feed", "source": "Конект", "category": "Tech"},
@@ -101,9 +102,17 @@ TARGET_FEEDS = [
     {"url": "https://sdk.mk/index.php/category/kultura/", "source": "SDK", "category": "Culture"},
     {"url": "https://www.porta3.mk/feed/", "source": "Porta3", "category": "Culture"},
     {"url": "https://gradska.mk/category/kultura/feed/", "source": "Градска", "category": "Culture"},
+    {"url": "https://emagazin.mk/category/ubava-prikaznja/feed/", "source": "еМагазин", "category": "Culture"},
+    {"url": "https://emagazin.mk/category/bash-ni-e-kef/feed/", "source": "еМагазин", "category": "Culture"},
     {"url": "https://umno.mk/feed/", "source": "Умно", "category": "Culture"},
     {"url": "https://okno.mk/rss", "source": "Окно", "category": "Culture"},
+    {"url": "https://tera.mk/category/slobodno-vreme/showbiz/feed/", "source": "Тера", "category": "Culture"},
+    {"url": "https://tera.mk/category/slobodno-vreme/zanimlivosti/feed/", "source": "Тера", "category": "Culture"},
+    {"url": "https://antropol.mk/nastani/feed/", "source": "Антропол", "category": "Culture"},
+
+
     {"url": "https://radiomof.mk/feed/", "source": "Радио МОФ", "category": "Culture"},
+    {"url": "https://provereno.mk/category/граѓански/feed/", "source": "Проверено", "category": "Culture"},
     {"url": "https://www.kafepauza.mk/feed/", "source": "Кафе Пауза", "category": "Lifestyle"},
     {"url": "https://off.net.mk/feed", "source": "Off.net", "category": "Lifestyle"},
     {"url": "https://pedijatar.mk/feed/", "source": "Педијатар", "category": "Lifestyle"},
@@ -113,6 +122,7 @@ TARGET_FEEDS = [
     {"url": "https://www.ubavinaizdravje.mk/rubriki/gastro/feed/", "source": "Убавина и Здравје", "category": "Lifestyle"},
     {"url": "https://www.ubavinaizdravje.mk/rubriki/fitnes/feed/", "source": "Убавина и Здравје", "category": "Lifestyle"},
     {"url": "https://www.ubavinaizdravje.mk/rubriki/kosa-lice-telo/feed/", "source": "Убавина и Здравје", "category": "Lifestyle"},
+    {"url": "https://provereno.mk/category/гастронаутика/feed/", "source": "Проверено", "category": "Lifestyle"},
     {"url": "https://www.ubavinaizdravje.mk/rubriki/homestyle/feed/", "source": "Убавина и Здравје", "category": "Lifestyle"},
     {"url": "https://www.ubavinaizdravje.mk/rubriki/semejstvo/feed/", "source": "Убавина и Здравје", "category": "Lifestyle"},
     {"url": "https://setaliste.mk/category/category/култура/feed/", "source": "Шеталиште", "category": "Culture"},
@@ -155,11 +165,16 @@ TARGET_FEEDS = [
     {"url": "https://kajgana.com/rss.xml", "source": "Кајгана", "curate": True},
     {"url": "https://makfax.com.mk/feed/", "source": "Makfax", "curate": True},
     {"url": "https://glamur.mk/fashion/feed/", "source": "Glamur", "curate": True},
+    {"url": "https://prizma.mk/feed/", "source": "Призма", "curate": True},
+    {"url": "https://emagazin.mk/feed/", "source": "еМагазин", "curate": True},
     {"url": "https://www.slobodnaevropa.mk/api/z_poml-vomx-tpevjpy", "source": "Радио Слободна Европа", "curate": True},
+    {"url": "https://skopskoeho.mk/feed/", "source": "Скопско Ехо", "curate": True},
+    {"url": "https://vocentar.com/feed/", "source": "Во Центар", "curate": True},
     # Independent Journalism
     {"url": "https://sdk.mk/index.php/category/dopisna-mrezha/feed", "source": "SDK.mk", "curate": True},
     {"url": "https://sdk.mk/index.php/category/svet/feed/", "source": "SDK.mk", "curate": True},
     {"url": "https://meta.mk/feed/", "source": "Meta", "curate": True},
+    {"url": "https://antropol.mk/feed/", "source": "Антропол", "curate": True},
     {"url": "https://pari.com.mk/feed/", "source": "Pari", "curate": True}, # Also good for general news
     {"url": "https://prizma.mk/feed/", "source": "Prizma", "curate": True},
     {"url": "https://rss.dw.com/rdf/rss-maz-all", "source": "Deutsche Welle", "curate": True},
@@ -177,6 +192,7 @@ TARGET_FEEDS = [
     {"url": "https://kumanovonews.mk/rss", "source": "Kumanovo News", "curate": True},
     {"url": "https://strumicadenes.mk/feed/", "source": "Strumica Denes", "curate": True},
 ]
+
 
 # ---- Helpers ----
 

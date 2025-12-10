@@ -141,7 +141,7 @@ const HeroStory = ({ post }: { post: any }) => {
         <span className="inline-block border border-black px-2 py-0.5 text-xs font-bold uppercase tracking-widest mb-4 hover:bg-black hover:text-white transition-colors">
           {post.source}
         </span>
-        <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-black leading-[0.9] mb-4 group-hover:text-[#FFD300] transition-colors break-words">
+        <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-black leading-[0.9] mb-4 group-hover:underline transition-colors break-words">
           {post.title}
         </h2>
         <p className="text-sm md:text-base font-mono uppercase tracking-[0.15em] text-neutral-600 mb-6 max-w-2xl mx-auto">
