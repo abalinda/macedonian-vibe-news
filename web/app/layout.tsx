@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import './globals.css'
 import { GoogleAnalytics } from "@next/third-parties/google";
@@ -55,13 +55,22 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://vibes.mk";
 
+export const viewport: Viewport = {
+  themeColor: "#FDFBF7",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1, // Optional: useful for PWA "app-like" feel prevents zooming
+  userScalable: false, // Optional: often used for PWAs
+};
+
+// 2. Keep SEO & PWA definitions here
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "Vibes - Твои вести, секој ден",
   description: "Дневна доза на внимателно избрани македонски вести од најдобрите извори.",
   applicationName: "Vibes",
   manifest: "/manifest.json",
-  themeColor: "#FDFBF7",
+  // themeColor removed from here
   appleWebApp: {
     capable: true,
     title: "Vibes",

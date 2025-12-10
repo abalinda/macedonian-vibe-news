@@ -220,9 +220,8 @@ export const NavBar = () => {
               <SignedIn>
                 <div className="flex items-center gap-4 rounded-2xl border border-black/70 bg-[linear-gradient(120deg,#FFF8D8,#FDFBF7)] px-4 py-3 shadow-[10px_10px_0_#00000012]">
                   <div className="flex-1">
-                    <p className="text-[11px] uppercase tracking-[0.28em] text-neutral-600">Сметка</p>
                     <p className="text-sm font-semibold text-neutral-900 leading-tight">Vibes профил</p>
-                    <p className="text-xs text-neutral-600">Управувај со подесувања и зачувани написи</p>
+                    <p className="text-xs text-neutral-600">Подесувања</p>
                   </div>
                   <UserButton
                     appearance={{
