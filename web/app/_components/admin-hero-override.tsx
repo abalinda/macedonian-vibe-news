@@ -27,7 +27,7 @@ const formatDuration = (isoDate?: string | null) => {
 
   const diffMs = Date.now() - parsed.getTime();
   const diffMinutes = Math.max(0, Math.floor(diffMs / 60000));
-  const hours = Math.floor(diffMinutes / 60);
+  const hours = (Math.floor(diffMinutes / 60)-1);
   const minutes = diffMinutes % 60;
 
   if (hours <= 0) return `${minutes} мин.`;
@@ -43,8 +43,8 @@ const formatLockCountdown = (isoDate?: string | null) => {
   const diffMs = parsed.getTime() - Date.now();
   if (diffMs <= 0) return null;
   const minutes = Math.ceil(diffMs / 60000);
-  const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
+  const hours = (Math.floor(minutes / 60)-1);
   return hours > 0 ? `${hours}ч ${mins}м` : `${mins}м`;
 };
 
@@ -161,7 +161,7 @@ export const AdminHeroOverride = ({
           </p>
           {isLocked ? (
             <p className="text-xs font-semibold text-amber-700">
-              Заклучено уште {lockCountdown} (мин. 4h)
+              Заклучено уште {lockCountdown} (мин. 1h)
             </p>
           ) : (
             <p className="text-xs font-semibold text-green-700">Слотот е отклучен</p>

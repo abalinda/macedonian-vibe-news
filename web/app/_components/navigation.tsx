@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client'
 import { posthog } from 'posthog-js'
 import { ClerkProvider, useUser } from '@clerk/clerk-react'
