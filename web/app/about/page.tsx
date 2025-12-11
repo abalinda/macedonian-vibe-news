@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { CategoryNav, NavBar } from "../_components/navigation";
 import Link from "next/link";
 
@@ -6,10 +7,18 @@ export const metadata = {
   description: "Дознајте повеќе за Vibes и нашата мисија.",
 };
 
+const NavFallback = () => (
+  <div className="sticky top-0 z-40 border-b border-black bg-[#FDFBF7] py-3 px-4 md:px-8">
+    <div className="w-full max-w-[1400px] mx-auto h-11" />
+  </div>
+);
+
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-[#FDFBF7] text-neutral-900 pb-20 selection:bg-yellow-200">
-      <NavBar />
+      <Suspense fallback={<NavFallback />}>
+        <NavBar />
+      </Suspense>
       <CategoryNav activeCategory="About" />
 
       <div className="max-w-4xl mx-auto px-4 md:px-8 pt-12 md:pt-20 space-y-16">
