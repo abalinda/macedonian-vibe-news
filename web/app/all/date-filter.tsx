@@ -21,6 +21,7 @@ export function DateFilter() {
   const fromParam = searchParams.get('from') ?? '';
   const toParam = searchParams.get('to') ?? '';
   const categoryParam = searchParams.get('category') ?? searchParams.get('cat') ?? '';
+  const queryParam = searchParams.get('q') ?? '';
 
   const fromRef = useRef<HTMLInputElement>(null);
   const toRef = useRef<HTMLInputElement>(null);
@@ -34,10 +35,12 @@ export function DateFilter() {
     const fromValue = fromRef.current?.value?.trim() ?? '';
     const toValue = toRef.current?.value?.trim() ?? '';
     const categoryValue = categoryRef.current?.value ?? '';
+    const trimmedQuery = queryParam.trim();
 
     if (fromValue) params.set('from', fromValue);
     if (toValue) params.set('to', toValue);
     if (categoryValue) params.set('category', categoryValue);
+    if (trimmedQuery) params.set('q', trimmedQuery);
 
     const query = params.toString();
     router.push(query ? `/all?${query}` : '/all');
@@ -48,7 +51,11 @@ export function DateFilter() {
     if (fromRef.current) fromRef.current.value = '';
     if (toRef.current) toRef.current.value = '';
     if (categoryRef.current) categoryRef.current.value = '';
-    router.push('/all');
+    const params = new URLSearchParams();
+    const trimmedQuery = queryParam.trim();
+    if (trimmedQuery) params.set('q', trimmedQuery);
+    const query = params.toString();
+    router.push(query ? `/all?${query}` : '/all');
   };
   const hasFilters = Boolean(fromParam || toParam || categoryParam);
 

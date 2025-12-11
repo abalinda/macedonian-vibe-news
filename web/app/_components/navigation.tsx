@@ -5,7 +5,8 @@ import { ClerkProvider, useUser } from '@clerk/clerk-react'
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 import {
   SignInButton,
@@ -15,6 +16,7 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 import { isAdminEmail } from "@/lib/admins";
+import { searchPosts, type SearchResult } from "@/app/actions/search";
 
 
 export default function PostHogClerkSync() {
@@ -33,9 +35,286 @@ export default function PostHogClerkSync() {
 
   return null
 }
+
+const MIN_NAV_QUERY_LENGTH = 2;
+
+const formatSearchDate = (value?: string | null) => {
+  if (!value) return "Ново";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "Ново";
+  return parsed.toLocaleDateString("mk-MK", { day: "2-digit", month: "short" });
+};
+
+type NavSearchProps = {
+  onNavigate?: () => void;
+  isCompact?: boolean;
+  isExpanded?: boolean;
+  onExpand?: () => void;
+  onCollapse?: () => void;
+};
+
+const NavSearch = ({
+  onNavigate,
+  isCompact = false,
+  isExpanded = true,
+  onExpand,
+  onCollapse,
+}: NavSearchProps) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get("q")?.toString() ?? "");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [isOpenDropdown, setIsOpenDropdown] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const requestRef = useRef(0);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    const nextQuery = searchParams.get("q")?.toString() ?? "";
+    setQuery(nextQuery);
+    if (!nextQuery) {
+      setResults([]);
+      setIsOpenDropdown(false);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!containerRef.current) return;
+      if (containerRef.current.contains(event.target as Node)) return;
+      setIsOpenDropdown(false);
+      if (isCompact && isExpanded) onCollapse?.();
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isCompact, isExpanded, onCollapse]);
+
+  useEffect(() => {
+    if (!isCompact || !isExpanded) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onCollapse?.();
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [isCompact, isExpanded, onCollapse]);
+
+  useEffect(() => {
+    if (isCompact && isExpanded) {
+      const timer = setTimeout(() => inputRef.current?.focus(), 80);
+      return () => clearTimeout(timer);
+    }
+  }, [isCompact, isExpanded]);
+
+  useEffect(() => {
+    if (isCompact && !isExpanded) {
+      setIsOpenDropdown(false);
+    }
+  }, [isCompact, isExpanded]);
+
+  const submitSearch = (term: string) => {
+    const trimmed = term.trim();
+    if (!trimmed || trimmed.length < MIN_NAV_QUERY_LENGTH) return;
+    setIsOpenDropdown(false);
+    onNavigate?.();
+    router.push(`/all?q=${encodeURIComponent(trimmed)}`);
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    submitSearch(query);
+  };
+
+  const runSearch = async (term: string) => {
+    const requestId = ++requestRef.current;
+    setIsLoading(true);
+    try {
+      const data = await searchPosts({ query: term, limit: 6 });
+      if (requestRef.current === requestId) {
+        setResults(data);
+        setIsOpenDropdown(true);
+      }
+    } catch (error) {
+      console.error("Search failed:", error);
+    } finally {
+      if (requestRef.current === requestId) {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleChange = (value: string) => {
+    setQuery(value);
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    const trimmed = value.trim();
+    if (trimmed.length < MIN_NAV_QUERY_LENGTH) {
+      requestRef.current += 1;
+      setIsLoading(false);
+      setResults([]);
+      setIsOpenDropdown(false);
+      return;
+    }
+
+    debounceRef.current = setTimeout(() => runSearch(trimmed), 300);
+  };
+
+  const containerWidth = isCompact
+    ? isExpanded
+      ? "w-[min(92vw,360px)]"
+      : "w-11"
+    : "w-[170px] sm:w-[240px]";
+  const showDropdown = isOpenDropdown && isExpanded;
+  const showFormUI = !isCompact || isExpanded;
+
+  const handleResultClick = (result: SearchResult) => {
+    const href = result.category === "Blog" ? `/blog/${result.id}` : `/go/${result.id}`;
+    setIsOpenDropdown(false);
+    onNavigate?.();
+    router.push(href);
+  };
+
+  const showEmptyState =
+    query.trim().length >= MIN_NAV_QUERY_LENGTH && !isLoading && results.length === 0;
+
+  return (
+    <div
+      className={`relative ${containerWidth} h-11 flex items-center transition-[width,max-width] duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] z-20`}
+      ref={containerRef}
+    >
+      {isCompact && (
+        <button
+          type="button"
+          onClick={() => {
+            onExpand?.();
+          }}
+          aria-label="Отвори пребарување"
+          className={`absolute inset-0 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-black bg-white text-black shadow-[4px_4px_0_#00000012] transition-all duration-250 ease-[cubic-bezier(0.33,1,0.68,1)] hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#00000012] ${
+            isExpanded ? "pointer-events-none opacity-0 scale-95" : "opacity-100 scale-100"
+          }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+        </button>
+      )}
+
+      <form
+        onSubmit={handleSubmit}
+        className={`relative ${isCompact ? "h-11" : ""} transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          showFormUI ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
+        }`}
+      >
+        <input
+          value={query}
+          onChange={(e) => handleChange(e.target.value)}
+          onFocus={() => {
+            if (results.length > 0) setIsOpenDropdown(true);
+          }}
+          placeholder="Пребарувај"
+          ref={inputRef}
+          className="h-11 w-full rounded-full border border-black/20 bg-white px-12 text-sm font-sans placeholder:text-neutral-500 shadow-[3px_3px_0_#0000000a] focus:border-black focus:outline-none focus:ring-2 focus:ring-[#FFD300]/60 transition-all duration-200"
+        />
+        {showFormUI && (
+          <>
+            <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+            </div>
+
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              {isCompact && isExpanded && (
+                <button
+                  type="button"
+                  onClick={() => onCollapse?.()}
+                  className="flex h-7 w-7 items-center justify-center rounded-full border border-black bg-white text-black shadow-[3px_3px_0_#00000010] transition-all hover:-translate-y-0.5 hover:bg-black hover:text-[#FFD300]"
+                  aria-label="Затвори пребарување"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </button>
+              )}
+              {isLoading && (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-black" />
+              )}
+            </div>
+          </>
+        )}
+      </form>
+
+      {showDropdown && (
+        <div className="absolute right-0 top-[110%] z-[70] w-[min(90vw,420px)] sm:w-[360px] rounded-md border border-black bg-white shadow-[10px_10px_0_#00000010]">
+          <div className="max-h-[70vh] overflow-y-auto divide-y divide-neutral-200">
+            {results.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => handleResultClick(item)}
+                className="flex w-full items-start justify-between gap-3 p-3 text-left hover:bg-neutral-50 transition-colors"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">
+                    <span className="text-[#002CFF] truncate max-w-[160px]">
+                      {item.source || "Vibes"}
+                    </span>
+                    <span className="text-neutral-300">•</span>
+                    <span className="truncate max-w-[120px]">
+                      {item.category || "Вести"}
+                    </span>
+                  </div>
+                  <p className="mt-1 font-serif text-sm font-semibold leading-snug text-neutral-900 line-clamp-2">
+                    {item.title}
+                  </p>
+                </div>
+                <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400 whitespace-nowrap">
+                  {formatSearchDate(item.published_at || item.scraped_at)}
+                </div>
+              </button>
+            ))}
+
+            {showEmptyState && (
+              <div className="p-3 text-xs text-neutral-500">Нема резултати.</div>
+            )}
+          </div>
+
+          <div className="border-t border-neutral-200 bg-neutral-50 p-2">
+            <button
+              type="button"
+              onClick={() => submitSearch(query)}
+              className="w-full rounded-sm border border-black bg-black px-3 py-2 text-[11px] font-bold uppercase tracking-[0.25em] text-white transition-colors hover:bg-[#FFD300] hover:text-black"
+            >
+              Сите резултати во архивата →
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLocal, setIsLocal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const { user, isLoaded } = useUser();
   const currentDate = new Date().toLocaleDateString("mk-MK", {
     day: "2-digit",
@@ -44,11 +323,23 @@ export const NavBar = () => {
   });
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const updateViewport = () => setIsMobile(window.innerWidth < 768);
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+    return () => window.removeEventListener("resize", updateViewport);
+  }, []);
+
+  useEffect(() => {
     if (typeof window !== "undefined") {
       const host = window.location.hostname;
       setIsLocal(host === "localhost" || host === "127.0.0.1");
     }
   }, []);
+
+  useEffect(() => {
+    if (!isMobile) setIsMobileSearchOpen(false);
+  }, [isMobile]);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -86,36 +377,55 @@ export const NavBar = () => {
     { label: "Архива", href: "/all" },
   ];
 
+  const titleShift = isMobile && isMobileSearchOpen ? -70 : 0;
+  const searchIsExpanded = !isMobile || isMobileSearchOpen;
+
   return (
     <>
-      <nav className="sticky top-0 z-50 border-b border-black bg-[#FDFBF7] py-3 px-4 md:px-8 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <button
-            aria-label="Отвори мени"
-            aria-expanded={isOpen}
-            onClick={() => setIsOpen((prev) => !prev)}
-            className="h-11 w-11 p-1 flex items-center justify-center hover:bg-black hover:text-white transition-colors rounded-full border border-transparent hover:border-black"
+      <nav className="sticky top-0 z-50 border-b border-black bg-[#FDFBF7] py-3 px-4 md:px-8 flex items-center gap-4 relative">
+        <div className="w-full max-w-[1350px] mx-auto flex items-center gap-4 relative">
+          <div className="flex items-center gap-4 flex-1">
+            <button
+              aria-label="Отвори мени"
+              aria-expanded={isOpen}
+              onClick={() => {
+                setIsOpen((prev) => !prev);
+                setIsMobileSearchOpen(false);
+              }}
+              className="h-11 w-11 p-1 flex items-center justify-center hover:bg-black hover:text-white transition-colors rounded-full border border-transparent hover:border-black"
+            >
+              <Image
+                src="/logo_homepage.png"
+                alt="Vibes лого"
+                width={40}
+                height={40}
+                className={`h-full w-full object-contain transition-transform ${isOpen ? "scale-95 rotate-6" : ""}`}
+                priority
+              />
+            </button>
+            <span className="text-[11px] font-bold tracking-[0.3em] uppercase font-sans hidden md:block">
+            </span>
+          </div>
+
+          <h1
+            className="font-serif text-3xl md:text-5xl font-black tracking-tighter absolute left-1/2 transition-transform duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]"
+            style={{ transform: `translateX(-50%) translateX(${titleShift}px)` }}
           >
-            <Image
-              src="/logo_homepage.png"
-              alt="Vibes лого"
-              width={40}
-              height={40}
-              className={`h-full w-full object-contain transition-transform ${isOpen ? "scale-95 rotate-6" : ""}`}
-              priority
+            <a href="https://www.vibes.mk/">VIBES.</a>
+          </h1>
+
+          <div className="flex-1 flex justify-end min-w-[180px]">
+            <NavSearch
+              onNavigate={() => {
+                setIsOpen(false);
+                setIsMobileSearchOpen(false);
+              }}
+              isCompact={isMobile}
+              isExpanded={searchIsExpanded}
+              onExpand={() => setIsMobileSearchOpen(true)}
+              onCollapse={() => setIsMobileSearchOpen(false)}
             />
-          </button>
-          <span className="text-[11px] font-bold tracking-[0.3em] uppercase font-sans hidden md:block">
-          </span>
-        </div>
-
-        <h1 className="font-serif text-3xl md:text-5xl font-black tracking-tighter absolute left-1/2 -translate-x-1/2">
-          <a href="https://www.vibes.mk/">VIBES.</a>
-        </h1>
-
-{/* Date on Right */}
-        <div className="text-xs font-mono min-w-[80px] text-right" suppressHydrationWarning>
-          {currentDate}
+          </div>
         </div>
       </nav>
 
@@ -133,7 +443,7 @@ export const NavBar = () => {
           }`}
         >
           <div className="flex flex-col h-full p-6 gap-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <IconButton href="https://www.instagram.com/vibes.mkd" label="Instagram">
                   <InstagramIcon />
@@ -154,15 +464,20 @@ export const NavBar = () => {
                   </Link>
                 )}
               </div>
-              <button
-                aria-label="Затвори мени"
-                onClick={() => setIsOpen(false)}
-                className="p-2 rounded-full hover:bg-black hover:text-white transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-mono text-neutral-600 whitespace-nowrap" suppressHydrationWarning>
+                  {currentDate}
+                </span>
+                <button
+                  aria-label="Затвори мени"
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 rounded-full hover:bg-black hover:text-white transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-2">
@@ -317,14 +632,14 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
             href="/all"
             className={`
               ml-auto flex-shrink-0 text-xs font-bold uppercase tracking-widest whitespace-nowrap
-              border border-black px-3 py-1 rounded-full transition-all
+              border border-black px-1 py-1 rounded-full transition-all
               ${isAllPage 
                 ? "bg-black text-white shadow-[4px_4px_0_#000]" 
                 : "text-neutral-700 hover:bg-black hover:text-white"
               }
             `}
           >
-            Сите
+            Архива
           </Link>
         </nav>
       </div>

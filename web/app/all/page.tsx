@@ -2,7 +2,9 @@
 import { turso } from "@/lib/turso";
 import { CategoryNav, NavBar } from "../_components/navigation";
 import { DateFilter } from "./date-filter";
+import { SearchBar } from "./search-bar";
 import { StoriesList } from "./stories-list";
+import { searchPosts } from "../actions/search";
 
 export const revalidate = 60;
 
@@ -38,49 +40,58 @@ const EmptyState = () => (
 export default async function AllStoriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string; category?: string; cat?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; category?: string; cat?: string; q?: string }>;
 }) {
   const params = await searchParams;
   
   const fromDate = params.from || null;
   const toDate = params.to || null;
   const requestedCategory = params.category || params.cat || null;
+  const searchQuery = (params.q || "").trim();
   const categoryFilter: CategoryValue | null =
     requestedCategory && CATEGORY_VALUES.includes(requestedCategory as CategoryValue)
       ? (requestedCategory as CategoryValue)
       : null;
 
   // Construct SQL dynamically
-  let sql = "SELECT * FROM posts";
-  const args: any[] = [];
-  const conditions: string[] = [];
-
-  if (categoryFilter) {
-    conditions.push("category = ?");
-    args.push(categoryFilter);
-  }
-
-  if (fromDate) {
-    conditions.push("date(published_at) >= ?");
-    args.push(fromDate);
-  }
-
-  if (toDate) {
-    conditions.push("date(published_at) <= ?");
-    args.push(toDate);
-  }
-
-  if (conditions.length > 0) {
-    sql += " WHERE " + conditions.join(" AND ");
-  }
-
-  // Always order by newest first
-  sql += " ORDER BY scraped_at DESC LIMIT 150";
-
   let posts: any[] = [];
   try {
-    const result = await turso.execute({ sql, args });
-    posts = result.rows;
+    if (searchQuery.length >= 2) {
+      posts = await searchPosts({
+        query: searchQuery,
+        limit: 200,
+        category: categoryFilter,
+        fromDate,
+        toDate,
+      });
+    } else {
+      let sql = "SELECT * FROM posts";
+      const args: any[] = [];
+      const conditions: string[] = [];
+
+      if (categoryFilter) {
+        conditions.push("category = ?");
+        args.push(categoryFilter);
+      }
+
+      if (fromDate) {
+        conditions.push("date(published_at) >= ?");
+        args.push(fromDate);
+      }
+
+      if (toDate) {
+        conditions.push("date(published_at) <= ?");
+        args.push(toDate);
+      }
+
+      if (conditions.length > 0) {
+        sql += " WHERE " + conditions.join(" AND ");
+      }
+
+      sql += " ORDER BY scraped_at DESC LIMIT 150";
+      const result = await turso.execute({ sql, args });
+      posts = result.rows;
+    }
   } catch (err) {
     console.error("Failed to fetch archive:", err);
   }
@@ -103,15 +114,19 @@ export default async function AllStoriesPage({
               Архива
             </h1>
             <p className="text-neutral-500 font-sans text-sm max-w-xl">
-              Пребарувајте низ нашата база на податоци според датум.
+              {searchQuery.length >= 2
+                ? `Резултати за „${searchQuery}“`
+                : "Пребарувајте низ нашата база на податоци според датум."}
             </p>
           </div>
           
           <div className="flex flex-col items-end gap-3 w-full xl:w-auto">
+             <SearchBar />
              <DateFilter />
              <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-400">
                Прикажани: {posts.length} {storiesLabel}
                {categoryLabel ? ` • Категорија: ${categoryLabel}` : ""}
+               {searchQuery.length >= 2 ? ` • Барање: ${searchQuery}` : ""}
              </div>
           </div>
         </div>

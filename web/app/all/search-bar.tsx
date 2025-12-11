@@ -1,13 +1,25 @@
 'use client';
 
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
-import { useTransition } from 'react';
+import { FormEvent, useEffect, useRef, useState, useTransition } from 'react';
 
 export function SearchBar() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [value, setValue] = useState(searchParams.get('q')?.toString() ?? '');
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setValue(searchParams.get('q')?.toString() ?? '');
+  }, [searchParams]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   function handleSearch(term: string) {
     const params = new URLSearchParams(searchParams);
@@ -19,21 +31,36 @@ export function SearchBar() {
     }
 
     startTransition(() => {
-      // Updates the URL without a full page reload, but triggers a server re-render
-      replace(`${pathname}?${params.toString()}`);
+      const queryString = params.toString();
+      replace(queryString ? `${pathname}?${queryString}` : pathname);
     });
   }
 
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    handleSearch(value.trim());
+  };
+
+  const handleChange = (next: string) => {
+    setValue(next);
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    const trimmed = next.trim();
+    debounceRef.current = setTimeout(() => handleSearch(trimmed), 300);
+  };
+
   return (
-    <div className="mb-8 w-full max-w-md">
+    <form className="w-full max-w-md" onSubmit={handleSubmit}>
       <div className="relative">
         <input
           className="peer block w-full rounded-md border border-neutral-200 bg-white py-[9px] pl-10 text-sm outline-2 placeholder:text-neutral-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           placeholder="Пребарувај..."
-          onChange={(e) => {
-            handleSearch(e.target.value);
-          }}
-          defaultValue={searchParams.get('q')?.toString()}
+          onChange={(e) => handleChange(e.target.value)}
+          value={value}
         />
         <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 peer-focus:text-neutral-900">
            {/* Simple SVG Mag Glass icon */}
@@ -47,6 +74,6 @@ export function SearchBar() {
            </div>
         )}
       </div>
-    </div>
+    </form>
   );
 }
