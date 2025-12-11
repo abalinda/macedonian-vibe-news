@@ -33,7 +33,7 @@ const formatDuration = (isoDate?: string | null) => {
   if (!isoDate) return "непознато време";
   const parsed = new Date(isoDate);
   if (Number.isNaN(parsed.valueOf())) return "непознато време";
-  const diffMs = (Date.now() - parsed.getTime() - 3600000);
+  const diffMs = (Date.now() - parsed.getTime() + 3600000);
   const diffMinutes = Math.max(0, Math.floor(diffMs / 60000));
   const hours = Math.floor(diffMinutes / 60);
   const minutes = diffMinutes % 60;
@@ -47,7 +47,7 @@ const formatLockCountdown = (isoDate?: string | null) => {
   if (!isoDate) return null;
   const parsed = new Date(isoDate);
   if (Number.isNaN(parsed.valueOf())) return null;
-  const diffMs = parsed.getTime() - Date.now() - 3600000;
+  const diffMs = parsed.getTime() - Date.now() + 3600000;
   if (diffMs <= 0) return null;
   const mins = Math.ceil(diffMs / 60000);
   const hours = Math.floor(mins / 60);
@@ -141,7 +141,7 @@ export const AdminHeroManager = ({ isLocal }: AdminHeroManagerProps) => {
 
     if (lockCountdown && !forceOverride) {
       const confirmChange = window.confirm(
-        `Овој hero слот е заклучен уште ${lockCountdown}. Минимум 4 часа е препорака, но можеш да препишеш. Продолжи?`,
+        `Овој hero слот е заклучен уште ${lockCountdown}. Минимум 1 час е препорачано. Продолжи?`,
       );
       if (!confirmChange) return;
       forceOverride = true;
