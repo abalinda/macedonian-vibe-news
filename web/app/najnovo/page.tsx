@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Suspense } from "react";
 import { turso } from "@/lib/turso";
 import { CategoryNav, NavBar } from "../_components/navigation";
 import { LatestFeed } from "./latest-feed";
@@ -21,6 +22,12 @@ const EmptyState = () => (
   </div>
 );
 
+const NavFallback = () => (
+  <div className="sticky top-0 z-40 border-b border-black bg-[#FDFBF7] py-3 px-4 md:px-8">
+    <div className="w-full max-w-[1400px] mx-auto h-11" />
+  </div>
+);
+
 export default async function LatestStoriesPage() {
   let posts: any[] = [];
 
@@ -36,7 +43,9 @@ export default async function LatestStoriesPage() {
 
   return (
     <main className="min-h-screen bg-[#FDFBF7] text-neutral-900 pb-20">
-      <NavBar />
+      <Suspense fallback={<NavFallback />}>
+        <NavBar />
+      </Suspense>
       <CategoryNav activeCategory="Latest" />
 
       <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8">
