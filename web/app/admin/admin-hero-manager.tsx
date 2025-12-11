@@ -46,7 +46,7 @@ const formatLockCountdown = (isoDate?: string | null) => {
   if (!isoDate) return null;
   const parsed = new Date(isoDate);
   if (Number.isNaN(parsed.valueOf())) return null;
-  const diffMs = parsed.getTime() - Date.now();
+  const diffMs = parsed.getTime() - Date.now() + 3600000;
   if (diffMs <= 0) return null;
   const mins = Math.ceil(diffMs / 60000);
   const hours = Math.floor(mins / 60);
