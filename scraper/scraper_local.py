@@ -24,8 +24,10 @@ if not URL or not TOKEN:
     raise ValueError("❌ Missing TURSO_DATABASE_URL or TURSO_AUTH_TOKEN")
 
 # ---- Config ----
-FEATURE_ROTATION_HOURS = 4
-MAX_AI_ARTICLES_PER_RUN = 20
+HERO_ROTATION_MINUTES = 60
+HERO_LOCK_MINUTES = 60
+HERO_FALLBACK_LOOKBACK_HOURS = 24
+MAX_AI_ARTICLES_PER_RUN = 30
 MIN_CURATION_INTERVAL_MINUTES = 30
 BATCH_SIZE = 5
 
@@ -39,9 +41,6 @@ FEATURE_SLOTS = {
     "sports": {"category": "Sports", "label": "Sports"},
 }
 
-# State tracking
-feature_states = {}
-feature_rotation_allowed = {slot: False for slot in FEATURE_SLOTS}
 persist_queue = Queue()
 persist_stop_event = Event()
 direct_seen_links: set[str] = set()
@@ -372,38 +371,297 @@ def clean_html_summary(html_content):
     soup = BeautifulSoup(html_content, "html.parser")
     return soup.get_text(separator=" ").strip()[:400] + "..."
 
-def get_feature_state_map(client):
+def ensure_featured_slots_table(client):
+    """Ensure featured_slots exists with the expected columns/rows."""
     try:
         client.execute("""
-            CREATE TABLE IF NOT EXISTS feature_states (
+            CREATE TABLE IF NOT EXISTS featured_slots (
                 slot_id TEXT PRIMARY KEY,
-                article_id TEXT,
-                updated_at DATETIME
+                label TEXT,
+                post_id INTEGER,
+                locked_until TEXT,
+                updated_at TEXT,
+                manual_override INTEGER DEFAULT 0,
+                admin_choice INTEGER DEFAULT 0
             )
         """)
-        rs = client.execute("SELECT slot_id, updated_at FROM feature_states")
-        states = {}
-        for row in rs.rows:
-            try:
-                states[row[0]] = datetime.fromisoformat(row[1])
-            except (ValueError, TypeError):
-                states[row[0]] = datetime.min.replace(tzinfo=timezone.utc)
-        return states
     except Exception as e:
-        print(f"⚠️ Error fetching feature states: {e}")
+        print(f"⚠️ Unable to ensure featured_slots table: {e}")
+
+    try:
+        client.execute("ALTER TABLE featured_slots ADD COLUMN admin_choice INTEGER DEFAULT 0")
+    except Exception as e:
+        if "duplicate column name" not in str(e).lower():
+            print(f"⚠️ Unable to add admin_choice column: {e}")
+
+    try:
+        client.execute("ALTER TABLE featured_slots ADD COLUMN manual_override INTEGER DEFAULT 0")
+    except Exception as e:
+        if "duplicate column name" not in str(e).lower():
+            print(f"⚠️ Unable to add manual_override column: {e}")
+
+    for slot_id, meta in FEATURE_SLOTS.items():
+        try:
+            client.execute(
+                "INSERT OR IGNORE INTO featured_slots (slot_id, label, post_id, manual_override, admin_choice) VALUES (?, ?, NULL, 0, 0)",
+                [slot_id, meta["label"]],
+            )
+        except Exception as e:
+            print(f"⚠️ Unable to ensure featured slot {slot_id}: {e}")
+
+
+def _parse_ts(value):
+    if not value:
+        return None
+    try:
+        ts = datetime.fromisoformat(value)
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=timezone.utc)
+        return ts
+    except Exception:
+        return None
+
+
+def get_featured_slot_states(client):
+    """Return the current featured slot state (locked_until, admin flags, timestamps)."""
+    try:
+        rs = client.execute(
+            "SELECT slot_id, post_id, locked_until, updated_at, admin_choice, manual_override FROM featured_slots"
+        )
+    except Exception as e:
+        print(f"⚠️ Error reading featured_slots: {e}")
         return {}
 
-def can_rotate_feature_slot(slot_id):
-    last_update = feature_states.get(slot_id)
-    if not last_update:
-        return True
-    
-    now = datetime.now(timezone.utc)
-    if last_update.tzinfo is None:
-        last_update = last_update.replace(tzinfo=timezone.utc)
+    states = {}
+    for row in rs.rows or []:
+        states[row[0]] = {
+            "post_id": row[1],
+            "locked_until": _parse_ts(row[2]),
+            "updated_at": _parse_ts(row[3]),
+            "admin_choice": bool(row[4]),
+            "manual_override": bool(row[5]) if len(row) > 5 else False,
+        }
+    return states
 
-    diff = now - last_update
-    return diff > timedelta(hours=FEATURE_ROTATION_HOURS)
+
+def should_rotate_slot(state, now):
+    """Determine if a slot is eligible for rotation based on lock + freshness."""
+    if not state or not state.get("post_id"):
+        return True
+
+    locked_until = state.get("locked_until")
+    if locked_until and locked_until > now:
+        return False
+
+    if state.get("admin_choice") and locked_until and locked_until > now:
+        return False
+
+    if state.get("manual_override") and locked_until and locked_until > now:
+        return False
+
+    updated_at = state.get("updated_at")
+    if not updated_at:
+        return True
+
+    return (now - updated_at) >= timedelta(minutes=HERO_ROTATION_MINUTES)
+
+
+def _hero_score_key(article):
+    try:
+        score = int(article.get("hero_score", 0) or 0)
+    except (TypeError, ValueError):
+        score = 0
+    if article.get("image_url"):
+        score += 5
+    return score
+
+
+def _pick_candidate_for_slot(candidates, category, used_links):
+    for art in candidates:
+        link = art.get("link")
+        if not link or link in used_links:
+            continue
+        if category and art.get("category") != category:
+            continue
+        used_links.add(link)
+        return art
+    return None
+
+
+def select_ai_hero_assignments(hero_candidates, slots_to_update, used_links):
+    """Map slots -> curated hero articles based on score/category."""
+    sorted_candidates = sorted(hero_candidates, key=_hero_score_key, reverse=True)
+    assignments = {}
+
+    for slot in slots_to_update:
+        target_category = FEATURE_SLOTS[slot]["category"]
+        candidate = _pick_candidate_for_slot(sorted_candidates, target_category, used_links)
+
+        if slot == "main" and not candidate:
+            candidate = _pick_candidate_for_slot(sorted_candidates, None, used_links)
+
+        if candidate:
+            assignments[slot] = candidate
+
+    return assignments
+
+
+def load_recent_posts_for_random(client):
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=HERO_FALLBACK_LOOKBACK_HOURS)).isoformat()
+    try:
+        rs = client.execute(
+            """
+            SELECT id, link, category, image_url
+            FROM posts
+            WHERE image_url IS NOT NULL AND image_url != '' AND scraped_at >= ?
+            ORDER BY scraped_at DESC
+            LIMIT 200
+            """,
+            [cutoff],
+        )
+        posts = [
+            {"id": row[0], "link": row[1], "category": row[2], "image_url": row[3]}
+            for row in rs.rows or []
+        ]
+        random.shuffle(posts)
+        return posts
+    except Exception as e:
+        print(f"⚠️ Unable to load posts for random hero fallback: {e}")
+        return []
+
+
+def select_random_assignments(client, slots_to_update, used_links):
+    """Pick random posts (with images) for slots when AI is unavailable."""
+    pool = load_recent_posts_for_random(client)
+    assignments = {}
+
+    def pop_for_category(cat: str | None):
+        for idx, post in enumerate(pool):
+            if post.get("link") in used_links:
+                continue
+            if cat and post.get("category") != cat:
+                continue
+            used_links.add(post["link"])
+            return pool.pop(idx)
+        return None
+
+    for slot in slots_to_update:
+        target_category = FEATURE_SLOTS[slot]["category"]
+        candidate = None
+
+        if slot == "main":
+            candidate = pop_for_category("Tech") or pop_for_category("Culture") or pop_for_category(None)
+        else:
+            candidate = pop_for_category(target_category) or pop_for_category(None)
+
+        if candidate:
+            assignments[slot] = candidate
+
+    return assignments
+
+
+def resolve_post_ids_for_assignments(client, assignments):
+    """Translate assignment links to post IDs so we can update featured_slots."""
+    slot_post_map = {}
+    link_to_slots = {}
+
+    for slot, item in assignments.items():
+        if item.get("id"):
+            slot_post_map[slot] = item["id"]
+        elif item.get("link"):
+            link_to_slots.setdefault(item["link"], []).append(slot)
+
+    if link_to_slots:
+        placeholders = ",".join(["?"] * len(link_to_slots))
+        try:
+            rs = client.execute(
+                f"SELECT id, link FROM posts WHERE link IN ({placeholders})",
+                list(link_to_slots.keys()),
+            )
+            for row in rs.rows or []:
+                post_id, link = row[0], row[1]
+                for slot in link_to_slots.get(link, []):
+                    slot_post_map[slot] = post_id
+        except Exception as e:
+            print(f"⚠️ Unable to resolve post IDs for heroes: {e}")
+
+    return slot_post_map
+
+
+def write_featured_slots(client, slot_post_map):
+    if not slot_post_map:
+        return 0
+
+    lock_until = (datetime.now(timezone.utc) + timedelta(minutes=HERO_LOCK_MINUTES)).isoformat()
+    updated = 0
+
+    for slot, post_id in slot_post_map.items():
+        if not post_id:
+            continue
+        try:
+            client.execute(
+                """
+                UPDATE featured_slots
+                SET post_id = ?, locked_until = ?, updated_at = CURRENT_TIMESTAMP, manual_override = 0, admin_choice = 0
+                WHERE slot_id = ?
+                """,
+                [post_id, lock_until, slot],
+            )
+            updated += 1
+        except Exception as e:
+            print(f"⚠️ Failed to update featured slot {slot}: {e}")
+
+    return updated
+
+
+def rotate_featured_slots(curated_articles, ai_available=True):
+    """Rotate hero slots hourly using AI-approved picks or random fallbacks."""
+    try:
+        client = get_db_client()
+    except Exception as e:
+        print(f"⚠️ Unable to open DB for hero rotation: {e}")
+        return
+
+    try:
+        ensure_featured_slots_table(client)
+        slot_states = get_featured_slot_states(client)
+
+        now = datetime.now(timezone.utc)
+        slots_to_update = [slot for slot in FEATURE_SLOTS if should_rotate_slot(slot_states.get(slot), now)]
+
+        if not slots_to_update:
+            print("ℹ️ Hero slots are locked or recently updated; no rotation needed.")
+            return
+
+        hero_candidates = [a for a in curated_articles if a.get("hero_candidate")]
+        used_links: set[str] = set()
+        assignments = {}
+
+        if ai_available and hero_candidates:
+            assignments = select_ai_hero_assignments(hero_candidates, slots_to_update, used_links)
+
+        remaining_slots = [slot for slot in slots_to_update if slot not in assignments]
+
+        if remaining_slots:
+            random_assignments = select_random_assignments(client, remaining_slots, used_links)
+            assignments.update(random_assignments)
+
+        if not assignments:
+            print("ℹ️ No hero assignments available after rotation step.")
+            return
+
+        slot_post_map = resolve_post_ids_for_assignments(client, assignments)
+        updated = write_featured_slots(client, slot_post_map)
+
+        if updated:
+            print(f"🌟 Rotated {updated} hero slots. Next auto-change in ~{HERO_LOCK_MINUTES} minutes.")
+        else:
+            print("ℹ️ No hero slots updated (missing post IDs).")
+    finally:
+        try:
+            client.close()
+        except Exception:
+            pass
 
 def turso_persist_worker():
     """Background thread that writes to DB as fast as items arrive."""
@@ -455,31 +713,7 @@ def turso_persist_worker():
 
             writer_client.batch(statements)
 
-            # Hero promotion per item after successful save
             for item in batch_items:
-                if item.get('hero_candidate'):
-                    target_slot = None
-                    item_cat_lower = (item.get('category') or "").lower()
-                    
-                    if item_cat_lower in FEATURE_SLOTS:
-                        target_slot = item_cat_lower
-                    elif item.get('hero_score', 0) > 85: 
-                        target_slot = "main"
-
-                    if target_slot and feature_rotation_allowed.get(target_slot):
-                        print(f"🌟 PROMOTING to {target_slot}: {item['title']}")
-                        writer_client.execute(
-                            """
-                            INSERT INTO feature_states (slot_id, article_id, updated_at)
-                            VALUES (?, ?, ?)
-                            ON CONFLICT(slot_id) DO UPDATE SET
-                                article_id=excluded.article_id,
-                                updated_at=excluded.updated_at
-                            """,
-                            [target_slot, item['link'], datetime.now(timezone.utc).isoformat()]
-                        )
-                        feature_rotation_allowed[target_slot] = False
-                
                 saved_at = datetime.now(timezone.utc).isoformat()
                 print(f"✅ [{saved_at}] Saved '{item.get('title', 'Untitled')}' from {item.get('source', 'Unknown')} to DB.")
         except Exception as e:
@@ -492,16 +726,11 @@ def turso_persist_worker():
     print(f"💾 Persistence worker stopped at {datetime.now(timezone.utc).isoformat()}.")
 
 def process_feeds():
-    global feature_states, feature_rotation_allowed, last_curation_at
-    
-    # 1. Setup
-    client = get_db_client()
-    feature_states = get_feature_state_map(client)
-    client.close()
+    global last_curation_at
 
-    for slot in FEATURE_SLOTS:
-        feature_rotation_allowed[slot] = can_rotate_feature_slot(slot)
+    # 1. Setup
     direct_seen_links.clear()
+    curated_articles = []
 
     now = datetime.now(timezone.utc)
     min_curation_interval = timedelta(minutes=MIN_CURATION_INTERVAL_MINUTES)
@@ -642,6 +871,7 @@ def process_feeds():
                 
                 try:
                     curated = analyze_news_batch(batch)
+                    curated_articles.extend(curated)
                     for item in curated:
                         persist_queue.put(item)
                 except ModelExhaustedError:
@@ -661,6 +891,11 @@ def process_feeds():
         persist_queue.join()
         persist_stop_event.set()
         worker.join()
+        try:
+            ai_available_for_heroes = bool(curated_articles)
+            rotate_featured_slots(curated_articles, ai_available_for_heroes)
+        except Exception as e:
+            print(f"⚠️ Hero rotation encountered an error: {e}")
         try:
             backfill_images_for_recent_posts()
         except Exception as e:
