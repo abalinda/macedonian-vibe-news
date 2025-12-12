@@ -177,7 +177,7 @@ const NavSearch = ({
 
   const containerWidth = isCompact
     ? isExpanded
-      ? "w-[min(92vw,360px)]"
+      ? "w-full max-w-[320px]"
       : "w-11"
     : "w-[170px] sm:w-[240px]";
   const showDropdown = isOpenDropdown && isExpanded;
@@ -414,7 +414,7 @@ export const NavBar = () => {
             <a href="https://www.vibes.mk/">VIBES.</a>
           </h1>
 
-          <div className="flex-1 flex justify-end min-w-[180px]">
+          <div className="flex-1 flex justify-end min-w-0 sm:min-w-[180px]">
             <NavSearch
               onNavigate={() => {
                 setIsOpen(false);

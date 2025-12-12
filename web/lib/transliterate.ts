@@ -27,7 +27,7 @@ export function buildSearchVariants(input: string): string[] {
   const variants = new Set<string>();
 
   // 1. Generate Scripts (Latin <-> Cyrillic)
-  let latin = lower.split('').map(char => mkToLatMap[char] || char).join('');
+  const latin = lower.split('').map(char => mkToLatMap[char] || char).join('');
   let cyrillic = lower;
   const latKeys = Object.keys(latToMkMap).sort((a, b) => b.length - a.length);
   latKeys.forEach(key => {
