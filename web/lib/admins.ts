@@ -4,6 +4,7 @@ const ADMIN_EMAILS = [
   "team@vibes.mk",
   "andrej.petrovski@vibes.mk",
   "balinda.centar@gmail.com",
+  "joana.magdeska@gmail.mk"
 
 ] as const;
 
