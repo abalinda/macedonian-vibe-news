@@ -105,11 +105,48 @@ def scrape_image_from_page(article_url: str, scraper) -> str | None:
         if resp.status_code != 200:
             return None
         soup = BeautifulSoup(resp.text, "html.parser")
-        meta_props = [{"property": "og:image"}, {"name": "twitter:image"}]
+        meta_props = [
+            {"property": "og:image"},
+            {"property": "og:image:secure_url"},
+            {"name": "twitter:image"},
+        ]
         for attrs in meta_props:
             tag = soup.find("meta", attrs=attrs)
             if tag and tag.get("content"):
-                return normalize_image_url(tag["content"], article_url)
+                normalized = normalize_image_url(tag["content"], article_url)
+                if normalized:
+                    return normalized
+
+        def pick_img(container):
+            if not container:
+                return None
+            for img in container.find_all("img"):
+                src = (
+                    img.get("src")
+                    or img.get("data-src")
+                    or img.get("data-lazy-src")
+                )
+                if not src:
+                    srcset = img.get("srcset") or img.get("data-srcset")
+                    if srcset:
+                        src = srcset.split(",")[0].strip().split(" ")[0]
+                if not src or src.startswith("data:"):
+                    continue
+                normalized = normalize_image_url(src, article_url)
+                if normalized:
+                    return normalized
+            return None
+
+        priority_scopes = [
+            soup.find("article"),
+            *soup.select(".entry-content, .post-content, .td-post-content, article"),
+        ]
+        for scope in priority_scopes:
+            img_url = pick_img(scope)
+            if img_url:
+                return img_url
+
+        return pick_img(soup)
     except Exception:
         pass
     return None
