@@ -310,7 +310,8 @@ export default async function Home({
         />
         
         {/* GRID LAYOUT */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 border-t border-black pt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 pt-8">  {/* took out border-t border-black */}
+
           
           {/* LEFT SIDEBAR */}
           <div className="lg:col-span-3 lg:border-r border-neutral-300 lg:pr-8 order-2 lg:order-1">

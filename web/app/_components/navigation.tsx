@@ -565,6 +565,8 @@ type CategoryNavProps = {
 
 export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavProps) => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const hideScrollbarTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [isScrollbarHidden, setIsScrollbarHidden] = useState(true);
   const categories = [
     { name: "Најново", value: "Latest", href: "/najnovo" },
     { name: "Почетна", value: null, href: "/" },
@@ -589,15 +591,39 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
     if (!(firstLink instanceof HTMLElement)) return;
 
     const offset = firstLink.offsetWidth + 16; // hide the first chip just off-screen
-    el.scrollTo({ left: offset, behavior: "instant" as ScrollBehavior });
+    // el.scrollTo({ left: offset, behavior: "instant" as ScrollBehavior }); #commeting off as I want for the "Najnovo" to be visible on load. Uncomment to hide
   }, [activeCategory]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const showScrollbar = () => {
+      if (hideScrollbarTimeout.current) clearTimeout(hideScrollbarTimeout.current);
+      setIsScrollbarHidden(false);
+      hideScrollbarTimeout.current = setTimeout(() => setIsScrollbarHidden(true), 1200);
+    };
+
+    el.addEventListener("touchstart", showScrollbar, { passive: true });
+    el.addEventListener("wheel", showScrollbar, { passive: true });
+    el.addEventListener("scroll", showScrollbar, { passive: true });
+
+    return () => {
+      el.removeEventListener("touchstart", showScrollbar);
+      el.removeEventListener("wheel", showScrollbar);
+      el.removeEventListener("scroll", showScrollbar);
+      if (hideScrollbarTimeout.current) clearTimeout(hideScrollbarTimeout.current);
+    };
+  }, []);
 
   return (
     <div className="bg-[#FDFBF7]">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         <nav
           ref={scrollRef}
-          className="flex items-center gap-4 md:gap-6 py-4 overflow-x-auto scrollbar-hide justify-start md:justify-center px-1 md:px-0"
+          className={`flex items-center gap-4 md:gap-6 py-4 overflow-x-auto justify-start md:justify-center px-1 md:px-0 ${
+            isScrollbarHidden ? "scrollbar-hide" : ""
+          }`}
         >
           <div className="flex items-center gap-4 md:gap-6 flex-none md:flex-1 md:justify-center">
             {categories.map((cat) => {
