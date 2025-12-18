@@ -77,6 +77,10 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   icons: {
+    icon: [
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon.ico", sizes: "48x48", type: "image/x-icon" },
+    ],
     apple: "/apple-touch-icon.png",
   },
 };
@@ -105,7 +109,6 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Vibes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

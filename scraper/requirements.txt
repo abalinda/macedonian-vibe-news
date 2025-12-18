@@ -7,3 +7,4 @@ beautifulsoup4
 libsql-client
 libsql
 google
+schedule

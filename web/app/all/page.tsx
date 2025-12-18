@@ -104,7 +104,7 @@ export default async function AllStoriesPage({
       <NavBar />
       <CategoryNav activeCategory={categoryFilter ?? null} isAllPage />
 
-      <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8">
+      <div className="max-w-[1300px] mx-auto px-5 md:px-10 pt-8">
         
         {/* Header Section */}
         <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-10 pb-6 border-b border-black">

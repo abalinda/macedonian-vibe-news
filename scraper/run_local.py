@@ -10,19 +10,25 @@ def job():
     except Exception as e:
         print(f"🔥 Critical Failure in run loop: {e}")
     print("💤 Sleeping until next cycle...")
-        
+
 # Configuration
 MINUTES_BETWEEN_RUNS = 15
 
-print(f"🤖 Vibes.mk Local Daemon Started.")
-print(f"🔄 Schedule: Every {MINUTES_BETWEEN_RUNS} minutes.")
 
-# Run once immediately on start
-job()
+def run_daemon():
+    print("🤖 Vibes.mk Local Daemon Started.")
+    print(f"🔄 Schedule: Every {MINUTES_BETWEEN_RUNS} minutes.")
 
-# Schedule future runs
-schedule.every(MINUTES_BETWEEN_RUNS).minutes.do(job)
+    # Run once immediately on start
+    job()
 
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+    # Schedule future runs
+    schedule.every(MINUTES_BETWEEN_RUNS).minutes.do(job)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
+if __name__ == "__main__":
+    run_daemon()

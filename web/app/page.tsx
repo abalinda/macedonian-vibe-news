@@ -155,6 +155,64 @@ const HeroStory = ({ post }: { post: any }) => {
   );
 };
 
+const SecondaryHeroStory = ({ post, position }: { post: any; position: number }) => {
+  const teaserText = getTeaserText(post);
+  const heroImage = post?.image_url;
+  const categoryLabel = CATEGORY_LABELS[post?.category as keyof typeof CATEGORY_LABELS] ?? post?.category ?? "Вести";
+
+  return (
+    <StoryLink post={post} className="group block">
+      <div className="flex flex-col gap-3">
+        <div className="relative aspect-[4/3] bg-neutral-100 border border-neutral-200 overflow-hidden">
+          {heroImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={heroImage}
+              alt={post.title || "Слика за истакнатата приказна"}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+              loading="eager"
+              decoding="async"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-sm font-mono uppercase tracking-[0.3em] text-neutral-400">
+              Vibes.mk
+            </div>
+          )}
+
+          {/* <div className="absolute left-4 top-4 flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase tracking-widest bg-white/90 border border-black rounded-full px-2 py-1">
+              #{String(position).padStart(2, "0")}
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-widest rounded-full px-2 py-1 bg-black text-white">
+              {categoryLabel}
+            </span>
+          </div> */}
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <h3 className="font-serif text-2xl font-bold leading-tight text-neutral-900 group-hover:underline break-words">
+            {post.title}
+          </h3>
+          {teaserText && (
+            <p className="text-xs text-neutral-700 font-mono uppercase tracking-[0.2em] leading-relaxed line-clamp-3">
+              {teaserText}
+            </p>
+          )}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <span className="inline-block border border-black px-2 py-0.5 text-xs font-bold uppercase tracking-widest mb-0 sm:mb-0 hover:bg-black hover:text-white transition-colors">
+              {post.source}
+            </span>
+            <span className="inline-flex items-center gap-2 text-xs font-bold text-neutral-900 uppercase tracking-widest border-b-2 border-transparent group-hover:border-[#FFD300]">
+              Прочитај повеќе <span aria-hidden>→</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </StoryLink>
+  );
+};
+
 const EmptyState = ({ category, teaserMessage }: { category: string | null; teaserMessage?: string }) => (
   <div className="flex flex-col items-center justify-center py-20 px-4">
     <div className="text-center max-w-md">
@@ -281,8 +339,10 @@ export default async function Home({
     ? posts.filter((p) => p.id !== heroPost.id) 
     : posts;
 
-  const leftColumnPosts = remainingPosts.slice(0, 4);
-  const rightColumnPosts = remainingPosts.slice(4, 9);
+  const secondaryHeroPosts = remainingPosts.slice(0, 2);
+  const sidebarPool = remainingPosts.slice(secondaryHeroPosts.length);
+  const leftColumnPosts = sidebarPool.slice(0, 4);
+  const rightColumnPosts = sidebarPool.slice(4, 9);
   const overridePosts: any[] = [];
   const seen = new Set<number>();
   [heroPost, ...remainingPosts].forEach((post) => {
@@ -298,7 +358,7 @@ export default async function Home({
       <CategoryNav activeCategory={selectedCategory} />
       <AdminBlogCTA />
 
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+      <div className="max-w-[1500px] mx-auto px-5 md:px-10">
 
         <AdminHeroOverride
           slotId={heroSlotId}
@@ -318,7 +378,7 @@ export default async function Home({
             <h4 className="font-sans text-xs font-black uppercase tracking-widest border-b-4 border-black pb-2 mb-4">
               {selectedCategory ? 'Најново' : 'Последни новости'}
             </h4>
-            <div className="flex flex-col">
+            <div className="flex flex-col lg:gap-4">
               {leftColumnPosts.map((post) => (
                 <SideStory key={post.id} post={post} />
               ))}
@@ -328,6 +388,13 @@ export default async function Home({
           {/* CENTER HERO */}
           <div className="lg:col-span-6 px-0 lg:px-8 order-1 lg:order-2">
             {heroPost && <HeroStory post={heroPost} />}
+            {secondaryHeroPosts.length > 0 && (
+              <div className="hidden lg:grid grid-cols-2 gap-6 mt-6">
+                {secondaryHeroPosts.map((post, index) => (
+                  <SecondaryHeroStory key={post.id ?? `${post.title}-${index}`} post={post} position={index + 2} />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* RIGHT SIDEBAR */}
@@ -345,7 +412,7 @@ export default async function Home({
                 </Link>
               )}
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col lg:gap-4">
               {rightColumnPosts.map((post) => (
                 <SideStory key={post.id} post={post} />
               ))}

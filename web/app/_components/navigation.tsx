@@ -392,14 +392,24 @@ export const NavBar = () => {
                 setIsOpen((prev) => !prev);
                 setIsMobileSearchOpen(false);
               }}
-              className="h-11 w-11 p-1 flex items-center justify-center hover:bg-black hover:text-white transition-colors rounded-full border border-transparent hover:border-black"
+              className="group relative h-11 w-11 p-1 flex items-center justify-center hover:bg-black hover:text-white transition-colors rounded-full border border-transparent hover:border-black overflow-hidden"
             >
+              <Image
+                src="/hamburger-menu.svg"
+                alt="Мени"
+                width={40}
+                height={40}
+                className={`absolute inset-0 h-full w-full object-contain transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-0 group-hover:-translate-y-2 ${
+                  isOpen ? "scale-95 rotate-3" : ""
+                }`}
+                priority
+              />
               <Image
                 src="/logo_homepage.png"
                 alt="Vibes лого"
                 width={40}
                 height={40}
-                className={`h-full w-full object-contain transition-transform ${isOpen ? "scale-95 rotate-6" : ""}`}
+                className="absolute inset-0 h-full w-full object-contain transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0"
                 priority
               />
             </button>
@@ -438,7 +448,7 @@ export const NavBar = () => {
         />
 
         <aside
-          className={`absolute left-0 top-0 h-full w-[min(360px,85vw)] bg-[#FDFBF7] border-r border-black shadow-[10px_0_0_#0000000a] transition-transform duration-300 ease-out ${
+          className={`absolute left-0 top-0 h-full w-[min(360px,85vw)] bg-[#FDFBF7] border-r border-black shadow-[0px_0_0_#0000000a] transition-transform duration-300 ease-out ${
             isOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >

@@ -48,7 +48,7 @@ export default async function LatestStoriesPage() {
       </Suspense>
       <CategoryNav activeCategory="Latest" />
 
-      <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8">
+      <div className="max-w-[1300px] mx-auto px-5 md:px-10 pt-8">
         
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-0 mb-10 pb-6 border-b border-black">
           <div>

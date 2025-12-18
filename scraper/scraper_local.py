@@ -2,6 +2,7 @@ import sys
 import os
 import feedparser
 import random
+from difflib import SequenceMatcher
 from datetime import datetime, timedelta, timezone
 from time import mktime
 from queue import Queue, Empty
@@ -30,6 +31,8 @@ HERO_FALLBACK_LOOKBACK_HOURS = 24
 MAX_AI_ARTICLES_PER_RUN = 30
 MIN_CURATION_INTERVAL_MINUTES = 30
 BATCH_SIZE = 5
+TITLE_SIMILARITY_THRESHOLD = 0.9
+TITLE_DEDUP_SEED_LIMIT = 100
 
 last_curation_at = datetime.min.replace(tzinfo=timezone.utc)
 FEATURE_SLOTS = {
@@ -44,6 +47,7 @@ FEATURE_SLOTS = {
 persist_queue = Queue()
 persist_stop_event = Event()
 direct_seen_links: set[str] = set()
+direct_seen_titles_normalized: list[str] = []
 
 
 class AIBudget:
@@ -164,6 +168,62 @@ def extract_summary_text(entry) -> str:
     raw = entry.get("summary") or entry.get("description") or ""
     soup = BeautifulSoup(raw, "html.parser")
     return soup.get_text(separator=" ", strip=True)[:320]
+
+def normalize_title_for_match(title: str) -> str:
+    """Lower, strip punctuation, and collapse whitespace for stable comparisons."""
+    if not title:
+        return ""
+    cleaned = "".join(ch if ch.isalnum() or ch.isspace() else " " for ch in title.lower())
+    return " ".join(cleaned.split())
+
+
+def is_duplicate_title(title: str, seen_normalized: list[str], threshold: float = TITLE_SIMILARITY_THRESHOLD):
+    """Check if title is similar to any seen title using a simple similarity ratio."""
+    normalized = normalize_title_for_match(title)
+    if not normalized:
+        return False, normalized
+
+    for seen in seen_normalized:
+        if not seen:
+            continue
+        similarity = SequenceMatcher(None, normalized, seen).ratio()
+        if similarity >= threshold:
+            return True, normalized
+
+    return False, normalized
+
+
+def seed_title_dedup_from_db(target: list[str], limit: int = TITLE_DEDUP_SEED_LIMIT) -> int:
+    """Seed in-memory dedup list with recent DB titles so older stories win ties."""
+    client = None
+    try:
+        client = get_db_client()
+        rs = client.execute(
+            """
+            SELECT title
+            FROM posts
+            WHERE title IS NOT NULL AND title != ''
+            ORDER BY scraped_at DESC
+            LIMIT ?
+            """,
+            [limit],
+        )
+        rows = rs.rows or []
+        for row in rows:
+            title = row[0] if row else ""
+            normalized = normalize_title_for_match(title)
+            if normalized:
+                target.append(normalized)
+        return len(rows)
+    except Exception as e:
+        print(f"⚠️ Unable to preload titles for dedup: {e}")
+        return 0
+    finally:
+        try:
+            if client:
+                client.close()
+        except Exception:
+            pass
 
 
 def dedup_articles_by_link(articles):
@@ -767,6 +827,10 @@ def process_feeds():
 
     # 1. Setup
     direct_seen_links.clear()
+    direct_seen_titles_normalized.clear()
+    seeded_titles = seed_title_dedup_from_db(direct_seen_titles_normalized)
+    if seeded_titles:
+        print(f"ℹ️ Seeded {seeded_titles} recent titles for deduping.")
     curated_articles = []
 
     now = datetime.now(timezone.utc)
@@ -839,12 +903,22 @@ def process_feeds():
                 raw_articles = filter_existing_links(raw_articles)
 
                 fresh_articles = []
+                skipped_similar_titles = 0
                 for art in raw_articles:
                     link = art.get("link")
                     if not link or link in direct_seen_links:
                         continue
+                    is_dup, normalized_title = is_duplicate_title(art.get("title", ""), direct_seen_titles_normalized)
+                    if is_dup:
+                        skipped_similar_titles += 1
+                        continue
+                    if normalized_title:
+                        direct_seen_titles_normalized.append(normalized_title)
                     direct_seen_links.add(link)
                     fresh_articles.append(art)
+
+                if skipped_similar_titles:
+                    print(f"   ℹ️ Skipping {skipped_similar_titles} items with near-duplicate titles.")
 
                 if not fresh_articles:
                     print("   ℹ️ No new links to process.")
@@ -933,10 +1007,10 @@ def process_feeds():
             rotate_featured_slots(curated_articles, ai_available_for_heroes)
         except Exception as e:
             print(f"⚠️ Hero rotation encountered an error: {e}")
-        try:
-            backfill_images_for_recent_posts()
-        except Exception as e:
-            print(f"⚠️ Image backfill encountered an error: {e}")
+        # try:
+        #     backfill_images_for_recent_posts()
+        # except Exception as e:
+        #     print(f"⚠️ Image backfill encountered an error: {e}")
 
 if __name__ == "__main__":
     process_feeds()
