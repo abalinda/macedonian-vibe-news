@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    unoptimized: true, // Keep this until you set up Cloudflare Images binding
+    unoptimized: true,
   },
   transpilePackages: ["@libsql/client"],
 };

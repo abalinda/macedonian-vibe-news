@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { turso } from "@/lib/turso";
 
-export const runtime = "edge";
+// export const runtime = "edge"; NO LONGER NEEDED WITH Cloudflare RUNTIME
 
 export async function GET(
   request: NextRequest,
