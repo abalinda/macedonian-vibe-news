@@ -17,3 +17,8 @@ node_modules
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# Cloudflare & OpenNext artifacts
+.wrangler/
+.open-next/
+.vercel/

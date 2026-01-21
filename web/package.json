@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "prebuild": "node -e \"console.log('Build Environment:'); Object.keys(process.env).filter(k => k.includes('SUPABASE')).forEach(k => console.log(k + ':', process.env[k] ? 'SET' : 'MISSING'));\""
-  },
+  "dev": "next dev",
+  "build": "next build",
+  "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+  "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+  "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+},
   "dependencies": {
     "@clerk/localizations": "^3.30.1",
     "@clerk/nextjs": "^6.36.0",
