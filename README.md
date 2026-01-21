@@ -1,29 +1,26 @@
 # Macedonian Vibes News 📰
 
-[![Cloudflare](https://img.shields.io/badge/Pages-Cloudflare-F38020?logo=cloudflare)](https://pages.cloudflare.com/)
+[![Cloudflare Workers](https://img.shields.io/badge/Host-Cloudflare_Workers-F38020?logo=cloudflare)](https://workers.cloudflare.com/)
+[![OpenNext](https://img.shields.io/badge/Adapter-OpenNext-000000?logo=next.js)](https://opennext.js.org/)
 [![Turso](https://img.shields.io/badge/DB-Turso-3B82F6?logo=sqlite)](https://turso.tech/)
 [![Clerk](https://img.shields.io/badge/Auth-Clerk-3E2CFF?logo=clerk)](https://clerk.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js)](https://nextjs.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python)](https://www.python.org/)
-[![Analytics](https://img.shields.io/badge/Analytics-GA_%2B_PostHog-111111?logo=google-analytics)](#analytics--pwa)
 
-AI-curated Macedonian news aggregator. A Python scraper ingests 70+ RSS feeds, filters with Gemini/Gemma, writes to Turso, and a Next.js 16 + Clerk frontend serves category views, a latest feed, blog posts, PWA shell, and admin controls.
+AI-curated Macedonian news aggregator. A Python scraper ingests 70+ RSS feeds, filters with Gemini/Gemma, writes to Turso, and a Next.js 16 + Clerk frontend serves category views, a latest feed, blog posts, and admin controls.
 
 **Live:** [vibes.mk](https://vibes.mk)
 
 ---
 
 ## What’s Here Right Now
-- Next.js 16 / React 19 App Router UI in Macedonian with categories (Tech, Culture, Lifestyle, Business, Sports, Blog) and a dedicated `/najnovo` page ordered by `scraped_at`.
-- Turso as the single source of truth via `@libsql/client/web`; hero slots rotate automatically every 8h and can be overridden by admins.
-- Clerk authentication in the nav drawer; admin-only blog composer and hero override surfaces gated by `web/lib/admins.ts`.
-- Blog: rich-text composer (`/blog/new`), sanitized HTML storage in `posts.content`, and reader pages under `/blog/[id]`.
-- Analytics: Google Analytics (`G-VG899CFSWV`) + PostHog JS, proxied through `/relay-Z6aO` with Clerk identity sync.
-- PWA: manifest + `/public/sw.js` pre-cache shell, install prompt on load, and edge `/go/:id` redirect that increments click counts.
-- Scraper GitHub Action runs every ~3h (01:30, 04:30, ...), batches writes to Turso, and keeps JSONL logs in `scraper/logs/`.
+- **Frontend:** Next.js 16 App Router (React 19) deployed on **Cloudflare Workers** via **OpenNext**.
+- **Features:** Categories (Tech, Culture, Lifestyle, Business, Sports), dedicated `/najnovo` feed, and Admin Dashboard.
+- **Database:** Turso (libSQL) as the single source of truth; hero slots rotate automatically every 8h.
+- **Auth:** Clerk authentication (running on Edge middleware); admin-only areas gated by `web/lib/admins.ts`.
+- **Scraper:** Python-based GitHub Action running every ~3h to curate news using Gemini/Gemma.
 
 ---
-
 ## Architecture (Current)
 ```
 Browser/PWA ─┬─ Cloudflare Pages (Next.js 16, Edge-ready)
@@ -45,6 +42,14 @@ Browser/PWA ─┬─ Cloudflare Pages (Next.js 16, Edge-ready)
 - `featured_slots`: `slot_id` (`main`, `tech`, `culture`, `lifestyle`, `business`, `sports`), `label`, `post_id`, `locked_until`, `updated_at`, `manual_override`, `admin_choice`.
 
 ---
+## Key Components
+- Runtime: The main application runs on the nodejs_compat runtime (via OpenNext), allowing full Node.js API support on Cloudflare Workers.
+- Middleware: Authentication runs on the experimental-edge runtime for low-latency request interception.
+
+Data Model (Turso):
+`posts: Content, summaries, metadata, and click tracking.
+
+featured_slots: Hero story management with admin override locks.
 
 ## Frontend (web/)
 - Home + categories: `web/app/page.tsx` (ISR 60s) with hero + sidebars; category filter drives hero slot selection.
@@ -95,56 +100,9 @@ macedonian-vibes-news/
 
 ---
 
-## Local Development
-Prereqs: Node 20+ (Next.js 16 supports 18.18+, 20+ recommended), Python 3.11, Turso auth token, Gemini API key (for scraper), Clerk keys, PostHog key/host.
-
-### Frontend
-```bash
-cd web
-npm install
-# set env (see below)
-npm run dev
-```
-Visit http://localhost:3000. Clerk auth works once `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are set. Turso keys are required for any data fetch.
-
-### Scraper
-```bash
-cd scraper
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-# add .env with TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, GEMINI_API_KEY
-python scraper_2.py
-```
-Logs write to `scraper/logs/scraper_log.jsonl`. The script exits after one run (the GitHub Action schedule repeats it).
-
----
-
-## Environment Variables
-**Frontend (`web/`):**
-- `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`
-- `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` (use the `/relay-Z6aO` proxy host)
-- `NEXT_PUBLIC_SITE_URL` (for metadata, default https://vibes.mk)
-
-**Scraper (`scraper/`):**
-- `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
-- `GEMINI_API_KEY`
-
-Google Analytics is currently hardcoded as `G-VG899CFSWV` in `web/app/layout.tsx`—change there if needed.
-
----
-
 ## Deployment & Ops
-- **Frontend:** Cloudflare Pages with `pages_build_output_dir = web/.next` and `nodejs_compat` (see `wrangler.toml`). Works on Vercel as well; PostHog rewrites live in `web/vercel.json`.
-- **Cron:** `.github/workflows/scraper.yml` runs every 3h, single concurrency group to avoid overlapping scrapes.
-- **Admin controls:** `/admin` shows hero slot status and lock countdowns; homepage override widget appears for admin emails/localhost. Admin list is in `web/lib/admins.ts`.
-- **Redirects:** `/go/:id` uses the edge runtime to count clicks then forward to `posts.link`.
+- **The project is deployed to Cloudflare Workers.**
 
----
-
-## Notes
-- A legacy Supabase helper (`web/lib/supabase.ts`) and `web/scripts/inject-env.sh` remain from an older setup but are unused by the live app; Turso is the active DB for both web and scraper.
-- `.env` files are ignored; keep secrets in platform/env vars.
 
 ---
 
@@ -152,4 +110,4 @@ Google Analytics is currently hardcoded as `G-VG899CFSWV` in `web/app/layout.tsx
 MIT
 
 Made with ❤️ in Macedonia  
-*Last Updated: December 10, 2025*
+*Last Updated: January 2026*
