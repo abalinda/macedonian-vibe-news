@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export const metadata = {
   title: "За нас | VIBES",
-  description: "Дознајте повеќе за Vibes и нашата мисија.",
+  description: "Дознајте повеќе за Vibes и нашата мисија",
 };
 
 const NavFallback = () => (
