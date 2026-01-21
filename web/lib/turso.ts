@@ -1,4 +1,4 @@
-import { createClient } from '@libsql/client/web'; // Import from /web for Next.js Edge support
+import { createClient } from '@libsql/client';
 
 export const turso = createClient({
   url: process.env.TURSO_DATABASE_URL!,
