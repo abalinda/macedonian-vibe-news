@@ -14,6 +14,6 @@ export async function GET(
   const { id } = await params;
 
   // 4. Return a simple text response
-  // If you see this on your screen, the "Internal Error" is definitely caused by the Turso Client.
+  // If you see this on your screen, the` "Internal Error" is definitely caused by the Turso Client.
   return new NextResponse(`Probe Success! ID: ${id} - The issue is the DB Client`, { status: 200 });
 }
