@@ -1,4 +1,4 @@
-export const runtime = "experimental-edge";
+// export const runtime = "experimental-edge"; deleting as it's implied by OpenNext
 
 import { clerkMiddleware } from '@clerk/nextjs/server';
 
