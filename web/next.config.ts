@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
-
 initOpenNextCloudflareForDev();
 
 const nextConfig: NextConfig = {
@@ -16,6 +15,7 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   transpilePackages: ["@libsql/client"],
+  // serverExternalPackages: ["@clerk/nextjs", "posthog-node"], 
 };
 
 export default nextConfig;

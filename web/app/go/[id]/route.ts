@@ -1,15 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
+import { turso } from "@/lib/turso";
 
-// ❌ DO NOT IMPORT TURSO HERE
-// import { turso } from "@/lib/turso"; 
+// export const runtime = "edge"; NO LONGER NEEDED WITH Cloudflare RUNTIME
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  
-  // If this page loads, we know the previous crash was caused by the Turso import.
-  // If this page STILL crashes, the problem is in your Middleware.
-  return new NextResponse(`ISOLATION TEST: Route is working. ID: ${id}`, { status: 200 });
+  const postId = Number(id);
+
+  if (!Number.isFinite(postId)) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  try {
+    const result = await turso.execute({
+      sql: "SELECT link FROM posts WHERE id = ? LIMIT 1",
+      args: [postId],
+    });
+
+    const post = result.rows[0];
+    const targetUrl = (post?.link as string | null) ?? null;
+
+    if (!targetUrl) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+
+    await turso.execute({
+      sql: "UPDATE posts SET clicks = COALESCE(clicks, 0) + 1 WHERE id = ?",
+      args: [postId],
+    });
+
+    return NextResponse.redirect(targetUrl, 307);
+  } catch (error) {
+    console.error("Redirect error on /go:", error);
+    return NextResponse.redirect(new URL("/", request.url));
+  }
 }
