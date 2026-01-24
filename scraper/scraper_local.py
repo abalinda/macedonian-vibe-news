@@ -10,7 +10,7 @@ from threading import Thread, Event
 from urllib.parse import urljoin
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
-from curator_2 import analyze_news_batch, ModelExhaustedError
+from curator_groq import analyze_news_batch, ModelExhaustedError
 import cloudscraper
 import libsql_client
 

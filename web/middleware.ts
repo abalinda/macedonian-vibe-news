@@ -1,6 +1,6 @@
 // export const runtime = "experimental-edge"; deleting as it's implied by OpenNext
 
-import { clerkMiddleware } from '@clerk/nextjs/server';
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 export default clerkMiddleware();
 

@@ -1,23 +1,33 @@
 import json
 import os
-from datetime import datetime
-from pathlib import Path
+import socket
+import threading
+from datetime import datetime, timezone
 from typing import Any, Dict
 
-LOG_DIR = Path(__file__).resolve().parent / "logs"
-LOG_FILE = LOG_DIR / "scraper_log.jsonl"
+_HOSTNAME = socket.gethostname()
+_PID = os.getpid()
+
+
+def _safe_context() -> Dict[str, Any]:
+    return {
+        "host": _HOSTNAME,
+        "pid": _PID,
+        "thread": threading.current_thread().name,
+        "cwd": os.getcwd(),
+    }
+
 
 def log_event(event_type: str, data: Dict[str, Any]) -> None:
-    """Append a structured JSON log entry to scraper/logs/scraper_log.jsonl."""
+    """Print structured JSON logs to stdout with enriched debug context."""
     try:
-        LOG_DIR.mkdir(parents=True, exist_ok=True)
         payload = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "event": event_type,
+            "context": _safe_context(),
             "data": data,
         }
-        with LOG_FILE.open("a", encoding="utf-8") as logfile:
-            logfile.write(json.dumps(payload, ensure_ascii=False) + "\n")
+        print(json.dumps(payload, ensure_ascii=False))
     except Exception as err:
-        # Swallow logging errors so scraping never aborts due to disk hiccups
+        # Swallow logging errors so scraping never aborts due to log formatting issues
         print(f"⚠️ Logging failure ({event_type}): {err}")

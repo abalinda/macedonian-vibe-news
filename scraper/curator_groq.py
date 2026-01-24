@@ -5,39 +5,29 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
+from groq import Groq
 
-# from logger import log_event
+from logger import log_event
 
 
 class ModelExhaustedError(RuntimeError):
-    """Raised when all Gemini/Gemma models fail and no further curation is possible."""
+    """Raised when all Groq/Gemini models fail and no further curation is possible."""
 
 
 # Load environment variables
 load_dotenv()
 
-api_key = os.getenv("GEMINI_API_KEY")
-if not api_key:
-    raise ValueError("❌ GEMINI_API_KEY is missing in .env file!")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
-# Central client instance for all generations
-client = genai.Client(api_key=api_key)
-
-# Prefer lighter/cheaper models first to reduce token burn
+# Prefer Groq models first, then Gemini fallback
 MODEL_PRIORITY = [
-    "gemini-2.5-flash-lite",
-    "gemini-2.5-flash",
-    "gemma-3-27b-it"
-    "gemma-3-12b-it",
+    "llama-3.1-8b-instant",
+    "llama-4-scout-17b-16e-instruct",
 ]
 
-GENERATION_CONFIG = types.GenerateContentConfig(
-    temperature=0.1,
-    response_mime_type="application/json",
-    max_output_tokens=400,
-)
+GROQ_TEMPERATURE = 0.1
+GROQ_MAX_TOKENS = 400
 
 # Circuit breaker state (keeps us from spamming a sick model)
 _model_state: Dict[str, Dict[str, Any]] = {
@@ -86,18 +76,35 @@ def mark_model_failure(model_name: str, error_msg: str) -> None:
         seconds=cooldown_seconds
     )
     _model_state[model_name]["errors"] += 1
-    # log_event(
-    #     "curator_model_cooldown",
-    #     {
-    #         "model": model_name,
-    #         "cooldown_s": cooldown_seconds,
-    #         "error": str(error_msg),
-    #     },
-    # )
-    print(f"⚠️ Model {model_name} failed ({error_msg}); cooling down for {cooldown_seconds}s.")
+    log_event(
+        "curator_model_cooldown",
+        {
+            "model": model_name,
+            "cooldown_s": cooldown_seconds,
+            "error": str(error_msg),
+        },
+    )
+    print(
+        f"⚠️ Model {model_name} failed ({error_msg}); cooling down for {cooldown_seconds}s."
+    )
 
 
-def generate_with_fallback(prompt: str, max_retries: int | None = None):
+def _generate_with_groq(prompt: str, model_name: str) -> str:
+    if not groq_client:
+        raise RuntimeError("GROQ_API_KEY is missing in .env file!")
+
+    result = groq_client.chat.completions.create(
+        model=model_name,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=GROQ_TEMPERATURE,
+        max_tokens=GROQ_MAX_TOKENS,
+    )
+    return (result.choices[0].message.content or "").strip()
+
+
+def generate_with_fallback(
+    prompt: str, max_retries: int | None = None
+) -> tuple[str, str]:
     """Try each model with the circuit breaker until one succeeds or we give up."""
     if max_retries is None:
         max_retries = len(MODEL_PRIORITY) * 2
@@ -108,21 +115,24 @@ def generate_with_fallback(prompt: str, max_retries: int | None = None):
     while attempts < max_retries:
         model_name = get_available_model()
         attempts += 1
-        # log_event("curator_model_attempt", {"model": model_name, "attempt": attempts})
+        log_event("curator_model_attempt", {"model": model_name, "attempt": attempts})
         try:
-            result = client.models.generate_content(
-                model=model_name, contents=prompt, config=GENERATION_CONFIG
-            )
-            # log_event("curator_model_success", {"model": model_name, "attempt": attempts})
+            raw_text = _generate_with_groq(prompt, model_name)
+            log_event("curator_model_success", {"model": model_name, "attempt": attempts})
             print(f"🤖 Curator used model {model_name} on attempt {attempts}.")
-            return result
+            return raw_text, model_name
         except Exception as err:  # noqa: BLE001
             last_error = err
             mark_model_failure(model_name, str(err))
             continue
 
-    failure_message = f"❌ All models failed after {attempts} attempts. Last error: {last_error}"
-    # log_event("curator_model_exhausted", {"attempts": attempts, "last_error": str(last_error)})
+    failure_message = (
+        f"❌ All models failed after {attempts} attempts. Last error: {last_error}"
+    )
+    log_event(
+        "curator_model_exhausted",
+        {"attempts": attempts, "last_error": str(last_error)},
+    )
     raise ModelExhaustedError(failure_message)
 
 
@@ -132,7 +142,14 @@ def _is_coarse_reject(title: str, snippet: str) -> bool:
     Keeps AI token spend for ambiguous cases.
     """
     blob = f"{title} {snippet}".lower()
-    banned = ["парламент",        "претседател",        "министер",        "влада",      "совет",        "кампања",       "партија",
+    banned = [
+        "парламент",
+        "претседател",
+        "министер",
+        "влада",
+        "совет",
+        "кампања",
+        "партија",
         "избор",
         "протест",
         "осуден",
@@ -146,7 +163,13 @@ def _is_coarse_reject(title: str, snippet: str) -> bool:
         "експлозија",
         "кражба",
         "полиција",
-        "корупција","воен","земјотрес","температура","хороскоп","лото"]
+        "корупција",
+        "воен",
+        "земјотрес",
+        "температура",
+        "хороскоп",
+        "лото",
+    ]
     return any(token in blob for token in banned)
 
 
@@ -158,10 +181,13 @@ def analyze_news_batch(articles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     if not articles:
         return []
 
-    # log_event(
-    #     "curator_batch_received",
-    #     {"count": len(articles), "articles": [_article_summary_for_log(a) for a in articles]},
-    # )
+    log_event(
+        "curator_batch_received",
+        {
+            "count": len(articles),
+            "articles": [_article_summary_for_log(a) for a in articles],
+        },
+    )
     print(f"🧠 Curating {len(articles)} articles.")
 
     filtered_articles: List[Dict[str, Any]] = []
@@ -170,10 +196,10 @@ def analyze_news_batch(articles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     for idx, article in enumerate(articles):
         snippet = (article.get("summary_text") or "")[:200]
         if _is_coarse_reject(article.get("title", ""), snippet):
-            # log_event(
-            #     "curator_coarse_reject",
-            #     {"title": article.get("title", ""), "source": article.get("source", "")},
-            # )
+            log_event(
+                "curator_coarse_reject",
+                {"title": article.get("title", ""), "source": article.get("source", "")},
+            )
             print(f"⏩ Coarse reject: {article.get('title', '')}")
             continue
 
@@ -190,10 +216,13 @@ def analyze_news_batch(articles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     if not filtered_articles:
         return []
 
-    # log_event(
-    #     "curator_input",
-    #     {"count": len(filtered_articles), "articles": [_article_summary_for_log(a) for a in filtered_articles]},
-    # )
+    log_event(
+        "curator_input",
+        {
+            "count": len(filtered_articles),
+            "articles": [_article_summary_for_log(a) for a in filtered_articles],
+        },
+    )
 
     prompt = f"""
 Return strictly JSON. Evaluate Macedonian headlines.
@@ -206,17 +235,21 @@ Input: {json.dumps(payload, ensure_ascii=False)}
 """.strip()
 
     try:
-        response = generate_with_fallback(prompt)
-        raw_text = response.text.strip()
+        raw_text, model_used = generate_with_fallback(prompt)
         if raw_text.startswith("```"):
-            raw_text = raw_text.removeprefix("```json").removeprefix("```").rstrip("`").strip()
+            raw_text = (
+                raw_text.removeprefix("```json")
+                .removeprefix("```")
+                .rstrip("`")
+                .strip()
+            )
 
         try:
             parsed = json.loads(raw_text)
         except json.JSONDecodeError as parse_err:
-            # log_event(
-            #     "curator_parse_error", {"error": str(parse_err), "raw": raw_text[:500]}
-            # )
+            log_event(
+                "curator_parse_error", {"error": str(parse_err), "raw": raw_text[:500]}
+            )
             print(f"⚠️ Curator parse error: {parse_err}")
             return []
 
@@ -231,6 +264,15 @@ Input: {json.dumps(payload, ensure_ascii=False)}
                 continue
 
             original = filtered_articles[idx]
+            log_event(
+                "curator_article_model",
+                {
+                    "model": model_used,
+                    "status": item.get("status", "unknown"),
+                    "article": _article_summary_for_log(original),
+                },
+            )
+
             if item.get("status") == "rejected":
                 rejected_count += 1
                 rejected_details.append(
@@ -269,21 +311,22 @@ Input: {json.dumps(payload, ensure_ascii=False)}
                 }
             )
 
-        # log_event(
-        #     "curator_output_final",
-        #     {
-        #         "approved_count": len(final_articles),
-        #         "rejected_count": rejected_count,
-        #         "approved": [_article_summary_for_log(a) for a in final_articles],
-        #         "rejected": rejected_details,
-        #     },
-        # )
+        log_event(
+            "curator_output_final",
+            {
+                "approved_count": len(final_articles),
+                "rejected_count": rejected_count,
+                "approved": [_article_summary_for_log(a) for a in final_articles],
+                "rejected": rejected_details,
+                "model_used": model_used,
+            },
+        )
         print(f"✅ Curator approved {len(final_articles)} and rejected {rejected_count}.")
         return final_articles
 
     except ModelExhaustedError:
         raise
     except Exception as err:  # noqa: BLE001
-        # log_event("curator_exception", {"error": str(err)})
+        log_event("curator_exception", {"error": str(err)})
         print(f"⚠️ Curator exception: {err}")
         return []
