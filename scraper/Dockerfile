@@ -16,6 +16,9 @@ USER user
 ENV HOME=/home/user \
     PATH=/home/user/.local/bin:$PATH
 
+# Set Python to run in unbuffered mode (critical for HuggingFace logs)
+ENV PYTHONUNBUFFERED=1
+
 # Copy requirements first to leverage Docker cache
 COPY --chown=user requirements.txt requirements.txt
 RUN pip install --no-cache-dir --upgrade pip && \
@@ -24,5 +27,12 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy the rest of the application code
 COPY --chown=user . .
 
-# Command to run your daemon script
-CMD ["python", "run_local.py"]
+# Expose port 7860 (HuggingFace default)
+EXPOSE 7860
+
+# Health check to ensure the service is running
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:7860').read()"
+
+# Command to run your daemon script from the hugging folder
+CMD ["python", "hugging/run_local.py"]

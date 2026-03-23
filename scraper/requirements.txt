@@ -1,10 +1,9 @@
 feedparser
 supabase
 python-dotenv
-google-generativeai
+groq
 cloudscraper
 beautifulsoup4
 libsql-client
 libsql
-google
 schedule
