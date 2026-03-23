@@ -99,7 +99,12 @@ def _generate_with_groq(prompt: str, model_name: str) -> str:
         temperature=GROQ_TEMPERATURE,
         max_tokens=GROQ_MAX_TOKENS,
     )
-    return (result.choices[0].message.content or "").strip()
+    content = (result.choices[0].message.content or "").strip()
+    
+    if not content:
+        raise RuntimeError(f"Empty response from model {model_name}")
+    
+    return content
 
 
 def generate_with_fallback(
@@ -225,17 +230,41 @@ def analyze_news_batch(articles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     )
 
     prompt = f"""
-Return strictly JSON. Evaluate Macedonian headlines.
-Fields: id, status ("accepted"|"rejected"), reason (only if rejected), category (Tech|Culture|Lifestyle|Business|Sports), tone, hero_candidate, hero_score (0-100).
-Only ONE hero_candidate is allowed across the batch. If hero_candidate=false, set teaser and summary to "" to save tokens.
-If hero_candidate=true, also provide:
-- teaser: 6-9 words, uppercase-friendly, no punctuation.
-- summary: elegant Macedonian sentence, max 22 words, neutral/positive tone.
-Input: {json.dumps(payload, ensure_ascii=False)}
+RETURN ONLY VALID JSON. NO CODE. NO EXPLANATIONS. JUST JSON.
+
+Your response must start with {{ and contain a JSON object with a "results" array.
+
+Evaluate these Macedonian news headlines:
+{json.dumps(payload, ensure_ascii=False)}
+
+For each article, return:
+{{
+  "id": <number>,
+  "status": "accepted" or "rejected",
+  "reason": "<only if rejected>",
+  "category": "Tech" or "Culture" or "Lifestyle" or "Business" or "Sports",
+  "tone": "neutral" or "positive",
+  "hero_candidate": true or false,
+  "hero_score": <0-100>,
+  "teaser": "<6-9 words in UPPERCASE, only if hero_candidate=true>",
+  "summary": "<elegant Macedonian sentence, max 22 words, only if hero_candidate=true>"
+}}
+
+Rules:
+- Only ONE article can have hero_candidate=true
+- If hero_candidate=false, set teaser="" and summary=""
+- Return format: {{"results": [...]}} 
+- NO markdown, NO code blocks, ONLY JSON
 """.strip()
 
     try:
         raw_text, model_used = generate_with_fallback(prompt)
+        
+        if not raw_text or not raw_text.strip():
+            log_event("curator_empty_response", {"model": model_used})
+            print("⚠️ Curator returned empty response; skipping batch.")
+            return []
+        
         if raw_text.startswith("```"):
             raw_text = (
                 raw_text.removeprefix("```json")
@@ -251,6 +280,7 @@ Input: {json.dumps(payload, ensure_ascii=False)}
                 "curator_parse_error", {"error": str(parse_err), "raw": raw_text[:500]}
             )
             print(f"⚠️ Curator parse error: {parse_err}")
+            print(f"⚠️ Raw response (first 200 chars): {raw_text[:200]}")
             return []
 
         results = parsed.get("results", []) if isinstance(parsed, dict) else parsed

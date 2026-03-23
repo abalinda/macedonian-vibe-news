@@ -1,0 +1,44 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+*.jsonl
+
+# Database files (local only)
+*.db
+*.db-shm
+*.db-wal
+*.db-info
+
+# Environment files (secrets should be in HF Space settings)
+.env
+.env.local
+.env.production
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+benchmark.py
+
+# Local test scripts
+run_local.py

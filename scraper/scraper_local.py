@@ -485,17 +485,16 @@ def ensure_featured_slots_table(client):
     except Exception as e:
         print(f"⚠️ Unable to ensure featured_slots table: {e}")
 
+    # Try to add columns if they don't exist (silently ignore if they do)
     try:
         client.execute("ALTER TABLE featured_slots ADD COLUMN admin_choice INTEGER DEFAULT 0")
-    except Exception as e:
-        if "duplicate column name" not in str(e).lower():
-            print(f"⚠️ Unable to add admin_choice column: {e}")
+    except Exception:
+        pass  # Column likely already exists
 
     try:
         client.execute("ALTER TABLE featured_slots ADD COLUMN manual_override INTEGER DEFAULT 0")
-    except Exception as e:
-        if "duplicate column name" not in str(e).lower():
-            print(f"⚠️ Unable to add manual_override column: {e}")
+    except Exception:
+        pass  # Column likely already exists
 
     for slot_id, meta in FEATURE_SLOTS.items():
         try:
@@ -762,8 +761,13 @@ def rotate_featured_slots(curated_articles, ai_available=True):
 
 def turso_persist_worker():
     """Background thread that writes to DB as fast as items arrive."""
-    writer_client = get_db_client()
-    print(f"💾 Persistence worker started at {datetime.now(timezone.utc).isoformat()}.")
+    try:
+        writer_client = get_db_client()
+        print(f"💾 Persistence worker started at {datetime.now(timezone.utc).isoformat()}.")
+    except Exception as e:
+        print(f"🔥 CRITICAL: Persistence worker failed to connect to DB: {e}")
+        print(f"🔥 DB writes will FAIL. Check TURSO_DATABASE_URL and TURSO_AUTH_TOKEN.")
+        return
     
     while not persist_stop_event.is_set() or not persist_queue.empty():
         try:
@@ -808,13 +812,15 @@ def turso_persist_worker():
                 ]
                 statements.append(libsql_client.Statement(sql, params))
 
+            print(f"💾 Writing batch of {len(batch_items)} items to DB...")
             writer_client.batch(statements)
 
             for item in batch_items:
                 saved_at = datetime.now(timezone.utc).isoformat()
                 print(f"✅ [{saved_at}] Saved '{item.get('title', 'Untitled')}' from {item.get('source', 'Unknown')} to DB.")
         except Exception as e:
-            print(f"⚠️ DB Write Error for batch: {e}")
+            print(f"🔥 DB Write Error for batch of {len(batch_items)} items: {e}")
+            print(f"🔥 First item in failed batch: {batch_items[0].get('title', 'Unknown') if batch_items else 'Empty batch'}")
         finally:
             for _ in batch_items:
                 persist_queue.task_done()
@@ -848,10 +854,11 @@ def process_feeds():
     worker = Thread(target=turso_persist_worker)
     worker.start()
 
-    raw_articles_for_ai = []
     ai_budget = AIBudget(MAX_AI_ARTICLES_PER_RUN)
 
     try:
+        print(f"\n🔄 Processing {len(TARGET_FEEDS)} RSS feeds...")
+        print(f"💰 AI Budget: {ai_budget.remaining} articles\n")
         # === PHASE 1: THE SWEEP (Fetch & Instant Save) ===
         print("\n🌪️ PHASE 1: Fetching & Instant Processing...")
         
@@ -930,12 +937,15 @@ def process_feeds():
 
                 now_iso = datetime.now(timezone.utc).isoformat()
 
+                # ===== IMMEDIATE AI PROCESSING FOR CURATED FEEDS =====
                 if needs_curation:
+                    # Instead of accumulating, process this feed's articles immediately
+                    articles_for_ai = []
                     for art in fresh_articles:
                         if ai_budget.remaining <= 0:
                             print("   AI budget exhausted mid-feed; skipping remaining entries.")
                             break
-                        obj = {
+                        articles_for_ai.append({
                             'title': art["title"],
                             'link': art["link"],
                             'source': art["source"],
@@ -944,9 +954,30 @@ def process_feeds():
                             'summary_text': art["summary_text"],
                             'image_url': art.get("image_url"),
                             'scraped_at': now_iso,
-                        }
-                        raw_articles_for_ai.append(obj)
+                        })
                         ai_budget.remaining -= 1
+                    
+                    # Process this batch immediately instead of waiting
+                    if articles_for_ai:
+                        print(f"   🧠 AI curating {len(articles_for_ai)} articles from {source_name}...")
+                        try:
+                            curated = analyze_news_batch(articles_for_ai)
+                            curated_articles.extend(curated)
+                            
+                            # Update last curation timestamp on first successful AI call
+                            if do_curation and last_curation_at == datetime.min.replace(tzinfo=timezone.utc):
+                                last_curation_at = datetime.now(timezone.utc)
+                            
+                            for item in curated:
+                                persist_queue.put(item)
+                                print(f"   ✅ AI approved & queued: {item.get('title', 'Untitled')}")
+                        except ModelExhaustedError:
+                            print("🛑 AI Quota Exhausted. Skipping remaining curated feeds.")
+                            ai_budget.remaining = 0  # Stop all AI processing
+                        except Exception as e:
+                            print(f"⚠️ AI curation failed for {source_name}: {e}")
+                
+                # ===== DIRECT SAVE FOR NON-CURATED FEEDS =====
                 else:
                     category = config.get('category') or "General"
                     for art in fresh_articles:
@@ -970,28 +1001,7 @@ def process_feeds():
             except Exception as e:
                 print(f"⚠️ Error on {source_name}: {e}")
 
-        # === PHASE 2: THE DEEP THINK (AI Batching) ===
-        if do_curation and raw_articles_for_ai:
-            print(f"\n🧠 PHASE 2: AI Curation for {len(raw_articles_for_ai)} articles...")
-            last_curation_at = datetime.now(timezone.utc)
-            
-            # Batch them to avoid hitting rate limits too hard all at once
-            for i in range(0, len(raw_articles_for_ai), BATCH_SIZE):
-                batch = raw_articles_for_ai[i:i + BATCH_SIZE]
-                print(f"   Processing batch {i//BATCH_SIZE + 1}...")
-                
-                try:
-                    curated = analyze_news_batch(batch)
-                    curated_articles.extend(curated)
-                    for item in curated:
-                        persist_queue.put(item)
-                except ModelExhaustedError:
-                    print("🛑 AI Quota Exhausted. Stopping Phase 2.")
-                    break
-                except Exception as e:
-                    print(f"⚠️ Batch failed: {e}")
-        elif not do_curation:
-            print("ℹ️ Skipping AI curation this cycle (cooldown).")
+        # All feeds processed - AI curation happened inline above
 
     except Exception as e:
         print(f"🔥 Critical Scraper Error: {e}")
