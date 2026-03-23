@@ -1,4 +1,4 @@
-//-- POSTHOG ANALYTICS SETUP --
+//-- POSTHOG ANALYTICS SETUP -- Updated on 23/03/2026
 
 import posthog from 'posthog-js'
 
