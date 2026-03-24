@@ -3,6 +3,7 @@
     "@clerk/nextjs": "^6.36.0",
     "@libsql/client": "^0.15.15",
     "@next/third-parties": "^16.0.7",
+    "cross-env": "^10.1.0",
     "posthog-js": "^1.305.0"
   }
 }

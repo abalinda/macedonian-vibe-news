@@ -242,7 +242,7 @@ For each article, return:
   "id": <number>,
   "status": "accepted" or "rejected",
   "reason": "<only if rejected>",
-  "category": "Tech" or "Culture" or "Lifestyle" or "Business" or "Sports",
+  "category": "Tech" or "Culture" or "Lifestyle" or "Business" or "Sports" or "Iran",
   "tone": "neutral" or "positive",
   "hero_candidate": true or false,
   "hero_score": <0-100>,
