@@ -366,6 +366,7 @@ export const NavBar = () => {
   const showAdminLink = (isLoaded && isAdminEmail(email)) || isLocal;
 
   const menuLinks = [
+    { label: "Иран", href: "/?category=Iran" },
     { label: "Најново", href: "/najnovo" },
     { label: "Почетна", href: "/" },
     { label: "Технологија", href: "/?category=Tech" },
@@ -579,6 +580,7 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
   const [isScrollbarHidden, setIsScrollbarHidden] = useState(true);
   const categories = [
     { name: "Најново", value: "Latest", href: "/najnovo" },
+    { name: "Иран", value: "Iran" },
     { name: "Почетна", value: null, href: "/" },
     { name: "Технологија", value: "Tech" },
     { name: "Култура", value: "Culture" },
@@ -639,6 +641,7 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
             {categories.map((cat) => {
               const isActive = activeCategory === cat.value;
               const isLatest = cat.value === "Latest";
+              const isIran = cat.value === "Iran";
               const href = cat.href ?? (cat.value ? `/?category=${cat.value}` : "/");
 
               const baseClasses = `
@@ -651,12 +654,15 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
               const latestAccent = isLatest
                 ? "pl-3 pr-3 py-1 rounded-full border border-black bg-[#FFD300] text-black shadow-[3px_3px_0_#00000012] md:animate-pulse"
                 : "";
+              const iranAccent = isIran
+                ? "pl-3 pr-3 py-1 rounded-full border border-black bg-[#f26d6d] text-black shadow-[3px_3px_0_#ff000012] md:animate-pulse"
+                : "";
 
               return (
                 <Link
                   key={cat.name}
                   href={href}
-                  className={`${baseClasses} ${activeClasses} ${latestAccent}`}
+                  className={`${baseClasses} ${activeClasses} ${latestAccent} ${iranAccent}`}
                 >
                   {cat.name}
                 </Link>

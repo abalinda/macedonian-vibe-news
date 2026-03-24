@@ -14,6 +14,7 @@ const CATEGORY_LABELS = {
   Lifestyle: "Животен стил",
   Business: "Бизнис",
   Sports: "Спорт",
+  Iran: "Иран",
   Blog: "Блог",
 } as const;
 type CategoryValue = keyof typeof CATEGORY_LABELS;

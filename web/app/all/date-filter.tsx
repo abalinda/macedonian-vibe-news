@@ -10,6 +10,7 @@ const CATEGORY_OPTIONS = [
   { value: 'Lifestyle', label: 'Животен стил' },
   { value: 'Business', label: 'Бизнис' },
   { value: 'Sports', label: 'Спорт' },
+   { value: 'Iran', label: 'Иран' },
   { value: 'Blog', label: 'Блог' },
 ] as const;
 

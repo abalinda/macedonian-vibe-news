@@ -22,6 +22,7 @@ const getTeaserText = (post: any) => {
 
 // Maps URL parameter -> Database slot_id
 const CATEGORY_SLOT_MAP = {
+  Iran: "iran",
   Tech: "tech",
   Culture: "culture",
   Lifestyle: "lifestyle",
@@ -31,6 +32,7 @@ const CATEGORY_SLOT_MAP = {
 } as const;
 
 const CATEGORY_LABELS = {
+  Iran: "Иран",
   Tech: "Технологија",
   Culture: "Култура",
   Lifestyle: "Животен стил",

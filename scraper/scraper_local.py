@@ -42,6 +42,7 @@ FEATURE_SLOTS = {
     "lifestyle": {"category": "Lifestyle", "label": "Lifestyle"},
     "business": {"category": "Business", "label": "Business"},
     "sports": {"category": "Sports", "label": "Sports"},
+    "iran": {"category": "Iran", "label": "Иран"},
 }
 
 persist_queue = Queue()
@@ -175,6 +176,19 @@ def normalize_title_for_match(title: str) -> str:
         return ""
     cleaned = "".join(ch if ch.isalnum() or ch.isspace() else " " for ch in title.lower())
     return " ".join(cleaned.split())
+
+
+def entry_matches_keywords(entry, keywords: list[str]) -> bool:
+    if not keywords:
+        return True
+    blob = " ".join(
+        [
+            str(entry.get("title", "")),
+            str(entry.get("summary", "")),
+            str(entry.get("description", "")),
+        ]
+    ).lower()
+    return any(keyword in blob for keyword in keywords)
 
 
 def is_duplicate_title(title: str, seen_normalized: list[str], threshold: float = TITLE_SIMILARITY_THRESHOLD):
@@ -340,6 +354,31 @@ def backfill_images_for_recent_posts(limit: int = 200):
 # --- FEEDS CONFIGURATION ---
 TARGET_FEEDS = [
     # ==========================================
+    # 0. IRAN / WAR UPDATES (Curated + forced category)
+    # ==========================================
+    {
+        "url": "https://apnews.com/hub/iran?output=rss",
+        "source": "AP",
+        "curate": True,
+        "force_category": "Iran",
+        "keywords": ["iran", "tehran", "irgc"],
+    },
+    {
+        "url": "https://feeds.reuters.com/reuters/worldNews",
+        "source": "Reuters World",
+        "curate": True,
+        "force_category": "Iran",
+        "keywords": ["iran", "tehran", "irgc", "hormuz", "strait"],
+    },
+    {
+        "url": "https://www.aljazeera.com/xml/rss/all.xml",
+        "source": "Al Jazeera",
+        "curate": True,
+        "force_category": "Iran",
+        "keywords": ["iran", "tehran", "iranian", "hormuz"],
+    },
+
+    # ==========================================
     # 1. TECH & SCIENCE
     # ==========================================
     {"url": "https://mk.voanews.com/api/z-myil-vomx-tperbtm", "source": "Voice of America", "category": "Tech"},
@@ -484,6 +523,11 @@ def ensure_featured_slots_table(client):
         """)
     except Exception as e:
         print(f"⚠️ Unable to ensure featured_slots table: {e}")
+
+    try:
+        client.execute("CREATE INDEX IF NOT EXISTS idx_posts_category_published ON posts (category, published_at)")
+    except Exception as e:
+        print(f"⚠️ Unable to ensure posts index: {e}")
 
     # Try to add columns if they don't exist (silently ignore if they do)
     try:
@@ -892,6 +936,13 @@ def process_feeds():
 
                 entries = feed.entries[:4]  # Grab top 4 items
 
+                keywords = [k.lower() for k in config.get("keywords", [])]
+                if keywords:
+                    entries = [e for e in entries if entry_matches_keywords(e, keywords)]
+                    if not entries:
+                        print("   ℹ️ Skipping feed entries (no keyword match).")
+                        continue
+
                 raw_articles = []
                 for entry in entries:
                     summary_text = extract_summary_text(entry)
@@ -938,6 +989,8 @@ def process_feeds():
                 now_iso = datetime.now(timezone.utc).isoformat()
 
                 # ===== IMMEDIATE AI PROCESSING FOR CURATED FEEDS =====
+                force_category = config.get("force_category")
+
                 if needs_curation:
                     # Instead of accumulating, process this feed's articles immediately
                     articles_for_ai = []
@@ -950,7 +1003,7 @@ def process_feeds():
                             'link': art["link"],
                             'source': art["source"],
                             'published_at': art["published_at"],
-                            'category': None,
+                            'category': force_category,
                             'summary_text': art["summary_text"],
                             'image_url': art.get("image_url"),
                             'scraped_at': now_iso,
@@ -969,6 +1022,8 @@ def process_feeds():
                                 last_curation_at = datetime.now(timezone.utc)
                             
                             for item in curated:
+                                if force_category:
+                                    item["category"] = force_category
                                 persist_queue.put(item)
                                 print(f"   ✅ AI approved & queued: {item.get('title', 'Untitled')}")
                         except ModelExhaustedError:
@@ -979,7 +1034,7 @@ def process_feeds():
                 
                 # ===== DIRECT SAVE FOR NON-CURATED FEEDS =====
                 else:
-                    category = config.get('category') or "General"
+                    category = force_category or config.get('category') or "General"
                     for art in fresh_articles:
                         enriched_item = {
                             "title": art["title"],
