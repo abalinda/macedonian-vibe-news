@@ -110,4 +110,4 @@ macedonian-vibes-news/
 MIT
 
 Made with ❤️ in Macedonia  
-*Last Updated: January 2026*
+*Last Updated: March 2026*
