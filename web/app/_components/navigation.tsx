@@ -422,7 +422,7 @@ export const NavBar = () => {
             className="font-serif text-3xl md:text-5xl font-black tracking-tighter absolute left-1/2 transition-transform duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]"
             style={{ transform: `translateX(-50%) translateX(${titleShift}px)` }}
           >
-            <a href="https://www.vibes.mk/">VIBES.</a>
+            <a href="https://www.vibes.mk/">TEST.</a>
           </h1>
 
           <div className="flex-1 flex justify-end min-w-0 sm:min-w-[180px]">

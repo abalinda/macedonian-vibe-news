@@ -38,7 +38,7 @@ const CATEGORY_LABELS = {
   Lifestyle: "Животен стил",
   Business: "Бизнис",
   Sports: "Спорт",
-  Blog: "Тест",
+  Blog: "Блог",
 } as const;
 
 const toPlain = (value: any) => JSON.parse(JSON.stringify(value));
