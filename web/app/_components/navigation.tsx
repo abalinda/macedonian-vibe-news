@@ -432,7 +432,7 @@ export const NavBar = () => {
   {flagEnabled ? (
     <a href="https://www.vibes.mk/">FLAG-ENABLED</a>
   ) : (
-    <a href="https://www.vibes.mk/">Vibes</a>
+    <a href="https://www.vibes.mk/">VIBES.</a>
   )}
 </h1>
 
