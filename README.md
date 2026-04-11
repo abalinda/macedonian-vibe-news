@@ -122,7 +122,7 @@ macedonian-vibes-news/
 ## Deployment & Ops
 - **Frontend** is deployed to **Cloudflare Workers** via OpenNext (`web/wrangler.jsonc`).
 - **Scraper** runs as a GitHub Action (manual dispatch) or locally via Docker/`run_local.py`.
-- can be tested to feature-iran.macedonian-vibe-news.balinda-centar.workers.dev when pushing to feature/iran
+- can be tested to feature-iran.macedonian-vibe-news.balinda-centar.workers.dev when pushing to feature/iran.
 ---
 
 ## License
