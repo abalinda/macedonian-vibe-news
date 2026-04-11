@@ -1,7 +1,15 @@
-import { DOMExceptionCoercer, ErrorEventCoercer, ErrorCoercer, ObjectCoercer, StringCoercer } from './coercers'
+import {
+  DOMExceptionCoercer,
+  ErrorEventCoercer,
+  ErrorCoercer,
+  ObjectCoercer,
+  StringCoercer,
+  EventCoercer,
+} from './coercers'
 import { PrimitiveCoercer } from './coercers/primitive-coercer'
 import { PromiseRejectionEventCoercer } from './coercers/promise-rejection-event'
 import { ErrorPropertiesBuilder } from './error-properties-builder'
+import { createStackParser } from './parsers'
 import { ExceptionLike } from './types'
 
 describe('ErrorPropertiesBuilder', () => {
@@ -20,11 +28,12 @@ describe('ErrorPropertiesBuilder', () => {
         new ErrorEventCoercer(),
         new ErrorCoercer(),
         new PromiseRejectionEventCoercer(),
+        new EventCoercer(),
         new ObjectCoercer(),
         new StringCoercer(),
         new PrimitiveCoercer(),
       ],
-      [],
+      createStackParser('web:javascript'),
       []
     )
 
@@ -164,7 +173,7 @@ describe('ErrorPropertiesBuilder', () => {
       const exception = coerceInput(event, syntheticError)
       expect(exception).toMatchObject({
         type: 'MouseEvent',
-        value: "'MouseEvent' captured as exception with keys: [object has no keys]",
+        value: 'MouseEvent captured as exception with keys: [object has no keys]',
         stack: syntheticError.stack,
         synthetic: true,
       })
@@ -196,6 +205,24 @@ describe('ErrorPropertiesBuilder', () => {
         type: 'DOMException',
         value: 'dom-exception: oh no disaster',
         synthetic: false,
+      })
+    })
+
+    it('should extract the buried Error from a CustomEvent wrapping a PromiseRejectionEvent', () => {
+      const buriedError = new Error('Extension context invalidated.')
+      const customEvent = new CustomEvent('unhandledrejection', {
+        detail: {
+          reason: buriedError,
+          promise: Promise.resolve(),
+        },
+      })
+
+      const exception = coerceInput(customEvent)
+
+      expect(exception).toMatchObject({
+        type: 'Error',
+        value: 'Extension context invalidated.',
+        stack: buriedError.stack,
       })
     })
   })

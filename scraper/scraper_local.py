@@ -357,15 +357,15 @@ TARGET_FEEDS = [
     # 0. IRAN / WAR UPDATES (Curated + forced category)
     # ==========================================
     {
-        "url": "https://apnews.com/hub/iran?output=rss",
-        "source": "AP",
+        "url": "https://www.index.hr/rss",
+        "source": "Index.hr",
         "curate": True,
         "force_category": "Iran",
-        "keywords": ["iran", "tehran", "irgc"],
+        "keywords": ["iran", "tehran", "irgc", "rat"],
     },
     {
-        "url": "https://feeds.reuters.com/reuters/worldNews",
-        "source": "Reuters World",
+        "url": "https://balkans.aljazeera.net/rss.xml",
+        "source": "Al Jazeera Balkans",
         "curate": True,
         "force_category": "Iran",
         "keywords": ["iran", "tehran", "irgc", "hormuz", "strait"],
