@@ -269,8 +269,8 @@ export default async function Home({
     const [postsResult, featuredResult] = await Promise.all([
       turso.execute({
         sql: selectedCategory 
-          ? "SELECT * FROM posts WHERE category = ? ORDER BY published_at DESC LIMIT 20"
-          : "SELECT * FROM posts ORDER BY published_at DESC LIMIT 20",
+          ? "SELECT * FROM posts WHERE category = ? ORDER BY scraped_at DESC LIMIT 20"
+          : "SELECT * FROM posts ORDER BY scraped_at DESC LIMIT 20",
         args: selectedCategory ? [selectedCategory] : [],
       }),
       (async () => {
