@@ -524,11 +524,6 @@ def ensure_featured_slots_table(client):
     except Exception as e:
         print(f"⚠️ Unable to ensure featured_slots table: {e}")
 
-    try:
-        client.execute("CREATE INDEX IF NOT EXISTS idx_posts_category_published ON posts (category, published_at)")
-    except Exception as e:
-        print(f"⚠️ Unable to ensure posts index: {e}")
-
     # Try to add columns if they don't exist (silently ignore if they do)
     try:
         client.execute("ALTER TABLE featured_slots ADD COLUMN admin_choice INTEGER DEFAULT 0")
@@ -653,7 +648,7 @@ def load_recent_posts_for_random(client):
             """
             SELECT id, link, category, image_url
             FROM posts
-            WHERE image_url IS NOT NULL AND image_url != '' AND scraped_at >= ?
+            WHERE image_url IS NOT NULL AND image_url != '' AND scraed_at >= ?
             ORDER BY scraped_at DESC
             LIMIT 200
             """,
@@ -935,13 +930,16 @@ def process_feeds():
                     continue
 
                 entries = feed.entries[:4]  # Grab top 4 items
+                strict_iran_only = needs_curation and (config.get("force_category") == "Iran")
 
                 keywords = [k.lower() for k in config.get("keywords", [])]
-                if keywords:
+                if keywords and not strict_iran_only:
                     entries = [e for e in entries if entry_matches_keywords(e, keywords)]
                     if not entries:
                         print("   ℹ️ Skipping feed entries (no keyword match).")
                         continue
+                elif strict_iran_only:
+                    print("   🎯 Strict Iran mode: every fetched entry will be LLM-validated.")
 
                 raw_articles = []
                 for entry in entries:
@@ -987,10 +985,9 @@ def process_feeds():
                     continue
 
                 now_iso = datetime.now(timezone.utc).isoformat()
-
-                # ===== IMMEDIATE AI PROCESSING FOR CURATED FEEDS =====
                 force_category = config.get("force_category")
 
+                # ===== IMMEDIATE AI PROCESSING FOR CURATED FEEDS =====
                 if needs_curation:
                     # Instead of accumulating, process this feed's articles immediately
                     articles_for_ai = []
@@ -1014,8 +1011,13 @@ def process_feeds():
                     if articles_for_ai:
                         print(f"   🧠 AI curating {len(articles_for_ai)} articles from {source_name}...")
                         try:
-                            curated = analyze_news_batch(articles_for_ai)
+                            curated = analyze_news_batch(
+                                articles_for_ai,
+                                strict_iran_only=strict_iran_only,
+                            )
                             curated_articles.extend(curated)
+                            if strict_iran_only and not curated:
+                                print("   ℹ️ Strict Iran gate rejected all items from this feed.")
                             
                             # Update last curation timestamp on first successful AI call
                             if do_curation and last_curation_at == datetime.min.replace(tzinfo=timezone.utc):

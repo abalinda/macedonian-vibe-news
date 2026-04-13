@@ -178,10 +178,13 @@ def _is_coarse_reject(title: str, snippet: str) -> bool:
     return any(token in blob for token in banned)
 
 
-def analyze_news_batch(articles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def analyze_news_batch(
+    articles: List[Dict[str, Any]], strict_iran_only: bool = False
+) -> List[Dict[str, Any]]:
     """
     Classify and lightly enrich a batch of articles while minimizing prompt/response tokens.
     Only ambiguous/general items should reach this function.
+    If strict_iran_only=True, every item is LLM-vetted for direct Iran relevance.
     """
     if not articles:
         return []
@@ -190,6 +193,7 @@ def analyze_news_batch(articles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         "curator_batch_received",
         {
             "count": len(articles),
+            "mode": "strict_iran" if strict_iran_only else "default",
             "articles": [_article_summary_for_log(a) for a in articles],
         },
     )
@@ -200,7 +204,7 @@ def analyze_news_batch(articles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
     for idx, article in enumerate(articles):
         snippet = (article.get("summary_text") or "")[:200]
-        if _is_coarse_reject(article.get("title", ""), snippet):
+        if not strict_iran_only and _is_coarse_reject(article.get("title", ""), snippet):
             log_event(
                 "curator_coarse_reject",
                 {"title": article.get("title", ""), "source": article.get("source", "")},
@@ -225,11 +229,45 @@ def analyze_news_batch(articles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         "curator_input",
         {
             "count": len(filtered_articles),
+            "mode": "strict_iran" if strict_iran_only else "default",
             "articles": [_article_summary_for_log(a) for a in filtered_articles],
         },
     )
 
-    prompt = f"""
+    if strict_iran_only:
+        prompt = f"""
+RETURN ONLY VALID JSON. NO CODE. NO EXPLANATIONS. JUST JSON.
+
+Your response must start with {{ and contain a JSON object with a "results" array.
+
+Evaluate these headlines and snippets for IRAN-SPECIFIC relevance:
+{json.dumps(payload, ensure_ascii=False)}
+
+For each article, return:
+{{
+  "id": <number>,
+  "status": "accepted" or "rejected",
+  "reason": "<required if rejected>",
+  "category": "Iran",
+  "tone": "neutral" or "positive",
+  "hero_candidate": true or false,
+  "hero_score": <0-100>,
+  "teaser": "<6-9 words in UPPERCASE, only if hero_candidate=true>",
+  "summary": "<elegant Macedonian sentence, max 22 words, only if hero_candidate=true>"
+}}
+
+Rules:
+- ACCEPT only if the story is explicitly about Iran (state, society, diplomacy, economy, military, culture, or direct actions involving Iran)
+- REJECT if it is about other countries/conflicts and Iran is missing or only mentioned in passing
+- For every accepted item, category MUST be "Iran"
+- Only ONE article can have hero_candidate=true
+- If hero_candidate=false, set teaser="" and summary=""
+- If rejected, set hero_candidate=false, hero_score=0, teaser="", summary=""
+- Return format: {{"results": [...]}}
+- NO markdown, NO code blocks, ONLY JSON
+""".strip()
+    else:
+        prompt = f"""
 RETURN ONLY VALID JSON. NO CODE. NO EXPLANATIONS. JUST JSON.
 
 Your response must start with {{ and contain a JSON object with a "results" array.
@@ -315,6 +353,20 @@ Rules:
                 )
                 continue
 
+            if strict_iran_only:
+                declared_category = str(item.get("category") or "").strip().lower()
+                if declared_category and declared_category != "iran":
+                    rejected_count += 1
+                    rejected_details.append(
+                        {
+                            "title": original.get("title", ""),
+                            "link": original.get("link", ""),
+                            "source": original.get("source", ""),
+                            "reason": "strict_iran_category_mismatch",
+                        }
+                    )
+                    continue
+
             summary_text = (original.get("summary_text") or "")[:500]
             teaser = (item.get("teaser") or summary_text[:90]).strip()
             summary = (item.get("summary") or summary_text).strip()
@@ -334,7 +386,9 @@ Rules:
                     "image_url": original.get("image_url"),
                     "summary": summary,
                     "teaser": teaser,
-                    "category": item.get("category") or "Lifestyle",
+                    "category": "Iran"
+                    if strict_iran_only
+                    else (item.get("category") or "Lifestyle"),
                     "tone": item.get("tone", ""),
                     "hero_candidate": bool(item.get("hero_candidate", False)),
                     "hero_score": hero_score_int,
@@ -349,6 +403,7 @@ Rules:
                 "approved": [_article_summary_for_log(a) for a in final_articles],
                 "rejected": rejected_details,
                 "model_used": model_used,
+                "mode": "strict_iran" if strict_iran_only else "default",
             },
         )
         print(f"✅ Curator approved {len(final_articles)} and rejected {rejected_count}.")
