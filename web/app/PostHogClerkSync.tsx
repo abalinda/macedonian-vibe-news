@@ -9,7 +9,6 @@ export default function PostHogClerkSync() {
   useEffect(() => {
     if (isLoaded) {
       if (user) {
-        // User is signed in - identify them
         const email = user.emailAddresses[0]?.emailAddress
         
         posthog.identify(email, {
