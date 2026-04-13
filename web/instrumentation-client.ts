@@ -6,5 +6,5 @@ posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
   ui_host: 'https://eu.posthog.com',  
   defaults: '2026-01-30',  
   opt_in_site_apps: true,  
-  person_profiles: 'identified_only',  
+  person_profiles: 'always',  
 })  
