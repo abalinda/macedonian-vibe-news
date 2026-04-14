@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { CategoryNav, NavBar } from "../_components/navigation";
-import Link from "next/link";
+import { ContactLink } from "../_components/contact-link";
 
 export const metadata = {
   title: "За нас | VIBES",
@@ -143,13 +143,7 @@ export default function AboutPage() {
                         Имате прашање, предлог или сакате да соработуваме?
                     </p>
                 </div>
-                <Link 
-                    href="mailto:contact@vibes.mk" 
-                    className="group flex items-center gap-2 font-sans text-lg font-bold border-2 border-black rounded-full px-12 py-4 hover:bg-black hover:text-white transition-all"
-                >
-                    contact@vibes.mk
-                    <span className="group-hover:translate-x-1 transition-transform">→</span>
-                </Link>
+                <ContactLink />
             </div>
         </section>
 

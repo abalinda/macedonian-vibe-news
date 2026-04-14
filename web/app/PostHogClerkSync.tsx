@@ -9,12 +9,11 @@ export default function PostHogClerkSync() {
   useEffect(() => {
     if (isLoaded) {
       if (user) {
-        const email = user.emailAddresses[0]?.emailAddress
-        
-        posthog.identify(email, {
-            name: user.fullName
+        posthog.identify(user.id, {
+            email: user.emailAddresses[0]?.emailAddress,
+            name: user.fullName,
         })
-        
+
       } else {
         // User is signed out - reset PostHog
         posthog.reset()

@@ -1,8 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 'use client'
-import { posthog } from 'posthog-js'
-import { ClerkProvider, useUser } from '@clerk/clerk-react'
-
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -15,26 +12,10 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
+import { useUser } from '@clerk/nextjs';
 import { isAdminEmail } from "@/lib/admins";
 import { searchPosts, type SearchResult } from "@/app/actions/search";
-import { useFeatureFlagEnabled, useFeatureFlagVariantKey } from "posthog-js/react";
-
-export default function PostHogClerkSync() {
-  const { isLoaded, user } = useUser();
-    useEffect(() => {
-    if (isLoaded) {
-      if (user) {
-        // User is signed in - identify them
-        posthog.identify(user.id)
-      } else {
-        // User is signed out - reset PostHog
-        posthog.reset()
-      }
-    }
-  }, [isLoaded, user])
-
-  return null
-}
+import { useFeatureFlagEnabled } from "posthog-js/react";
 
 const MIN_NAV_QUERY_LENGTH = 2;
 

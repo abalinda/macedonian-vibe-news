@@ -36,7 +36,7 @@ export default async function LatestStoriesPage() {
       sql: "SELECT * FROM posts ORDER BY scraped_at DESC LIMIT 150",
       args: [],
     });
-    posts = result.rows;
+    posts = JSON.parse(JSON.stringify(result.rows));
   } catch (err) {
     console.error("Failed to fetch latest posts:", err);
   }
