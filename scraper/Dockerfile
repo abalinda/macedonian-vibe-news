@@ -34,5 +34,5 @@ EXPOSE 7860
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:7860').read()"
 
-# Command to run your daemon script from the hugging folder
-CMD ["python", "hugging/run_local.py"]
+# Run the consolidated root daemon (binds port 7860 + uses the current Groq scraper)
+CMD ["python", "run_local.py"]
