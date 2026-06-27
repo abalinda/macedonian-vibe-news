@@ -56,7 +56,7 @@ const LatestCard = ({ post, index, now }: { post: any; index: number; now: numbe
   const categoryLabel = CATEGORY_LABELS[post?.category] ?? post?.category ?? "Вести";
   const finalTimeLabel = getRelativePostTime(post, now);
   const imageUrl = post?.image_url;
-  const shareUrl = post?.category === "Blog" ? `/blog/${post.id}` : post?.link || `/go/${post.id}`;
+  const shareUrl = post?.category === "Blog" ? `/blog/${post.id}` : `/go/${post.id}`;
 
   return (
     <div className="relative h-full">
@@ -83,7 +83,7 @@ const LatestCard = ({ post, index, now }: { post: any; index: number; now: numbe
             <span
               className={`text-[10px] font-black uppercase tracking-widest rounded-full px-2 py-1 shadow-sm ${
                 finalTimeLabel === "Тазе"
-                  ? "bg-[#FFD300] text-black"
+                  ? "bg-accent text-black"
                   : "bg-ink text-paper"
               }`}
             >
@@ -97,7 +97,7 @@ const LatestCard = ({ post, index, now }: { post: any; index: number; now: numbe
 
         <div className="p-4 flex flex-col gap-3 h-full">
           {/* <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-neutral-400">
-            <span className="text-[#002CFF] font-bold">{post.source}</span>
+            <span className="text-link font-bold">{post.source}</span>
             <span className="h-px w-6 bg-neutral-200" />
             <span className="text-neutral-600">{finalTimeLabel}</span>
           </div> */}
@@ -112,7 +112,7 @@ const LatestCard = ({ post, index, now }: { post: any; index: number; now: numbe
                 {teaserWithEllipsis}
               </p>
               <div className="flex justify-end">
-                <span className="text-[11px] font-bold text-ink uppercase tracking-widest border-b-2 border-transparent group-hover:border-[#FFD300]">
+                <span className="text-[11px] font-bold text-ink uppercase tracking-widest border-b-2 border-transparent group-hover:border-accent">
                   Прочитај повеќе →
                 </span>
               </div>
@@ -201,7 +201,7 @@ export const LatestFeed = ({ posts }: { posts: any[] }) => {
           <>
             <button
               onClick={() => setVisibleCount((prev) => Math.min(prev + 9, posts.length))}
-              className="group inline-flex items-center gap-2 border border-black bg-ink text-paper px-3 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.3em] transition-all hover:bg-[#FFD300] hover:text-black hover:shadow-[6px_6px_0_#00000012] md:self-auto self-end md:flex hidden"
+              className="group inline-flex items-center gap-2 border border-black bg-ink text-paper px-3 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.3em] transition-all hover:bg-accent hover:text-black hover:shadow-[6px_6px_0_var(--shadow)] md:self-auto self-end md:flex hidden"
               aria-label="Вчитај повеќе најнови вести"
             >
               <span>Уште вести</span>

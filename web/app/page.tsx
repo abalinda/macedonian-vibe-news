@@ -6,7 +6,6 @@ import { CategoryNav, NavBar } from "./_components/navigation";
 import { AdminBlogCTA } from "./_components/admin-blog-cta";
 import { WelcomeModal } from "./_components/welcome-modal";
 import { AdminHeroOverride } from "./_components/admin-hero-override";
-import { ShareButton } from "./_components/share-button";
 import { getRelativePostTime } from "@/lib/time";
 
 // Revalidate every 60 seconds (ISR)
@@ -44,10 +43,6 @@ const CATEGORY_LABELS = {
 } as const;
 
 const toPlain = (value: any) => JSON.parse(JSON.stringify(value));
-
-// Blog posts share their canonical vibes URL; external stories share the source link.
-const getShareUrl = (post: any) =>
-  post?.category === "Blog" ? `/blog/${post.id}` : post?.link || `/go/${post.id}`;
 
 // -- HELPER COMPONENTS --
 
@@ -90,7 +85,7 @@ const SideStory = ({ post }: { post: any }) => {
   return (
     <div className="relative py-6 last:border-0 border-b border-line-soft lg:border-none">
       <StoryLink post={post} className="group block">
-      <div className="flex gap-4 pr-9">
+      <div className="flex gap-4">
         <div className="relative w-32 aspect-[16/10] overflow-hidden bg-surface-2 border border-line flex-shrink-0">
           {imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -132,14 +127,6 @@ const SideStory = ({ post }: { post: any }) => {
         </div>
       </div>
       </StoryLink>
-      <ShareButton
-        url={getShareUrl(post)}
-        title={post.title || "Vibes"}
-        variant="icon"
-        context="home_side"
-        align="right"
-        className="absolute right-0 top-6 z-20"
-      />
     </div>
   );
 };
@@ -186,19 +173,11 @@ const HeroStory = ({ post }: { post: any }) => {
         <p className="text-sm md:text-base font-mono uppercase tracking-[0.15em] text-neutral-600 mb-6 max-w-2xl mx-auto">
           {teaserText}
         </p>
-        <div className="inline-flex items-center gap-2 text-xs font-bold text-ink uppercase tracking-widest border-b-2 border-transparent group-hover:border-[#FFD300]">
+        <div className="inline-flex items-center gap-2 text-xs font-bold text-ink uppercase tracking-widest border-b-2 border-transparent group-hover:border-accent">
           Прочитај повеќе <span>&rarr;</span>
         </div>
       </div>
       </StoryLink>
-      <ShareButton
-        url={getShareUrl(post)}
-        title={post.title || "Vibes"}
-        variant="icon"
-        context="home_hero"
-        align="right"
-        className="absolute right-4 top-4 z-20"
-      />
     </div>
   );
 };
@@ -260,21 +239,13 @@ const SecondaryHeroStory = ({ post, position }: { post: any; position: number })
                 </span>
               )}
             </div>
-            <span className="inline-flex items-center gap-2 text-xs font-bold text-ink uppercase tracking-widest border-b-2 border-transparent group-hover:border-[#FFD300]">
+            <span className="inline-flex items-center gap-2 text-xs font-bold text-ink uppercase tracking-widest border-b-2 border-transparent group-hover:border-accent">
               Прочитај повеќе <span aria-hidden>→</span>
             </span>
           </div>
         </div>
       </div>
       </StoryLink>
-      <ShareButton
-        url={getShareUrl(post)}
-        title={post.title || "Vibes"}
-        variant="icon"
-        context="home_secondary"
-        align="right"
-        className="absolute right-3 top-3 z-20"
-      />
     </div>
   );
 };

@@ -40,7 +40,7 @@ const StoryRow = ({ post, index }: { post: any; index: number }) => {
     : post?.id
       ? `/go/${post.id}`
       : post?.link || "#";
-  const shareUrl = isBlog ? `/blog/${post.id}` : post?.link || `/go/${post.id}`;
+  const shareUrl = isBlog ? `/blog/${post.id}` : `/go/${post.id}`;
   const wrapperClass = "group block pl-4 pr-14 md:pl-6 md:pr-16 py-5 hover:bg-surface-2 transition-colors";
   const content = (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
