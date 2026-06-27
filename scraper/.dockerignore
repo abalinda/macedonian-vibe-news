@@ -39,6 +39,3 @@ logs/
 # Documentation
 README.md
 benchmark.py
-
-# Local test scripts
-run_local.py
