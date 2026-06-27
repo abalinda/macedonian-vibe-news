@@ -13,7 +13,7 @@ Everything else is inactive: `my-clerk-app/` (Clerk starter sandbox), root `hugg
 
 ## Design system (MANDATORY for all UI work)
 
-**`web/DESIGN_SYSTEM.md` is the single source of truth for how vibes.mk looks, feels, and speaks. Read it before building, changing, or reviewing any frontend UI, and follow it on every commit.** It defines the brand (editorial neo-brutalism), the color tokens (`#FDFBF7` paper, `#FFD300` signature yellow, `#002CFF` interaction blue, `#f26d6d` Iran/alert coral), typography (Playfair headlines / Inter UI / mono UPPERCASE teasers), the hard-border + offset-zero-blur-shadow elevation model, copy-paste component recipes, the Macedonian-Cyrillic voice/lexicon, and a pre-PR design checklist. When the design genuinely needs a new pattern, add it to `DESIGN_SYSTEM.md` in the **same** commit — a design change not reflected there is a bug.
+**`web/DESIGN_SYSTEM.md` is the single source of truth for how vibes.mk looks, feels, and speaks. Read it before building, changing, or reviewing any frontend UI, and follow it on every commit.** It defines the brand (editorial neo-brutalism), the color tokens (`#FDFBF7` paper, `#FFD300` signature yellow, `#002CFF` interaction blue, `#f26d6d` alert coral (reserved)), typography (Playfair headlines / Inter UI / mono UPPERCASE teasers), the hard-border + offset-zero-blur-shadow elevation model, copy-paste component recipes, the Macedonian-Cyrillic voice/lexicon, and a pre-PR design checklist. When the design genuinely needs a new pattern, add it to `DESIGN_SYSTEM.md` in the **same** commit — a design change not reflected there is a bug.
 
 ## Commands
 
@@ -53,10 +53,10 @@ RSS feeds → scraper (cloudscraper + feedparser) → dedup → Groq/Llama curat
 ```
 
 ### Turso schema (no migration system)
-There is **no migrations tooling**. Schema is created/evolved by **idempotent runtime guards** in app code — e.g. `ensureAdminChoiceColumn()` runs `ALTER TABLE ... ADD COLUMN` and swallows "duplicate column" errors; `ensureIranSlot()` does `INSERT OR IGNORE`; the scraper's `ensure_featured_slots_table()` creates the table. When you add a column or slot, add a guard like these rather than a migration file.
+There is **no migrations tooling**. Schema is created/evolved by **idempotent runtime guards** in app code — e.g. `ensureAdminChoiceColumn()` runs `ALTER TABLE ... ADD COLUMN` and swallows "duplicate column" errors; the scraper's `ensure_featured_slots_table()` creates the table (seeding slot rows with `INSERT OR IGNORE`). When you add a column or slot, add a guard like these rather than a migration file.
 
 - **`posts`** — `id, title, link, source, category, teaser, summary, content?, image_url, published_at, scraped_at, clicks, updated_at`.
-- **`featured_slots`** — one row per homepage hero slot: `slot_id, label, post_id, locked_until, updated_at, manual_override, admin_choice`. Slot ids: `main, tech, culture, lifestyle, business, sports, iran`.
+- **`featured_slots`** — one row per homepage hero slot: `slot_id, label, post_id, locked_until, updated_at, manual_override, admin_choice`. Slot ids: `main, tech, culture, lifestyle, business, sports`.
 
 ### DB clients
 - Web: `web/lib/turso.ts` (`@libsql/client/http`). Imported in ~8 files; this is the live path.
@@ -91,5 +91,5 @@ The homepage hero and per-category highlights are driven by `featured_slots`. Tw
 - **The GitHub Actions workflow `.github/workflows/scraper.yml` is stale and would fail if run**: its schedule is commented out (manual `workflow_dispatch` only), it runs `python scraper_2.py` (doesn't exist — the real entry is `scraper_local.py`), and injects `GEMINI_API_KEY` (the curator actually uses `GROQ_API_KEY`). Production scraping happens on **HuggingFace Spaces**, not here.
 - **The scraper has one production entrypoint** (consolidated 2026-06-27): the HuggingFace Space `vibesmk/scraper` `Dockerfile` runs `python run_local.py` — the **root** daemon, which starts an HTTP server on **port 7860** (required, or HF flags the Space `RUNTIME_ERROR`) and then runs the root `scraper_local.py` + `curator_groq.py` (Groq). The old Gemini-based `scraper/hugging/` copy has been deleted; a separate, also-inactive root `hugging/` copy still exists. The Space's `.dockerignore` must **not** list `run_local.py` (doing so excludes the entrypoint from the image → `can't open file '/app/run_local.py'`). Deploy = `git push` to the HF git remote (separate from GitHub `origin`).
 - Multiple READMEs disagree on details (70+ vs 95+ feeds, Supabase vs Turso, GitHub Action vs HuggingFace, 1h vs 4h lock). **Trust the code constants over the prose.**
-- The `iran` category/slot was added on top of the original 6 — both the scraper `FEATURE_SLOTS` and the API's `ensureIranSlot()` handle it. New categories need updates in both places plus the frontend.
-- Preview deploy: pushing `feature/iran` publishes to `feature-iran.macedonian-vibe-news.balinda-centar.workers.dev`.
+- Categories live in three places that must stay in sync: the scraper `FEATURE_SLOTS`, the homepage `CATEGORY_SLOT_MAP`/nav in `web/app`, and the `/all` + `/najnovo` label maps. Adding or removing a category means editing all three; a removal also needs a one-off Turso cleanup (delete the `featured_slots` row + matching `posts`). The original `iran` category was removed this way.
+- Preview deploy: pushing a feature branch publishes to `<branch>.macedonian-vibe-news.balinda-centar.workers.dev` (e.g. `feature/foo` → `feature-foo.…`).

@@ -16,7 +16,7 @@ AI-curated Macedonian news aggregator. A Python scraper ingests 95+ RSS feeds, c
 ## What's Here Right Now
 
 - **Frontend:** Next.js 16 App Router (React 19) deployed on **Cloudflare Workers** via **OpenNext**.
-- **Features:** 7 categories (Tech, Culture, Lifestyle, Business, Sports, Iran + main hero), `/najnovo` feed, `/all` archive with Macedonian/Latin search and date filters, blog, Admin Dashboard, dark mode, PWA, share buttons.
+- **Features:** 6 categories (Tech, Culture, Lifestyle, Business, Sports + main hero), `/najnovo` feed, `/all` archive with Macedonian/Latin search and date filters, blog, Admin Dashboard, dark mode, PWA, share buttons.
 - **Two-tier homepage:** Stories tagged `good_vibes = 1` appear on the homepage; lower-quality accepted stories go only to *most recent* and *archive*. Tabloid/junk is rejected entirely.
 - **Database:** Turso (libSQL) as single source of truth; 7 hero slots rotate automatically.
 - **Auth:** Clerk (Edge middleware); admin-only areas gated by `web/lib/admins.ts`.
@@ -48,7 +48,7 @@ Browser/PWA ─┬─ Cloudflare Workers (Next.js 16, nodejs_compat)
 ### Data Model (Turso)
 
 - **`posts`**: `id`, `title`, `link`, `source`, `category`, `teaser`, `summary`, optional `content`, `image_url`, `published_at`, `scraped_at`, `clicks`, `updated_at`, `good_vibes` (1 = homepage-eligible, 0 = archive-only; auto-created by scraper with `DEFAULT 1`).
-- **`featured_slots`**: one row per hero slot — `slot_id` (`main`, `tech`, `culture`, `lifestyle`, `business`, `sports`, `iran`), `label`, `post_id`, `locked_until`, `updated_at`, `manual_override`, `admin_choice`.
+- **`featured_slots`**: one row per hero slot — `slot_id` (`main`, `tech`, `culture`, `lifestyle`, `business`, `sports`), `label`, `post_id`, `locked_until`, `updated_at`, `manual_override`, `admin_choice`.
 
 ---
 
@@ -207,12 +207,12 @@ npx eslint .      # lint (no npm lint script)
 - **Scraper runs on HuggingFace, not GitHub Actions.** The `.github/workflows/scraper.yml` workflow is stale: wrong entrypoint (`scraper_2.py`), wrong API key (`GEMINI_API_KEY`), schedule commented out.
 - **Port 7860 is required.** HuggingFace Docker Spaces mark a Space `RUNTIME_ERROR` unless the app listens on its declared `app_port`. `run_local.py` starts an HTTP server there before the daemon loop.
 - **Two Spaces can race.** If the Groq Space and the Claude trial Space both run at once, they will both rotate `featured_slots`. Pause the prod Space during any trial run. See `TRIAL_SETUP.md`.
-- **No migrations tooling.** Schema changes use idempotent runtime guards (e.g. `ensureAdminChoiceColumn()`, `ensureIranSlot()`, the scraper's `ensure_good_vibes_column()`). Add guards for any new column or slot rather than a migration file.
+- **No migrations tooling.** Schema changes use idempotent runtime guards (e.g. `ensureAdminChoiceColumn()`, the scraper's `ensure_good_vibes_column()`). Add guards for any new column or slot rather than a migration file.
 - **Admin override lock is 4 hours**, not 1 hour (the old README was wrong). Trust `FOUR_HOURS_MS` in `web/app/api/featured-slots/route.ts`.
 - **`good_vibes` homepage filter** requires a web deploy to take effect. The scraper creates the column and tags posts; the homepage only filters on it after `npm run deploy`. The query falls back to unfiltered if the column doesn't exist, so deploy order doesn't break the site.
 - **Multiple READMEs disagree.** Trust the code constants over prose (hero lock, feed count, API keys, etc.).
 - **`web/lib/supabase.ts`** and the `@supabase/supabase-js` dependency are legacy/dead — not imported anywhere. Ignore Supabase references.
-- **Preview deploy:** pushing `feature/iran` publishes to `feature-iran.macedonian-vibe-news.balinda-centar.workers.dev`.
+- **Preview deploy:** pushing a feature branch publishes to `<branch>.macedonian-vibe-news.balinda-centar.workers.dev` (e.g. `feature/foo` → `feature-foo.…`).
 
 ---
 

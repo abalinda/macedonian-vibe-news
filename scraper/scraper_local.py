@@ -32,8 +32,12 @@ HERO_FALLBACK_LOOKBACK_HOURS = 24
 # redeploy (Claude Max has far more headroom than the Groq free tier). Higher = more articles
 # curated per run, but more Claude calls = more Max quota used + longer wall-clock per run.
 MAX_AI_ARTICLES_PER_RUN = int(os.getenv("MAX_AI_ARTICLES_PER_RUN", "100"))
-MIN_CURATION_INTERVAL_MINUTES = int(os.getenv("MIN_CURATION_INTERVAL_MINUTES", "30"))
-BATCH_SIZE = int(os.getenv("BATCH_SIZE", "8"))
+# All feeds now route through curation, so a cooldown blocks every save — keep this below
+# the run cadence (15 min) so each run curates. Raise it to throttle Max quota.
+MIN_CURATION_INTERVAL_MINUTES = int(os.getenv("MIN_CURATION_INTERVAL_MINUTES", "10"))
+# Headlines sent to the AI per curation call (batched across feeds in PHASE 2). Bigger =
+# fewer Claude calls + more token-efficient; too big risks a sloppier single response.
+CURATION_BATCH_SIZE = int(os.getenv("CURATION_BATCH_SIZE", "12"))
 # How many entries to pull from each feed per run (was a hardcoded 4).
 ENTRIES_PER_FEED = int(os.getenv("ENTRIES_PER_FEED", "4"))
 # Only stories scoring at/above this may occupy a homepage featured (hero) slot.
@@ -49,7 +53,6 @@ FEATURE_SLOTS = {
     "lifestyle": {"category": "Lifestyle", "label": "Lifestyle"},
     "business": {"category": "Business", "label": "Business"},
     "sports": {"category": "Sports", "label": "Sports"},
-    "iran": {"category": "Iran", "label": "Иран"},
 }
 
 persist_queue = Queue()
@@ -360,31 +363,6 @@ def backfill_images_for_recent_posts(limit: int = 200):
 
 # --- FEEDS CONFIGURATION ---
 TARGET_FEEDS = [
-    # ==========================================
-    # 0. IRAN / WAR UPDATES (Curated + forced category)
-    # ==========================================
-    {
-        "url": "https://www.index.hr/rss",
-        "source": "Index.hr",
-        "curate": True,
-        "force_category": "Iran",
-        "keywords": ["iran", "tehran", "irgc", "rat"],
-    },
-    {
-        "url": "https://balkans.aljazeera.net/rss.xml",
-        "source": "Al Jazeera Balkans",
-        "curate": True,
-        "force_category": "Iran",
-        "keywords": ["iran", "tehran", "irgc", "hormuz", "strait"],
-    },
-    {
-        "url": "https://www.aljazeera.com/xml/rss/all.xml",
-        "source": "Al Jazeera",
-        "curate": True,
-        "force_category": "Iran",
-        "keywords": ["iran", "tehran", "iranian", "hormuz"],
-    },
-
     # ==========================================
     # 1. TECH & SCIENCE
     # ==========================================
@@ -904,6 +882,7 @@ def process_feeds():
     if seeded_titles:
         print(f"ℹ️ Seeded {seeded_titles} recent titles for deduping.")
     curated_articles = []
+    pending_curation = []  # accumulated across feeds in PHASE 1, AI-curated in PHASE 2
 
     # Make sure the homepage-tier column exists before the persist worker writes.
     try:
@@ -939,7 +918,9 @@ def process_feeds():
         for config in TARGET_FEEDS:
             try:
                 source_name = config.get('source', 'Unknown Source')
-                needs_curation = bool(config.get('curate'))
+                # Curate any feed that is flagged OR carries a category — i.e. ALL feeds.
+                # (Topic feeds used to save directly; now Claude vets them for good_vibes.)
+                needs_curation = bool(config.get('curate')) or bool(config.get('category'))
                 lane = "AI" if needs_curation else "direct"
                 print(f"📡 Fetching {source_name} ({lane})...")
 
@@ -965,16 +946,13 @@ def process_feeds():
                     continue
 
                 entries = feed.entries[:ENTRIES_PER_FEED]  # Grab top N items per feed
-                strict_iran_only = needs_curation and (config.get("force_category") == "Iran")
 
                 keywords = [k.lower() for k in config.get("keywords", [])]
-                if keywords and not strict_iran_only:
+                if keywords:
                     entries = [e for e in entries if entry_matches_keywords(e, keywords)]
                     if not entries:
                         print("   ℹ️ Skipping feed entries (no keyword match).")
                         continue
-                elif strict_iran_only:
-                    print("   🎯 Strict Iran mode: every fetched entry will be LLM-validated.")
 
                 raw_articles = []
                 for entry in entries:
@@ -1020,56 +998,30 @@ def process_feeds():
                     continue
 
                 now_iso = datetime.now(timezone.utc).isoformat()
-                force_category = config.get("force_category")
+                # Preserve each feed's intended category (topic feeds carry `category`;
+                # broad feeds carry none and let Claude classify).
+                force_category = config.get("force_category") or config.get("category")
 
-                # ===== IMMEDIATE AI PROCESSING FOR CURATED FEEDS =====
+                # ===== ACCUMULATE CURATED-FEED ARTICLES FOR BATCHED AI (PHASE 2) =====
                 if needs_curation:
-                    # Instead of accumulating, process this feed's articles immediately
-                    articles_for_ai = []
+                    # Broad feeds (curate:True — General/Local) get priority so a heavy
+                    # topic-feed volume never starves them when we truncate to the run budget.
+                    priority = 0 if config.get("curate") else 1
                     for art in fresh_articles:
-                        if ai_budget.remaining <= 0:
-                            print("   AI budget exhausted mid-feed; skipping remaining entries.")
-                            break
-                        articles_for_ai.append({
-                            'title': art["title"],
-                            'link': art["link"],
-                            'source': art["source"],
-                            'published_at': art["published_at"],
-                            'category': force_category,
-                            'summary_text': art["summary_text"],
-                            'image_url': art.get("image_url"),
-                            'scraped_at': now_iso,
+                        pending_curation.append({
+                            "title": art["title"],
+                            "link": art["link"],
+                            "source": art["source"],
+                            "published_at": art["published_at"],
+                            "summary_text": art["summary_text"],
+                            "image_url": art.get("image_url"),
+                            "scraped_at": now_iso,
+                            "_force_category": force_category,
+                            "_priority": priority,
                         })
-                        ai_budget.remaining -= 1
-                    
-                    # Process this batch immediately instead of waiting
-                    if articles_for_ai:
-                        print(f"   🧠 AI curating {len(articles_for_ai)} articles from {source_name}...")
-                        try:
-                            curated = analyze_news_batch(
-                                articles_for_ai,
-                                strict_iran_only=strict_iran_only,
-                            )
-                            curated_articles.extend(curated)
-                            if strict_iran_only and not curated:
-                                print("   ℹ️ Strict Iran gate rejected all items from this feed.")
-                            
-                            # Update last curation timestamp on first successful AI call
-                            if do_curation and last_curation_at == datetime.min.replace(tzinfo=timezone.utc):
-                                last_curation_at = datetime.now(timezone.utc)
-                            
-                            for item in curated:
-                                if force_category:
-                                    item["category"] = force_category
-                                persist_queue.put(item)
-                                print(f"   ✅ AI approved & queued: {item.get('title', 'Untitled')}")
-                        except ModelExhaustedError:
-                            print("🛑 AI Quota Exhausted. Skipping remaining curated feeds.")
-                            ai_budget.remaining = 0  # Stop all AI processing
-                        except Exception as e:
-                            print(f"⚠️ AI curation failed for {source_name}: {e}")
-                
-                # ===== DIRECT SAVE FOR NON-CURATED FEEDS =====
+                    print(f"   🧺 Queued {len(fresh_articles)} article(s) for batched AI curation.")
+
+                # ===== DIRECT SAVE FOR NON-CURATED FEEDS (fallback; normally none) =====
                 else:
                     category = force_category or config.get('category') or "General"
                     for art in fresh_articles:
@@ -1093,7 +1045,45 @@ def process_feeds():
             except Exception as e:
                 print(f"⚠️ Error on {source_name}: {e}")
 
-        # All feeds processed - AI curation happened inline above
+        # === PHASE 2: BATCHED AI CURATION (broad feeds first) ===
+        if pending_curation:
+            # Broad feeds first, then topic; truncate to the per-run budget (the rest stay
+            # unsaved => still "fresh" next run, so they get picked up later, not lost).
+            pending_curation.sort(key=lambda a: a.get("_priority", 1))
+            if len(pending_curation) > MAX_AI_ARTICLES_PER_RUN:
+                dropped = len(pending_curation) - MAX_AI_ARTICLES_PER_RUN
+                print(f"✂️ Curation budget {MAX_AI_ARTICLES_PER_RUN} reached; deferring {dropped} lower-priority article(s) to a later run.")
+                pending_curation = pending_curation[:MAX_AI_ARTICLES_PER_RUN]
+
+            force_map = {a["link"]: a.get("_force_category") for a in pending_curation}
+            print(
+                f"\n🧠 PHASE 2: Batched curation of {len(pending_curation)} article(s), "
+                f"batch size {CURATION_BATCH_SIZE}..."
+            )
+
+            quota_ok = True
+            for start in range(0, len(pending_curation), CURATION_BATCH_SIZE):
+                if not quota_ok:
+                    break
+                batch = pending_curation[start:start + CURATION_BATCH_SIZE]
+                try:
+                    curated = analyze_news_batch(batch)
+                except ModelExhaustedError:
+                    print("🛑 AI quota exhausted; stopping batched curation.")
+                    quota_ok = False
+                    break
+                except Exception as e:  # noqa: BLE001
+                    print(f"⚠️ Curation batch failed: {e}")
+                    continue
+                if do_curation and last_curation_at == datetime.min.replace(tzinfo=timezone.utc):
+                    last_curation_at = datetime.now(timezone.utc)
+                for item in curated:
+                    fc = force_map.get(item.get("link"))
+                    if fc:
+                        item["category"] = fc  # keep the topic feed's intended category
+                    curated_articles.append(item)
+                    persist_queue.put(item)
+                    print(f"   ✅ AI approved & queued: {item.get('title', 'Untitled')}")
 
     except Exception as e:
         print(f"🔥 Critical Scraper Error: {e}")

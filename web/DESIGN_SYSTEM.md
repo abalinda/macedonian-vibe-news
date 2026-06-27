@@ -41,7 +41,7 @@ This system is **extracted from the live codebase** (`app/globals.css`, `app/lay
 
 ## 3. Color system
 
-The palette is deliberately tiny: **paper + ink + one yellow**, with electric blue for interaction and coral for the **Иран** category (and, as a *separate* reserved semantic, breaking/alert). Everything else is neutral gray. **Apply brand colors through their token utilities — `bg-accent`, `text-link`, `bg-iran` — never raw hex.**
+The palette is deliberately tiny: **paper + ink + one yellow**, with electric blue for interaction and coral reserved for a breaking/alert semantic. Everything else is neutral gray. **Apply brand colors through their token utilities — `bg-accent`, `text-link` — never raw hex.**
 
 ### Core tokens
 
@@ -52,8 +52,7 @@ The palette is deliberately tiny: **paper + ink + one yellow**, with electric bl
 | **Ink** | `#000000` / `neutral-900` | Borders, text, the "invert" hover fill. Body text is `text-neutral-900`. |
 | **Signature Yellow** | `#FFD300` → `bg-accent` | **The brand accent.** CTAs, the "Најново" pill, hover accents, "read more" underline, the **ray-burst** mark (§6), active highlights. Use it sparingly and on purpose — it's the loudest thing on the page. Apply via `bg-accent`/`text-accent`/`border-accent`. |
 | **Electric Blue** | `#002CFF` → `text-link` | Interactive/source accent: source labels, link hover (`group-hover:text-link`), blog-body links. |
-| **Иран category** | `#f26d6d` → `bg-iran` | The **Иран** category pill. Pairs with the red-tinted offset shadow `var(--shadow-alert)`. Apply via `bg-iran`. |
-| **Alert (reserved)** | `#f26d6d` → `bg-alert` | Breaking/urgent **semantic** — a *separate role* from the Иран category so the two can diverge later. Same hue today; not yet used in UI. Never use coral for generic decoration. |
+| **Alert (reserved)** | `#f26d6d` → `bg-alert` | Breaking/urgent **semantic**, reserved for future use — not yet wired into any UI. Never use coral for generic decoration. |
 
 ### Soft yellow fills (warm gradients / glows)
 
@@ -77,11 +76,11 @@ Shadows are **hard, offset, zero-blur**, in near-transparent black. This is a de
 |---|---|---|---|
 | `var(--shadow)` | `rgba(0,0,0,.07)` | `rgba(0,0,0,.55)` | **Default** card / button / panel offset |
 | `var(--shadow-strong)` | `rgba(0,0,0,.10)` | `rgba(0,0,0,.65)` | Strong hover / modal / heavy CTA |
-| `var(--shadow-alert)` | `rgba(255,0,0,.07)` | `rgba(255,90,90,.22)` | Иран pill only (red-tinted) |
+| `var(--shadow-alert)` | `rgba(255,0,0,.07)` | `rgba(255,90,90,.22)` | Reserved red-tinted offset, pairs with `bg-alert` |
 
 > Rule of thumb: resting elements carry `var(--shadow)`; the **offset grows on hover** to imply lift (see §6 Elevation). `#e5e5e5` (token `border-line-soft`) remains an opaque hairline variant on light surfaces.
 
-**Color don'ts:** no new brand hues without adding them here; never introduce a second accent that competes with `#FFD300`; never use pure blurred shadows; **apply brand colors/shadows through their token utilities, not raw hex**; keep coral to the Иран category / the reserved alert semantic.
+**Color don'ts:** no new brand hues without adding them here; never introduce a second accent that competes with `#FFD300`; never use pure blurred shadows; **apply brand colors/shadows through their token utilities, not raw hex**; keep coral to the reserved alert semantic.
 
 ### Dark mode (semantic tokens)
 
@@ -99,15 +98,14 @@ Dark mode is **class-based**: `<html>` gets `.dark` from a no-flash inline scrip
 | `border-line-soft` | `#E5E5E5` | `rgba(255,255,255,.10)` | Dividers, soft borders |
 | `text-link` | `#002CFF` | `#8AA0FF` | Interaction/source accent (blue lightens in dark) |
 | `bg-accent` | `#FFD300` | `#FFD300` | Signature yellow (unchanged — pops on both) |
-| `bg-iran` | `#f26d6d` | `#f26d6d` | Иран category accent (keeps dark text) |
 | `var(--shadow)` | `rgba(0,0,0,.07)` | `rgba(0,0,0,.55)` | Offset-shadow tint, e.g. `shadow-[6px_6px_0_var(--shadow)]` |
 | `var(--shadow-strong)` | `rgba(0,0,0,.10)` | `rgba(0,0,0,.65)` | Stronger offset (modals, heavy CTAs) |
 
 **How existing literals map (use these substitutions when converting a surface):**
-- `bg-[#FDFBF7]`→`bg-paper` · `text-neutral-900`→`text-ink` · `border-black`→`border-line` · `bg-white`→`bg-surface` · `border-neutral-200`→`border-line-soft` · `text-[#002CFF]`/`text-blue-600`→`text-link` · `bg-[#FFD300]`→`bg-accent` · `bg-[#f26d6d]`→`bg-iran` · `shadow-[…_#000000xx]`→`shadow-[…_var(--shadow)]`.
+- `bg-[#FDFBF7]`→`bg-paper` · `text-neutral-900`→`text-ink` · `border-black`→`border-line` · `bg-white`→`bg-surface` · `border-neutral-200`→`border-line-soft` · `text-[#002CFF]`/`text-blue-600`→`text-link` · `bg-[#FFD300]`→`bg-accent` · `shadow-[…_#000000xx]`→`shadow-[…_var(--shadow)]`.
 - **Invert fills** (`bg-black text-white`, `hover:bg-black hover:text-white`) → `bg-ink text-paper` / `hover:bg-ink hover:text-paper`. These invert correctly in *both* themes (dark-on-light becomes light-on-dark) — the preferred pattern for primary buttons and hover-invert badges.
-- **Always-yellow / always-coral surfaces keep DARK text** (`text-black` / `text-neutral-900`) — never switch their text to `text-ink` (it would go light on a yellow chip). Likewise, overlay **scrims stay dark** in both themes (`bg-black/20`–`/50`).
-- Brand hues that read on both themes use their **always-on tokens** (`bg-accent` for `#FFD300`, `bg-iran` for the Иран coral) — identical in both themes, but kept as tokens so there's one source of truth.
+- **Always-yellow surfaces keep DARK text** (`text-black` / `text-neutral-900`) — never switch their text to `text-ink` (it would go light on a yellow chip). Likewise, overlay **scrims stay dark** in both themes (`bg-black/20`–`/50`).
+- Brand hues that read on both themes use their **always-on token** (`bg-accent` for `#FFD300`) — identical in both themes, but kept as a token so there's one source of truth.
 
 **Dark don'ts:** don't add parallel `dark:` hex values when a token exists; don't flip text on always-accent surfaces; don't let an offset shadow vanish on dark — use `var(--shadow)`.
 
@@ -199,7 +197,7 @@ Resting shadow is a small hard offset; on hover the element **lifts** (`-transla
 - **Easing:** `cubic-bezier(0.22,1,0.36,1)` (expo-out, the default) and `cubic-bezier(0.33,1,0.68,1)`.
 - **Duration:** `200–400ms`. Micro-interactions 200ms; layout/expansion 300–400ms.
 - **Hero entrance (the orchestrated moment):** a staggered "rise" on load — `vibe-reveal` / `vibe-reveal-2` / `vibe-reveal-3` (eyebrow → headline → teaser), defined in `globals.css`. **Gated inside `@media (prefers-reduced-motion: no-preference)`** — reduced-motion users get the final state with no movement.
-- **Live pills:** the "Најново"/"Иран" pulse is **`md:motion-safe:animate-pulse`** — always gate looping motion with `motion-safe:`.
+- **Live pills:** the "Најново" pulse is **`md:motion-safe:animate-pulse`** — always gate looping motion with `motion-safe:`.
 - **Image hover:** `group-hover:scale-105` (700ms) on hero, `scale-[1.02]` on cards.
 - **Headline hover:** `group-hover:underline decoration-2 underline-offset-4`.
 - **"Read more" hover:** a yellow underline grows in — `border-b-2 border-transparent group-hover:border-accent`.
@@ -242,11 +240,9 @@ Copy these. They are the canonical building blocks — extend them, don't replac
 ### Pills & chips
 
 ```tsx
-// Live category pill — "Најново" (yellow) / "Иран" (coral)
+// Live category pill — "Најново" (yellow)
 <span className="px-3 py-1 rounded-full border border-line bg-accent text-black
   text-sm font-bold uppercase tracking-widest shadow-[3px_3px_0_var(--shadow)] md:motion-safe:animate-pulse">Најново</span>
-<span className="px-3 py-1 rounded-full border border-line bg-iran text-black
-  text-sm font-bold uppercase tracking-widest shadow-[3px_3px_0_var(--shadow-alert)] md:motion-safe:animate-pulse">Иран</span>
 
 // Source badge (editorial) — inverts on hover
 <span className="inline-block border border-line px-2 py-0.5 text-xs font-bold uppercase tracking-widest
@@ -362,7 +358,7 @@ Buttons/labels are **UPPERCASE**; headlines are sentence-case Alegreya; teasers 
 
 ## 12. Tech notes for implementers
 
-- **Tailwind v4, no config file.** Tokens live in `app/globals.css` — semantic colors via `@theme inline` (`--color-accent`, `--color-link`, `--color-iran`, `--color-alert`, plus paper/surface/ink/line/muted) and shadow tints as CSS vars (`--shadow`, `--shadow-strong`, `--shadow-alert`). **Apply brand colors through their token utilities** (`bg-accent`/`text-link`/`bg-iran`) and shadows as `shadow-[<offset>_var(--shadow)]` — **not** raw hex. (The only documented hex exceptions are the soft-yellow glow fills in §3, used inside one decorative gradient.)
+- **Tailwind v4, no config file.** Tokens live in `app/globals.css` — semantic colors via `@theme inline` (`--color-accent`, `--color-link`, `--color-alert`, plus paper/surface/ink/line/muted) and shadow tints as CSS vars (`--shadow`, `--shadow-strong`, `--shadow-alert`). **Apply brand colors through their token utilities** (`bg-accent`/`text-link`) and shadows as `shadow-[<offset>_var(--shadow)]` — **not** raw hex. (The only documented hex exceptions are the soft-yellow glow fills in §3, used inside one decorative gradient.)
 - **No component/icon library** — icons are hand-rolled inline SVG (`viewBox="0 0 24 24"`, `strokeWidth={1.5}` for line icons, `fill="currentColor"` for brand glyphs). The signature **ray-burst** lives in `app/_components/ray-burst.tsx` (§6). Keep new icons inline and consistent.
 - **No CSS-in-JS, no styled-components.** Utility classes only; shared snippets via small components in `app/_components/`.
 - If a value will repeat 3+ times (a new accent, a new shadow), promote it to a token in `globals.css` and document it here rather than copy-pasting arbitrary values. Shared logic does the same — e.g. the teaser helper + recipe live in `lib/teaser.ts` (§4).
@@ -373,7 +369,7 @@ Buttons/labels are **UPPERCASE**; headlines are sentence-case Alegreya; teasers 
 
 - [ ] Background is `#FDFBF7`; text is ink/neutral, not pure gray-on-gray.
 - [ ] Borders are hard hairlines (`border-black` editorial / `border-neutral-200` soft); **no blurred shadows** — offset-zero-blur only.
-- [ ] Brand colors via **tokens** (`bg-accent`/`text-link`/`bg-iran`), never raw hex. One accent (yellow); blue `text-link` only for interaction; coral `bg-iran` for the Иран category (`bg-alert` reserved for breaking).
+- [ ] Brand colors via **tokens** (`bg-accent`/`text-link`), never raw hex. One accent (yellow); blue `text-link` only for interaction; coral `bg-alert` reserved for breaking (not yet used).
 - [ ] Headlines = Alegreya (`font-serif`) heavy; teasers via `TEASER_CLASS` from `lib/teaser.ts` (mono, ≤0.12em, `text-muted`); body/UI = Inter. Fonts loaded with the `cyrillic` subset.
 - [ ] Hover states lift (`-translate-y`) + grow the offset shadow, or invert to ink/yellow.
 - [ ] Looping/large motion is gated for reduced-motion (`motion-safe:` or a `no-preference` block); the ray-burst signature is used intentionally (one memorable spot), not as decoration.

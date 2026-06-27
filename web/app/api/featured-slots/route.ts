@@ -88,19 +88,6 @@ const ensureAdminChoiceColumn = async () => {
   }
 };
 
-const ensureIranSlot = async () => {
-  try {
-    await turso.execute({
-      sql: `INSERT OR IGNORE INTO featured_slots (slot_id, label, post_id, locked_until, updated_at, manual_override, admin_choice)
-            VALUES ('iran', 'Иран', NULL, NULL, NULL, 0, 0)`
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("Failed to ensure Iran slot:", message);
-    throw err;
-  }
-};
-
 export async function GET(request: Request) {
   const auth = await requireAdmin();
   if (!auth.allowed) {
@@ -111,7 +98,6 @@ export async function GET(request: Request) {
 
   try {
     await ensureAdminChoiceColumn();
-    await ensureIranSlot();
     const result = await turso.execute({
       sql: `${BASE_SLOT_SELECT} ORDER BY fs.slot_id`,
     });
@@ -161,7 +147,6 @@ export async function POST(request: Request) {
 
   try {
     await ensureAdminChoiceColumn();
-    await ensureIranSlot();
 
     const slotResult = await turso.execute({
       sql: "SELECT locked_until FROM featured_slots WHERE slot_id = ? LIMIT 1",

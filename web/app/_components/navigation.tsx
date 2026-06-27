@@ -347,7 +347,6 @@ export const NavBar = () => {
   const showAdminLink = (isLoaded && isAdminEmail(email)) || isLocal;
 
   const menuLinks = [
-    { label: "Иран", href: "/?category=Iran" },
     { label: "Најново", href: "/najnovo" },
     { label: "Почетна", href: "/" },
     { label: "Технологија", href: "/?category=Tech" },
@@ -565,7 +564,6 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
   const [isScrollbarHidden, setIsScrollbarHidden] = useState(true);
   const categories = [
     { name: "Најново", value: "Latest", href: "/najnovo" },
-    { name: "Иран", value: "Iran" },
     { name: "Почетна", value: null, href: "/" },
     { name: "Технологија", value: "Tech" },
     { name: "Култура", value: "Culture" },
@@ -626,7 +624,6 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
             {categories.map((cat) => {
               const isActive = activeCategory === cat.value;
               const isLatest = cat.value === "Latest";
-              const isIran = cat.value === "Iran";
               const href = cat.href ?? (cat.value ? `/?category=${cat.value}` : "/");
 
               const baseClasses = `
@@ -639,15 +636,12 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
               const latestAccent = isLatest
                 ? "pl-3 pr-3 py-1 rounded-full border border-line bg-accent text-black shadow-[3px_3px_0_var(--shadow)] md:motion-safe:animate-pulse"
                 : "";
-              const iranAccent = isIran
-                ? "pl-3 pr-3 py-1 rounded-full border border-line bg-iran text-black shadow-[3px_3px_0_var(--shadow-alert)] md:motion-safe:animate-pulse"
-                : "";
 
               return (
                 <Link
                   key={cat.name}
                   href={href}
-                  className={`${baseClasses} ${activeClasses} ${latestAccent} ${iranAccent}`}
+                  className={`${baseClasses} ${activeClasses} ${latestAccent}`}
                 >
                   {cat.name}
                 </Link>
