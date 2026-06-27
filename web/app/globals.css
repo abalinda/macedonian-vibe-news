@@ -4,10 +4,70 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ----------------------------------------------------------------------------
+   Dark mode — class-based. The <html> element receives `.dark` from a no-flash
+   inline script in app/layout.tsx (defaults to the OS preference, overridable
+   via the theme toggle). See web/DESIGN_SYSTEM.md §3 "Dark mode".
+---------------------------------------------------------------------------- */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Semantic color tokens. NEW components and dark-aware surfaces should use the
+   utilities these generate — bg-paper, bg-surface, bg-surface-2, text-ink,
+   text-muted, border-line, border-line-soft, bg-accent, text-link, bg-alert —
+   so they flip automatically between themes. */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-accent: var(--accent);
+  --color-link: var(--link);
+  --color-alert: var(--alert);
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 253, 251, 247; /* #FDFBF7 */
   --background-end-rgb: 253, 251, 247;
+
+  /* Light theme — "paper" */
+  --paper: #fdfbf7;
+  --surface: #ffffff;
+  --surface-2: #faf8f2;
+  --ink: #171717;
+  --muted: #525252;
+  --line: #000000;
+  --line-soft: #e5e5e5;
+  --accent: #ffd300;
+  --link: #002cff;
+  --alert: #f26d6d;
+  --shadow: rgba(0, 0, 0, 0.07);
+  --blog-text: #1f2937;
+  --blog-muted: #4b5563;
+  --blog-rule: #e5e7eb;
+  color-scheme: light;
+}
+
+.dark {
+  /* Dark theme — warm near-black that preserves the paper warmth */
+  --paper: #141210;
+  --surface: #1d1a15;
+  --surface-2: #26221b;
+  --ink: #ece8df;
+  --muted: #a8a097;
+  --line: rgba(255, 255, 255, 0.16);
+  --line-soft: rgba(255, 255, 255, 0.1);
+  --accent: #ffd300;
+  --link: #8aa0ff;
+  --alert: #f26d6d;
+  --shadow: rgba(0, 0, 0, 0.55);
+  --blog-text: #e7e2d8;
+  --blog-muted: #b3a89c;
+  --blog-rule: rgba(255, 255, 255, 0.14);
+  color-scheme: dark;
 }
 
 html {
@@ -16,10 +76,19 @@ html {
 }
 
 body {
-  /* Apply the Serif font by default to headers via utility classes later, 
+  /* Apply the Serif font by default to headers via utility classes later,
      but setting base here helps */
   max-width: 100%;
   overflow-x: hidden;
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+/* Contained theme-change transition (respects reduced-motion). */
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
 }
 
 @layer utilities {
@@ -46,10 +115,14 @@ body {
 
 /* Reader-friendly rich text styling */
 .blog-body {
-  font-family: var(--font-serif), Georgia, serif;
-  line-height: 1.8;
-  color: #1f2937;
+  /* A comfortable reading serif (NOT Playfair, which is a display face) — see
+     DESIGN_SYSTEM.md: Playfair is for headlines, body copy stays readable. */
+  font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  line-height: 1.85;
+  color: var(--blog-text);
+  font-size: 1.125rem;
   word-break: break-word;
+  text-wrap: pretty;
 }
 
 .blog-body p,
@@ -90,15 +163,21 @@ body {
 }
 
 .blog-body a {
-  color: #002cff;
+  color: var(--link);
   text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.blog-body a:hover {
+  text-decoration-thickness: 2px;
 }
 
 .blog-body blockquote {
   margin: 0 0 1.4em;
   padding-left: 1em;
-  border-left: 4px solid #e5e7eb;
-  color: #4b5563;
+  border-left: 4px solid var(--accent);
+  color: var(--blog-muted);
+  font-style: italic;
 }
 
 .blog-body h1,
@@ -127,7 +206,7 @@ body {
 .blog-body hr {
   margin: 2em 0;
   border: none;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--blog-rule);
 }
 
 .blog-body figure {

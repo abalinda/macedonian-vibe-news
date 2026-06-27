@@ -4,6 +4,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { ShareButton } from "../_components/share-button";
+import { getRelativePostTime } from "@/lib/time";
 
 const CATEGORY_LABELS: Record<string, string> = {
   Tech: "Технологија",
@@ -22,25 +24,6 @@ const getTeaserText = (post: any) => {
   if (rawTeaser) return rawTeaser.toUpperCase();
   const summaryFallback = post?.summary ? stripHtml(post.summary).substring(0, 140).trim() : "";
   return summaryFallback ? summaryFallback.toUpperCase() : "";
-};
-
-const formatRelativeScrapedAt = (value?: string | null, nowValue?: number) => {
-  if (!value) return "Неодамна";
-  const timestamp = new Date(value).getTime();
-  if (Number.isNaN(timestamp)) return "Неодамна";
-
-  const now = nowValue ?? Date.now();
-  const diffMinutes = Math.max(0, Math.floor((now - timestamp) / (1000 * 60)));
-
-  if (diffMinutes < 15) return "Тазе";
-  if (diffMinutes < 60) return `пред ${diffMinutes} минути`;
-  if (diffMinutes < 120) return "пред 1 час";
-
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 48) return `пред ${diffHours} часа`;
-
-  const diffDays = Math.floor(diffHours / 24);
-  return `пред ${diffDays} дена`;
 };
 
 const CardLink = ({ post, className, children }: { post: any; className?: string; children: ReactNode }) => {
@@ -71,17 +54,15 @@ const LatestCard = ({ post, index, now }: { post: any; index: number; now: numbe
   const teaserWithEllipsis =
     teaserText && !teaserText.trimEnd().endsWith("...") ? `${teaserText.trimEnd()}...` : teaserText;
   const categoryLabel = CATEGORY_LABELS[post?.category] ?? post?.category ?? "Вести";
-  const relativeTime = formatRelativeScrapedAt(post?.scraped_at, now);
-  const timeLabel = relativeTime === "Неодамна" && post?.published_at
-    ? formatRelativeScrapedAt(post.published_at, now)
-    : relativeTime;
-  const finalTimeLabel = timeLabel || "Неодамна";
+  const finalTimeLabel = getRelativePostTime(post, now);
   const imageUrl = post?.image_url;
+  const shareUrl = post?.category === "Blog" ? `/blog/${post.id}` : post?.link || `/go/${post.id}`;
 
   return (
-    <CardLink post={post} className="group block h-full">
-      <article className="relative h-full overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[6px_6px_0_#00000010] transition-transform duration-200 hover:-translate-y-[3px] hover:shadow-[10px_10px_0_#00000012]">
-        <div className="relative aspect-[16/9] border-b border-neutral-200 bg-neutral-100 overflow-hidden">
+    <div className="relative h-full">
+      <CardLink post={post} className="group block h-full">
+      <article className="relative h-full overflow-hidden rounded-xl border border-line-soft bg-surface shadow-[6px_6px_0_var(--shadow)] transition-transform duration-200 hover:-translate-y-[3px] hover:shadow-[10px_10px_0_var(--shadow)]">
+        <div className="relative aspect-[16/9] border-b border-line-soft bg-surface-2 overflow-hidden">
           {imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -103,12 +84,12 @@ const LatestCard = ({ post, index, now }: { post: any; index: number; now: numbe
               className={`text-[10px] font-black uppercase tracking-widest rounded-full px-2 py-1 shadow-sm ${
                 finalTimeLabel === "Тазе"
                   ? "bg-[#FFD300] text-black"
-                  : "bg-black text-white"
+                  : "bg-ink text-paper"
               }`}
             >
               {finalTimeLabel}
             </span>
-            <span className="text-[10px] font-bold uppercase tracking-widest bg-white/90 border border-black rounded-full px-2 py-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest bg-surface/90 border border-line rounded-full px-2 py-1">
               #{String(index + 1).padStart(2, "0")} • {post.source}
             </span>
           </div>
@@ -121,7 +102,7 @@ const LatestCard = ({ post, index, now }: { post: any; index: number; now: numbe
             <span className="text-neutral-600">{finalTimeLabel}</span>
           </div> */}
 
-          <h3 className="font-serif text-xl font-bold leading-tight text-neutral-900 group-hover:underline transition-colors">
+          <h3 className="font-serif text-xl font-bold leading-tight text-ink group-hover:underline transition-colors">
             {post.title}
           </h3>
 
@@ -131,7 +112,7 @@ const LatestCard = ({ post, index, now }: { post: any; index: number; now: numbe
                 {teaserWithEllipsis}
               </p>
               <div className="flex justify-end">
-                <span className="text-[11px] font-bold text-neutral-900 uppercase tracking-widest border-b-2 border-transparent group-hover:border-[#FFD300]">
+                <span className="text-[11px] font-bold text-ink uppercase tracking-widest border-b-2 border-transparent group-hover:border-[#FFD300]">
                   Прочитај повеќе →
                 </span>
               </div>
@@ -139,16 +120,25 @@ const LatestCard = ({ post, index, now }: { post: any; index: number; now: numbe
           )}
 
           <div className="flex items-center justify-between mt-auto">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 bg-white border border-neutral-200 rounded px-2 py-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 bg-surface border border-line-soft rounded px-2 py-1">
               {categoryLabel}
             </span>
-            <span className="inline-flex items-center gap-1 text-xs font-black uppercase tracking-widest text-neutral-900 group-hover:text-[#002CFF] transition-colors">
+            <span className="inline-flex items-center gap-1 text-xs font-black uppercase tracking-widest text-ink group-hover:text-link transition-colors">
               Отвори <span aria-hidden>→</span>
             </span>
           </div>
         </div>
       </article>
-    </CardLink>
+      </CardLink>
+      <ShareButton
+        url={shareUrl}
+        title={post.title || "Vibes"}
+        variant="icon"
+        context="latest_card"
+        align="right"
+        className="absolute right-3 top-3 z-20"
+      />
+    </div>
   );
 };
 
@@ -211,18 +201,18 @@ export const LatestFeed = ({ posts }: { posts: any[] }) => {
           <>
             <button
               onClick={() => setVisibleCount((prev) => Math.min(prev + 9, posts.length))}
-              className="group inline-flex items-center gap-2 border border-black bg-black text-white px-3 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.3em] transition-all hover:bg-[#FFD300] hover:text-black hover:shadow-[6px_6px_0_#00000012] md:self-auto self-end md:flex hidden"
+              className="group inline-flex items-center gap-2 border border-black bg-ink text-paper px-3 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.3em] transition-all hover:bg-[#FFD300] hover:text-black hover:shadow-[6px_6px_0_#00000012] md:self-auto self-end md:flex hidden"
               aria-label="Вчитај повеќе најнови вести"
             >
               <span>Уште вести</span>
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-black group-hover:translate-x-1 transition-transform">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-paper text-ink group-hover:translate-x-1 transition-transform">
                 →
               </span>
             </button>
 
             <div
               ref={sentinelRef}
-              className="md:hidden w-full h-12 rounded-md bg-gradient-to-r from-neutral-50 via-neutral-100 to-neutral-50 border border-dashed border-neutral-200 flex items-center justify-center text-[11px] font-mono uppercase tracking-[0.2em] text-neutral-400"
+              className="md:hidden w-full h-12 rounded-md bg-gradient-to-r from-surface-2 via-surface to-surface-2 border border-dashed border-line-soft flex items-center justify-center text-[11px] font-mono uppercase tracking-[0.2em] text-muted"
             >
               Вчитуваме уште вести...
             </div>

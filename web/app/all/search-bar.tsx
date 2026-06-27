@@ -12,6 +12,7 @@ export function SearchBar() {
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setValue(searchParams.get('q')?.toString() ?? '');
   }, [searchParams]);
 
@@ -57,7 +58,7 @@ export function SearchBar() {
     <form className="w-full max-w-md" onSubmit={handleSubmit}>
       <div className="relative">
         <input
-          className="peer block w-full rounded-md border border-neutral-200 bg-white py-[9px] pl-10 text-sm outline-2 placeholder:text-neutral-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="peer block w-full rounded-md border border-line-soft bg-surface text-ink py-[9px] pl-10 text-sm outline-2 placeholder:text-neutral-500 focus:border-line focus:outline-none focus:ring-2 focus:ring-[#FFD300]/60"
           placeholder="Пребарувај..."
           onChange={(e) => handleChange(e.target.value)}
           value={value}

@@ -8,6 +8,7 @@ import { PostHogProvider } from './providers'
 import PostHogClerkSync from './PostHogClerkSync'
 
 import { PwaInstaller } from "./_components/pwa-installer";
+import { Footer } from "./_components/footer";
 
 const localization = {
   formButtonPrimary: 'Ајде!',
@@ -59,8 +60,7 @@ export const viewport: Viewport = {
   themeColor: "#FDFBF7",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1, // Optional: useful for PWA "app-like" feel prevents zooming
-  userScalable: false, // Optional: often used for PWAs
+  // Pinch-zoom is intentionally left enabled for accessibility (WCAG 1.4.4).
 };
 
 // 2. Keep SEO & PWA definitions here
@@ -101,10 +101,15 @@ export default function RootLayout({
       "https://instagram.com/vibes.mkd"
     ]
   };
+  // Runs before first paint to set the theme class with no flash of the wrong
+  // theme. Default = light; dark only when the user explicitly toggles it.
+  const themeInitScript = `(function(){try{var s=localStorage.getItem('vibes-theme');var d=s==='dark';var e=document.documentElement;if(d)e.classList.add('dark');e.style.colorScheme=d?'dark':'light';var c=d?'#141210':'#FDFBF7';document.querySelectorAll('meta[name="theme-color"]').forEach(function(x){x.setAttribute('content',c);});}catch(e){}})();`;
+
   return (
   <ClerkProvider localization={localization}>
-    <html lang="mk">
+    <html lang="mk" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -118,12 +123,13 @@ export default function RootLayout({
         <meta name="google-adsense-account" content="ca-pub-6000374890506320"></meta>
       </head>
         <GoogleAnalytics gaId="G-VG899CFSWV" />
-        <body className={`${inter.variable} ${playfair.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-[#FDFBF7] text-neutral-900 antialiased`}>
-          {/* slight off-white background (#FDFBF7) for 'paper' feel */}
+        <body className={`${inter.variable} ${playfair.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-paper text-ink`}>
+          {/* Canvas color comes from the --paper / --ink tokens (globals.css) so it flips in dark mode */}
           <PostHogProvider>
             <PostHogClerkSync />
             <PwaInstaller />
             {children}
+            <Footer />
           </PostHogProvider>
         </body>
       </html>
