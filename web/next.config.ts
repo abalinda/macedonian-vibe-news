@@ -15,7 +15,12 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   transpilePackages: ["@libsql/client"],
-  // serverExternalPackages: ["@clerk/nextjs", "posthog-node"], 
+  // serverExternalPackages: ["@clerk/nextjs", "posthog-node"],
+  // Pin the workspace root to this folder so Turbopack ignores the stray
+  // lockfiles in the repo root and the home directory.
+  turbopack: {
+    root: __dirname,
+  },
 };
 
 export default nextConfig;
