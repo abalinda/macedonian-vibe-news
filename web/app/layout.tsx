@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Inter, Alegreya } from "next/font/google";
 import './globals.css'
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { ClerkProvider } from '@clerk/nextjs'
@@ -44,16 +44,19 @@ const localization = {
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
-  subsets: ['latin'],
+  subsets: ['latin', 'cyrillic'],
 })
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
-  subsets: ['latin'],
+  subsets: ['latin', 'cyrillic'],
 })
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
+const inter = Inter({ subsets: ["latin", "cyrillic"], variable: "--font-inter" });
+// Display serif — Alegreya: distinctive editorial face with a real Macedonian-Cyrillic
+// cut (incl. localized italics) and weights to 900 for heavy headlines. Replaces
+// Playfair (a template default that was also loaded latin-only → Cyrillic fell back).
+const alegreya = Alegreya({ subsets: ["latin", "cyrillic"], variable: "--font-display" });
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://vibes.mk";
 
 export const viewport: Viewport = {
@@ -123,7 +126,7 @@ export default function RootLayout({
         <meta name="google-adsense-account" content="ca-pub-6000374890506320"></meta>
       </head>
         <GoogleAnalytics gaId="G-VG899CFSWV" />
-        <body className={`${inter.variable} ${playfair.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-paper text-ink`}>
+        <body className={`${inter.variable} ${alegreya.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-paper text-ink`}>
           {/* Canvas color comes from the --paper / --ink tokens (globals.css) so it flips in dark mode */}
           <PostHogProvider>
             <PostHogClerkSync />

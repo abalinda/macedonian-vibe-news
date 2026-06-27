@@ -40,9 +40,9 @@ export default function OfflinePage() {
       <div className="max-w-5xl mx-auto px-4 md:px-8 pt-12 space-y-12">
         <header className="space-y-6 border-b border-line pb-10">
           <div className="inline-flex items-center gap-3">
-            <span className="inline-flex items-center gap-2 rounded-full border border-black bg-[#FFD300] px-4 py-1 text-[10px] font-black uppercase tracking-[0.3em] shadow-[4px_4px_0_#00000012]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-black bg-accent px-4 py-1 text-[10px] font-black uppercase tracking-[0.3em] shadow-[4px_4px_0_var(--shadow)]">
               Offline
-              <span className="h-2 w-2 rounded-full bg-black animate-pulse" aria-hidden />
+              <span className="h-2 w-2 rounded-full bg-black motion-safe:animate-pulse" aria-hidden />
             </span>
             <span className="text-[11px] font-mono uppercase tracking-[0.3em] text-neutral-500">
               Конекцијата падна
@@ -66,7 +66,7 @@ export default function OfflinePage() {
             </Link>
             <Link
               href="/all"
-              className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[11px] font-bold uppercase tracking-[0.28em] text-ink transition-all hover:bg-[#FFD300] hover:text-black hover:shadow-[4px_4px_0_var(--shadow)]"
+              className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[11px] font-bold uppercase tracking-[0.28em] text-ink transition-all hover:bg-accent hover:text-black hover:shadow-[4px_4px_0_var(--shadow)]"
             >
               Архива
               <span aria-hidden>→</span>
@@ -105,7 +105,7 @@ export default function OfflinePage() {
           </section>
 
           <aside className="space-y-6">
-            <div className="rounded-2xl border border-black bg-[#FFD300] p-6 shadow-[6px_6px_0_#00000015] space-y-3">
+            <div className="rounded-2xl border border-black bg-accent p-6 shadow-[6px_6px_0_var(--shadow-strong)] space-y-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full border border-black bg-[#FDFBF7] text-lg font-black">
                   V

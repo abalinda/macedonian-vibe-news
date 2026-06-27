@@ -7,19 +7,11 @@ import { AdminBlogCTA } from "./_components/admin-blog-cta";
 import { WelcomeModal } from "./_components/welcome-modal";
 import { AdminHeroOverride } from "./_components/admin-hero-override";
 import { getRelativePostTime } from "@/lib/time";
+import { getTeaserText, TEASER_CLASS } from "@/lib/teaser";
+import { RayBurst } from "./_components/ray-burst";
 
 // Revalidate every 60 seconds (ISR)
 export const revalidate = 60;
-
-const stripHtml = (value: string) => value.replace(/<[^>]*>/g, "");
-
-const getTeaserText = (post: any) => {
-  const rawTeaser = post?.teaser?.trim();
-  if (rawTeaser) return rawTeaser.toUpperCase();
-
-  const summaryFallback = post?.summary ? stripHtml(post.summary).substring(0, 120).trim() : "";
-  return summaryFallback ? summaryFallback.toUpperCase() : "";
-};
 
 // Maps URL parameter -> Database slot_id
 const CATEGORY_SLOT_MAP = {
@@ -121,7 +113,7 @@ const SideStory = ({ post }: { post: any }) => {
           <h3 className="font-serif text-lg leading-tight font-bold group-hover:underline decoration-2 underline-offset-4 mb-2 break-words">
             {post.title}
           </h3>
-          <p className="text-xs text-neutral-800 font-mono uppercase tracking-[0.3em] line-clamp-2">
+          <p className={`${TEASER_CLASS} text-xs line-clamp-2`}>
             {teaserText}
           </p>
         </div>
@@ -157,7 +149,11 @@ const HeroStory = ({ post }: { post: any }) => {
       </div>
       
       <div className="text-center px-4">
-        <div className="flex items-center justify-center gap-3 mb-4">
+        <div className="flex items-center justify-center gap-2 mb-3 vibe-reveal">
+          <RayBurst className="h-3.5 w-3.5 text-accent" />
+          <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted">Избор на денот</span>
+        </div>
+        <div className="flex items-center justify-center gap-3 mb-4 vibe-reveal">
           <span className="inline-block border border-line px-2 py-0.5 text-xs font-bold uppercase tracking-widest hover:bg-ink hover:text-paper transition-colors">
             {post.source}
           </span>
@@ -167,10 +163,10 @@ const HeroStory = ({ post }: { post: any }) => {
             </span>
           )}
         </div>
-        <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-black leading-[0.9] mb-4 group-hover:underline transition-colors break-words">
+        <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-black leading-[0.9] mb-4 group-hover:underline transition-colors break-words vibe-reveal-2">
           {post.title}
         </h2>
-        <p className="text-sm md:text-base font-mono uppercase tracking-[0.15em] text-neutral-600 mb-6 max-w-2xl mx-auto">
+        <p className={`${TEASER_CLASS} text-sm md:text-base mb-6 max-w-2xl mx-auto vibe-reveal-3`}>
           {teaserText}
         </p>
         <div className="inline-flex items-center gap-2 text-xs font-bold text-ink uppercase tracking-widest border-b-2 border-transparent group-hover:border-accent">
@@ -224,7 +220,7 @@ const SecondaryHeroStory = ({ post, position }: { post: any; position: number })
             {post.title}
           </h3>
           {teaserText && (
-            <p className="text-xs text-neutral-700 font-mono uppercase tracking-[0.2em] leading-relaxed line-clamp-3">
+            <p className={`${TEASER_CLASS} text-xs line-clamp-3`}>
               {teaserText}
             </p>
           )}
@@ -253,6 +249,7 @@ const SecondaryHeroStory = ({ post, position }: { post: any; position: number })
 const EmptyState = ({ category, teaserMessage }: { category: string | null; teaserMessage?: string }) => (
   <div className="flex flex-col items-center justify-center py-20 px-4">
     <div className="text-center max-w-md">
+      <RayBurst className="h-8 w-8 mx-auto mb-5 text-neutral-300 dark:text-neutral-600" />
       <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4 text-neutral-800 dark:text-neutral-100">
         Нема пронајдени приказни
       </h2>
@@ -429,7 +426,8 @@ export default async function Home({
           
           {/* LEFT SIDEBAR */}
           <div className="lg:col-span-3 lg:border-r border-line-soft lg:pr-8 order-2 lg:order-1">
-            <h4 className="font-sans text-xs font-black uppercase tracking-widest border-b-4 border-line pb-2 mb-4">
+            <h4 className="flex items-center gap-2 font-sans text-xs font-black uppercase tracking-widest border-b-4 border-line pb-2 mb-4">
+              <RayBurst className="h-3.5 w-3.5 text-accent shrink-0" />
               {selectedCategory ? 'Најново' : 'Последни новости'}
             </h4>
             <div className="flex flex-col lg:gap-4">
@@ -454,7 +452,8 @@ export default async function Home({
           {/* RIGHT SIDEBAR */}
           <div className="lg:col-span-3 lg:border-l border-line-soft lg:pl-8 order-3">
              <div className="flex items-center justify-between gap-3 border-b-4 border-line pb-2 mb-4">
-              <h4 className="font-sans text-xs font-black uppercase tracking-widest">
+              <h4 className="flex items-center gap-2 font-sans text-xs font-black uppercase tracking-widest">
+                <RayBurst className="h-3.5 w-3.5 text-accent shrink-0" />
                 {selectedCategory ? 'Повеќе' : 'Останати приказни'}
               </h4>
               {selectedCategory && (

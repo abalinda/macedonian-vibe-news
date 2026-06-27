@@ -80,7 +80,7 @@ const FooterIcon = ({ href, label, children }: { href: string; label: string; ch
     href={href}
     target="_blank"
     rel="noreferrer"
-    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface text-ink transition-all hover:bg-[#FFD300] hover:text-black hover:shadow-[4px_4px_0_var(--shadow)]"
+    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface text-ink transition-all hover:bg-accent hover:text-black hover:shadow-[4px_4px_0_var(--shadow)]"
   >
     <span className="sr-only">{label}</span>
     {children}

@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ShareButton } from "../_components/share-button";
+import { getTeaserText, TEASER_CLASS } from "@/lib/teaser";
 
 const CATEGORY_LABELS: Record<string, string> = {
   Tech: "Технологија",
@@ -13,15 +14,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   Sports: "Спорт",
   Iran: "Иран",
   Blog: "Блог",
-};
-
-const stripHtml = (value: string) => value.replace(/<[^>]*>/g, "");
-
-const getTeaserText = (post: any) => {
-  const rawTeaser = post?.teaser?.trim();
-  if (rawTeaser) return rawTeaser.toUpperCase();
-  const summaryFallback = post?.summary ? stripHtml(post.summary).substring(0, 140).trim() : "";
-  return summaryFallback ? summaryFallback.toUpperCase() : "";
 };
 
 const formatDate = (value?: string | null) => {
@@ -63,7 +55,7 @@ const StoryRow = ({ post, index }: { post: any; index: number }) => {
           </span>
         </div>
 
-        <p className="text-xs md:text-sm text-neutral-600 font-mono uppercase tracking-wider line-clamp-2 leading-relaxed opacity-80">
+        <p className={`${TEASER_CLASS} text-xs md:text-sm line-clamp-2`}>
           {teaserText}
         </p>
 
