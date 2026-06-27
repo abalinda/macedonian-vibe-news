@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { ShareButton } from "../_components/share-button";
 
 const CATEGORY_LABELS: Record<string, string> = {
   Tech: "Технологија",
@@ -39,7 +40,8 @@ const StoryRow = ({ post, index }: { post: any; index: number }) => {
     : post?.id
       ? `/go/${post.id}`
       : post?.link || "#";
-  const wrapperClass = "group block px-4 py-5 md:px-6 hover:bg-surface-2 transition-colors";
+  const shareUrl = isBlog ? `/blog/${post.id}` : post?.link || `/go/${post.id}`;
+  const wrapperClass = "group block pl-4 pr-14 md:pl-6 md:pr-16 py-5 hover:bg-surface-2 transition-colors";
   const content = (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
       <div className="flex items-center gap-3 sm:w-24 flex-shrink-0">
@@ -76,18 +78,28 @@ const StoryRow = ({ post, index }: { post: any; index: number }) => {
     </div>
   );
 
-  if (isBlog) {
-    return (
-      <Link href={href} className={wrapperClass}>
-        {content}
-      </Link>
-    );
-  }
-
-  return (
+  const link = isBlog ? (
+    <Link href={href} className={wrapperClass}>
+      {content}
+    </Link>
+  ) : (
     <a href={href} target="_blank" rel="noreferrer" className={wrapperClass}>
       {content}
     </a>
+  );
+
+  return (
+    <div className="relative">
+      {link}
+      <ShareButton
+        url={shareUrl}
+        title={post.title || "Vibes"}
+        variant="icon"
+        context="archive_row"
+        align="right"
+        className="absolute right-3 top-1/2 -translate-y-1/2 z-20"
+      />
+    </div>
   );
 };
 

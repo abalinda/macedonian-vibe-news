@@ -6,6 +6,7 @@ import { CategoryNav, NavBar } from "./_components/navigation";
 import { AdminBlogCTA } from "./_components/admin-blog-cta";
 import { WelcomeModal } from "./_components/welcome-modal";
 import { AdminHeroOverride } from "./_components/admin-hero-override";
+import { ShareButton } from "./_components/share-button";
 import { getRelativePostTime } from "@/lib/time";
 
 // Revalidate every 60 seconds (ISR)
@@ -43,6 +44,10 @@ const CATEGORY_LABELS = {
 } as const;
 
 const toPlain = (value: any) => JSON.parse(JSON.stringify(value));
+
+// Blog posts share their canonical vibes URL; external stories share the source link.
+const getShareUrl = (post: any) =>
+  post?.category === "Blog" ? `/blog/${post.id}` : post?.link || `/go/${post.id}`;
 
 // -- HELPER COMPONENTS --
 
@@ -83,8 +88,9 @@ const SideStory = ({ post }: { post: any }) => {
   const timeLabel = getRelativePostTime(post);
 
   return (
-    <StoryLink post={post} className="group block py-6 last:border-0 border-b border-line-soft lg:border-none">
-      <div className="flex gap-4">
+    <div className="relative py-6 last:border-0 border-b border-line-soft lg:border-none">
+      <StoryLink post={post} className="group block">
+      <div className="flex gap-4 pr-9">
         <div className="relative w-32 aspect-[16/10] overflow-hidden bg-surface-2 border border-line flex-shrink-0">
           {imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -125,7 +131,16 @@ const SideStory = ({ post }: { post: any }) => {
           </p>
         </div>
       </div>
-    </StoryLink>
+      </StoryLink>
+      <ShareButton
+        url={getShareUrl(post)}
+        title={post.title || "Vibes"}
+        variant="icon"
+        context="home_side"
+        align="right"
+        className="absolute right-0 top-6 z-20"
+      />
+    </div>
   );
 };
 
@@ -135,7 +150,8 @@ const HeroStory = ({ post }: { post: any }) => {
   const timeLabel = getRelativePostTime(post);
 
   return (
-    <StoryLink post={post} className="group block mb-12 md:mb-0">
+    <div className="relative mb-12 md:mb-0">
+      <StoryLink post={post} className="group block">
       <div className="w-full aspect-video bg-surface-2 mb-6 flex items-center justify-center border border-line overflow-hidden relative">
           {heroImage ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -174,7 +190,16 @@ const HeroStory = ({ post }: { post: any }) => {
           Прочитај повеќе <span>&rarr;</span>
         </div>
       </div>
-    </StoryLink>
+      </StoryLink>
+      <ShareButton
+        url={getShareUrl(post)}
+        title={post.title || "Vibes"}
+        variant="icon"
+        context="home_hero"
+        align="right"
+        className="absolute right-4 top-4 z-20"
+      />
+    </div>
   );
 };
 
@@ -185,7 +210,8 @@ const SecondaryHeroStory = ({ post, position }: { post: any; position: number })
   const categoryLabel = CATEGORY_LABELS[post?.category as keyof typeof CATEGORY_LABELS] ?? post?.category ?? "Вести";
 
   return (
-    <StoryLink post={post} className="group block">
+    <div className="relative">
+      <StoryLink post={post} className="group block">
       <div className="flex flex-col gap-3">
         <div className="relative aspect-[4/3] bg-surface-2 border border-line-soft overflow-hidden">
           {heroImage ? (
@@ -240,7 +266,16 @@ const SecondaryHeroStory = ({ post, position }: { post: any; position: number })
           </div>
         </div>
       </div>
-    </StoryLink>
+      </StoryLink>
+      <ShareButton
+        url={getShareUrl(post)}
+        title={post.title || "Vibes"}
+        variant="icon"
+        context="home_secondary"
+        align="right"
+        className="absolute right-3 top-3 z-20"
+      />
+    </div>
   );
 };
 
