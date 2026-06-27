@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "dev": "npm --prefix web run dev",
+    "build": "npm --prefix web run build",
+    "deploy": "npm --prefix web run deploy"
+  },
   "dependencies": {
     "@clerk/nextjs": "^6.36.0",
     "@libsql/client": "^0.15.15",

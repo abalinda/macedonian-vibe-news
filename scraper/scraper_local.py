@@ -10,7 +10,7 @@ from threading import Thread, Event
 from urllib.parse import urljoin
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
-from curator_groq import analyze_news_batch, ModelExhaustedError
+from curator import analyze_news_batch, ModelExhaustedError
 import cloudscraper
 import libsql_client
 
@@ -28,9 +28,16 @@ if not URL or not TOKEN:
 HERO_ROTATION_MINUTES = 60
 HERO_LOCK_MINUTES = 60
 HERO_FALLBACK_LOOKBACK_HOURS = 24
-MAX_AI_ARTICLES_PER_RUN = 30
-MIN_CURATION_INTERVAL_MINUTES = 30
-BATCH_SIZE = 5
+# AI curation throughput — env-tunable so the Claude trial Space can be dialed up without a
+# redeploy (Claude Max has far more headroom than the Groq free tier). Higher = more articles
+# curated per run, but more Claude calls = more Max quota used + longer wall-clock per run.
+MAX_AI_ARTICLES_PER_RUN = int(os.getenv("MAX_AI_ARTICLES_PER_RUN", "100"))
+MIN_CURATION_INTERVAL_MINUTES = int(os.getenv("MIN_CURATION_INTERVAL_MINUTES", "30"))
+BATCH_SIZE = int(os.getenv("BATCH_SIZE", "8"))
+# How many entries to pull from each feed per run (was a hardcoded 4).
+ENTRIES_PER_FEED = int(os.getenv("ENTRIES_PER_FEED", "4"))
+# Only stories scoring at/above this may occupy a homepage featured (hero) slot.
+MIN_HERO_SCORE = int(os.getenv("MIN_HERO_SCORE", "60"))
 TITLE_SIMILARITY_THRESHOLD = 0.9
 TITLE_DEDUP_SEED_LIMIT = 100
 
@@ -545,6 +552,18 @@ def ensure_featured_slots_table(client):
             print(f"⚠️ Unable to ensure featured slot {slot_id}: {e}")
 
 
+def ensure_good_vibes_column(client):
+    """Idempotently add posts.good_vibes — the homepage-tier flag.
+
+    DEFAULT 1 keeps existing/legacy posts homepage-eligible; the Claude curator sets 0 for
+    so-so stories so they appear only in 'most recent' (najnovo) and 'archive' (all)."""
+    try:
+        client.execute("ALTER TABLE posts ADD COLUMN good_vibes INTEGER DEFAULT 1")
+        print("🆕 Added posts.good_vibes column.")
+    except Exception:
+        pass  # Column already exists
+
+
 def _parse_ts(value):
     if not value:
         return None
@@ -625,7 +644,9 @@ def _pick_candidate_for_slot(candidates, category, used_links):
 
 def select_ai_hero_assignments(hero_candidates, slots_to_update, used_links):
     """Map slots -> curated hero articles based on score/category."""
-    sorted_candidates = sorted(hero_candidates, key=_hero_score_key, reverse=True)
+    # Only stories that clear the homepage-quality floor may take a hero slot.
+    eligible = [c for c in hero_candidates if (int(c.get("hero_score", 0) or 0) >= MIN_HERO_SCORE)]
+    sorted_candidates = sorted(eligible, key=_hero_score_key, reverse=True)
     assignments = {}
 
     for slot in slots_to_update:
@@ -648,7 +669,9 @@ def load_recent_posts_for_random(client):
             """
             SELECT id, link, category, image_url
             FROM posts
-            WHERE image_url IS NOT NULL AND image_url != '' AND scraed_at >= ?
+            WHERE image_url IS NOT NULL AND image_url != ''
+              AND good_vibes = 1
+              AND scraped_at >= ?
             ORDER BY scraped_at DESC
             LIMIT 200
             """,
@@ -831,12 +854,13 @@ def turso_persist_worker():
                 art_summary = art.get("summary") or art.get("summary_text") or ""
 
                 sql = """
-                    INSERT INTO posts (title, link, source, category, teaser, summary, image_url, published_at, scraped_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO posts (title, link, source, category, teaser, summary, image_url, published_at, scraped_at, good_vibes)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(link) DO UPDATE SET
                         updated_at = CURRENT_TIMESTAMP,
                         summary = excluded.summary,
-                        image_url = excluded.image_url;
+                        image_url = excluded.image_url,
+                        good_vibes = excluded.good_vibes;
                 """
                 params = [
                     art.get('title') or "Untitled",
@@ -848,6 +872,9 @@ def turso_persist_worker():
                     art.get('image_url'),
                     art.get('published_at'),
                     art.get('scraped_at'),
+                    # Default to homepage-eligible (1) when the engine doesn't set good_vibes
+                    # (Groq path, direct-save feeds, legacy) so production behaviour is preserved.
+                    int(bool(art.get('good_vibes', True))),
                 ]
                 statements.append(libsql_client.Statement(sql, params))
 
@@ -877,6 +904,14 @@ def process_feeds():
     if seeded_titles:
         print(f"ℹ️ Seeded {seeded_titles} recent titles for deduping.")
     curated_articles = []
+
+    # Make sure the homepage-tier column exists before the persist worker writes.
+    try:
+        _gv_client = get_db_client()
+        ensure_good_vibes_column(_gv_client)
+        _gv_client.close()
+    except Exception as e:
+        print(f"⚠️ Could not ensure good_vibes column: {e}")
 
     now = datetime.now(timezone.utc)
     min_curation_interval = timedelta(minutes=MIN_CURATION_INTERVAL_MINUTES)
@@ -929,7 +964,7 @@ def process_feeds():
                     print("   ❌ No entries.")
                     continue
 
-                entries = feed.entries[:4]  # Grab top 4 items
+                entries = feed.entries[:ENTRIES_PER_FEED]  # Grab top N items per feed
                 strict_iran_only = needs_curation and (config.get("force_category") == "Iran")
 
                 keywords = [k.lower() for k in config.get("keywords", [])]

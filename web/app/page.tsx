@@ -331,12 +331,29 @@ export default async function Home({
     // 2. Parallel Fetching: Get Posts + Get Hero ID
     // We execute two queries in parallel for speed
     const [postsResult, featuredResult] = await Promise.all([
-      turso.execute({
-        sql: selectedCategory 
-          ? "SELECT * FROM posts WHERE category = ? ORDER BY scraped_at DESC LIMIT 20"
-          : "SELECT * FROM posts ORDER BY scraped_at DESC LIMIT 20",
-        args: selectedCategory ? [selectedCategory] : [],
-      }),
+      (async () => {
+        const args = selectedCategory ? [selectedCategory] : [];
+        const catFilter = selectedCategory ? "category = ? AND " : "";
+        try {
+          // Homepage shows only the "good vibes" tier; so-so stories live in najnovo/archive.
+          return await turso.execute({
+            sql: `SELECT * FROM posts WHERE ${catFilter}good_vibes = 1 ORDER BY scraped_at DESC LIMIT 20`,
+            args,
+          });
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          if (/no such column: good_vibes/i.test(message)) {
+            // Column not created yet (scraper hasn't run) — fall back to unfiltered.
+            return turso.execute({
+              sql: selectedCategory
+                ? "SELECT * FROM posts WHERE category = ? ORDER BY scraped_at DESC LIMIT 20"
+                : "SELECT * FROM posts ORDER BY scraped_at DESC LIMIT 20",
+              args,
+            });
+          }
+          throw err;
+        }
+      })(),
       (async () => {
         try {
           return await turso.execute({
