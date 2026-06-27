@@ -110,7 +110,7 @@ export default async function AllStoriesPage({
         {/* Header Section */}
         <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-10 pb-6 border-b border-line">
           <div>
-            {/* <p className="text-xs font-bold uppercase tracking-widest text-[#FFD300] mb-2">Архива</p> */}
+            {/* <p className="text-xs font-bold uppercase tracking-widest text-accent mb-2">Архива</p> */}
             <h1 className="font-serif text-4xl md:text-5xl font-black leading-tight mb-2">
               Архива
             </h1>

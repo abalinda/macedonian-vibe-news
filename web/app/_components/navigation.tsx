@@ -186,7 +186,7 @@ const NavSearch = ({
             onExpand?.();
           }}
           aria-label="Отвори пребарување"
-          className={`absolute inset-0 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-black shadow-[4px_4px_0_#00000012] transition-all duration-250 ease-[cubic-bezier(0.33,1,0.68,1)] hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#00000012] ${
+          className={`absolute inset-0 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-black shadow-[4px_4px_0_var(--shadow)] transition-all duration-250 ease-[cubic-bezier(0.33,1,0.68,1)] hover:-translate-y-0.5 hover:shadow-[6px_6px_0_var(--shadow)] ${
             isExpanded ? "pointer-events-none opacity-0 scale-95" : "opacity-100 scale-100"
           }`}
         >
@@ -210,7 +210,7 @@ const NavSearch = ({
           }}
           placeholder="Пребарувај"
           ref={inputRef}
-          className="h-11 w-full rounded-full border border-line/20 bg-surface px-12 text-sm font-sans placeholder:text-neutral-500 shadow-[3px_3px_0_#0000000a] focus:border-line focus:outline-none focus:ring-2 focus:ring-[#FFD300]/60 transition-all duration-200"
+          className="h-11 w-full rounded-full border border-line/20 bg-surface px-12 text-sm font-sans placeholder:text-neutral-500 shadow-[3px_3px_0_var(--shadow)] focus:border-line focus:outline-none focus:ring-2 focus:ring-accent/60 transition-all duration-200"
         />
         {showFormUI && (
           <>
@@ -225,7 +225,7 @@ const NavSearch = ({
                 <button
                   type="button"
                   onClick={() => onCollapse?.()}
-                  className="flex h-7 w-7 items-center justify-center rounded-full border border-line bg-surface text-black shadow-[3px_3px_0_#00000010] transition-all hover:-translate-y-0.5 hover:bg-black hover:text-[#FFD300]"
+                  className="flex h-7 w-7 items-center justify-center rounded-full border border-line bg-surface text-black shadow-[3px_3px_0_var(--shadow)] transition-all hover:-translate-y-0.5 hover:bg-black hover:text-accent"
                   aria-label="Затвори пребарување"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5}>
@@ -242,7 +242,7 @@ const NavSearch = ({
       </form>
 
       {showDropdown && (
-        <div className="absolute right-0 top-[110%] z-[70] w-[min(90vw,420px)] sm:w-[360px] rounded-md border border-line bg-surface shadow-[10px_10px_0_#00000010]">
+        <div className="absolute right-0 top-[110%] z-[70] w-[min(90vw,420px)] sm:w-[360px] rounded-md border border-line bg-surface shadow-[10px_10px_0_var(--shadow)]">
           <div className="max-h-[70vh] overflow-y-auto divide-y divide-line-soft">
             {results.map((item) => (
               <button
@@ -280,7 +280,7 @@ const NavSearch = ({
             <button
               type="button"
               onClick={() => submitSearch(query)}
-              className="w-full rounded-sm border border-line bg-black px-3 py-2 text-[11px] font-bold uppercase tracking-[0.25em] text-white transition-colors hover:bg-[#FFD300] hover:text-black"
+              className="w-full rounded-sm border border-line bg-black px-3 py-2 text-[11px] font-bold uppercase tracking-[0.25em] text-white transition-colors hover:bg-accent hover:text-black"
             >
               Сите резултати во архивата →
             </button>
@@ -433,7 +433,7 @@ export const NavBar = () => {
         />
 
         <aside
-          className={`absolute left-0 top-0 h-full w-[min(360px,85vw)] bg-paper border-r border-line shadow-[0px_0_0_#0000000a] transition-transform duration-300 ease-out ${
+          className={`absolute left-0 top-0 h-full w-[min(360px,85vw)] bg-paper border-r border-line shadow-[0px_0_0_var(--shadow)] transition-transform duration-300 ease-out ${
             isOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -453,7 +453,7 @@ export const NavBar = () => {
                   <Link
                     href="/admin"
                     onClick={() => setIsOpen(false)}
-                    className="ml-1 inline-flex items-center gap-2 rounded-full border border-line bg-[#FFD300] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-black shadow-[4px_4px_0_#00000010] transition-colors hover:bg-black hover:text-white"
+                    className="ml-1 inline-flex items-center gap-2 rounded-full border border-line bg-accent px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-black shadow-[4px_4px_0_var(--shadow)] transition-colors hover:bg-black hover:text-white"
                   >
                     Admin page
                   </Link>
@@ -513,15 +513,15 @@ export const NavBar = () => {
                     Управувај со твоите вести, сочувај написи и добиј персонализирани вибрации.
                   </p>
                   <SignInButton mode="modal">
-                    <button className="group w-full flex items-center justify-between border border-line/80 bg-surface px-4 py-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all hover:bg-black hover:text-[#FFD300] hover:shadow-[6px_6px_0_#00000012]">
+                    <button className="group w-full flex items-center justify-between border border-line/80 bg-surface px-4 py-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all hover:bg-black hover:text-accent hover:shadow-[6px_6px_0_var(--shadow)]">
                       <span>Најава</span>
-                      <span className="text-[10px] font-mono tracking-[0.2em] group-hover:text-[#FFD300]">
+                      <span className="text-[10px] font-mono tracking-[0.2em] group-hover:text-accent">
                         →
                       </span>
                     </button>
                   </SignInButton>
                   <SignUpButton mode="modal">
-                    <button className="w-full flex items-center justify-between border border-line bg-[#FFD300] text-black px-4 py-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all shadow-[6px_6px_0_#00000012] hover:-translate-y-0.5 hover:shadow-[10px_10px_0_#00000012]">
+                    <button className="w-full flex items-center justify-between border border-line bg-accent text-black px-4 py-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all shadow-[6px_6px_0_var(--shadow)] hover:-translate-y-0.5 hover:shadow-[10px_10px_0_var(--shadow)]">
                       <span>Креирај профил</span>
                       <span className="text-[10px] font-mono tracking-[0.2em]">+</span>
                     </button>
@@ -538,9 +538,9 @@ export const NavBar = () => {
                   <UserButton
                     appearance={{
                       elements: {
-                        avatarBox: "w-12 h-12 border border-line/70 rounded-full shadow-[4px_4px_0_#00000010]",
-                        userButtonPopoverCard: "border border-line/10 shadow-[12px_12px_0_#00000012] bg-[#FFFBEE]",
-                        userButtonPopoverActionButton: "hover:bg-black hover:text-[#FFD300]",
+                        avatarBox: "w-12 h-12 border border-line/70 rounded-full shadow-[4px_4px_0_var(--shadow)]",
+                        userButtonPopoverCard: "border border-line/10 shadow-[12px_12px_0_var(--shadow)] bg-[#FFFBEE]",
+                        userButtonPopoverActionButton: "hover:bg-black hover:text-accent",
                       },
                     }}
                   />
@@ -637,10 +637,10 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
                 ? "text-ink border-b-2 border-line pb-1"
                 : "text-neutral-500";
               const latestAccent = isLatest
-                ? "pl-3 pr-3 py-1 rounded-full border border-line bg-[#FFD300] text-black shadow-[3px_3px_0_#00000012] md:animate-pulse"
+                ? "pl-3 pr-3 py-1 rounded-full border border-line bg-accent text-black shadow-[3px_3px_0_var(--shadow)] md:motion-safe:animate-pulse"
                 : "";
               const iranAccent = isIran
-                ? "pl-3 pr-3 py-1 rounded-full border border-line bg-[#f26d6d] text-black shadow-[3px_3px_0_#ff000012] md:animate-pulse"
+                ? "pl-3 pr-3 py-1 rounded-full border border-line bg-iran text-black shadow-[3px_3px_0_var(--shadow-alert)] md:motion-safe:animate-pulse"
                 : "";
 
               return (
@@ -679,7 +679,7 @@ const IconButton = ({ href, label, children }: { href: string; label: string; ch
     href={href}
     target="_blank"
     rel="noreferrer"
-    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface text-ink transition-all hover:bg-[#FFD300] hover:text-black hover:shadow-[4px_4px_0_var(--shadow)]"
+    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface text-ink transition-all hover:bg-accent hover:text-black hover:shadow-[4px_4px_0_var(--shadow)]"
   >
     <span className="sr-only">{label}</span>
     {children}

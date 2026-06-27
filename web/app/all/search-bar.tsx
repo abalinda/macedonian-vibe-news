@@ -58,7 +58,7 @@ export function SearchBar() {
     <form className="w-full max-w-md" onSubmit={handleSubmit}>
       <div className="relative">
         <input
-          className="peer block w-full rounded-md border border-line-soft bg-surface text-ink py-[9px] pl-10 text-sm outline-2 placeholder:text-neutral-500 focus:border-line focus:outline-none focus:ring-2 focus:ring-[#FFD300]/60"
+          className="peer block w-full rounded-md border border-line-soft bg-surface text-ink py-[9px] pl-10 text-sm outline-2 placeholder:text-neutral-500 focus:border-line focus:outline-none focus:ring-2 focus:ring-accent/60"
           placeholder="Пребарувај..."
           onChange={(e) => handleChange(e.target.value)}
           value={value}
@@ -71,7 +71,7 @@ export function SearchBar() {
         </div>
         {isPending && (
            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-             <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-[#002CFF]"></div>
+             <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-link"></div>
            </div>
         )}
       </div>

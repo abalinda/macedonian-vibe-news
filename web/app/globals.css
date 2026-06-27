@@ -13,7 +13,7 @@
 
 /* Semantic color tokens. NEW components and dark-aware surfaces should use the
    utilities these generate — bg-paper, bg-surface, bg-surface-2, text-ink,
-   text-muted, border-line, border-line-soft, bg-accent, text-link, bg-alert —
+   text-muted, border-line, border-line-soft, bg-accent, text-link, bg-alert, bg-iran —
    so they flip automatically between themes. */
 @theme inline {
   --color-paper: var(--paper);
@@ -26,6 +26,7 @@
   --color-accent: var(--accent);
   --color-link: var(--link);
   --color-alert: var(--alert);
+  --color-iran: var(--category-iran);
 }
 
 :root {
@@ -43,8 +44,11 @@
   --line-soft: #e5e5e5;
   --accent: #ffd300;
   --link: #002cff;
-  --alert: #f26d6d;
+  --alert: #f26d6d;          /* semantic: breaking / urgent (reserved) */
+  --category-iran: #f26d6d;  /* category accent: Иран — distinct role, same hue today */
   --shadow: rgba(0, 0, 0, 0.07);
+  --shadow-strong: rgba(0, 0, 0, 0.1);
+  --shadow-alert: rgba(255, 0, 0, 0.07);
   --blog-text: #1f2937;
   --blog-muted: #4b5563;
   --blog-rule: #e5e7eb;
@@ -63,7 +67,10 @@
   --accent: #ffd300;
   --link: #8aa0ff;
   --alert: #f26d6d;
+  --category-iran: #f26d6d;
   --shadow: rgba(0, 0, 0, 0.55);
+  --shadow-strong: rgba(0, 0, 0, 0.65);
+  --shadow-alert: rgba(255, 90, 90, 0.22);
   --blog-text: #e7e2d8;
   --blog-muted: #b3a89c;
   --blog-rule: rgba(255, 255, 255, 0.14);
@@ -89,6 +96,17 @@ body {
   body {
     transition: background-color 0.3s ease, color 0.3s ease;
   }
+
+  /* Orchestrated hero entrance — a staggered "rise" on page load, in the brand
+     expo-out easing. Gated here so reduced-motion users get the final state with
+     no movement (no animation = elements simply present). See DESIGN_SYSTEM.md §6. */
+  @keyframes vibe-rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .vibe-reveal   { animation: vibe-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .vibe-reveal-2 { animation: vibe-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.09s both; }
+  .vibe-reveal-3 { animation: vibe-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both; }
 }
 
 @layer utilities {
@@ -104,7 +122,7 @@ body {
 
 /* Utilities for fonts */
 .font-serif {
-  font-family: var(--font-playfair), serif;
+  font-family: var(--font-display), serif;
 }
 .font-geist-mono {
   font-family: var(--font-geist-mono), monospace;
@@ -115,8 +133,8 @@ body {
 
 /* Reader-friendly rich text styling */
 .blog-body {
-  /* A comfortable reading serif (NOT Playfair, which is a display face) — see
-     DESIGN_SYSTEM.md: Playfair is for headlines, body copy stays readable. */
+  /* A comfortable reading serif (NOT the Alegreya display face) — see
+     DESIGN_SYSTEM.md: the serif display face is for headlines; body copy stays readable. */
   font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
   line-height: 1.85;
   color: var(--blog-text);

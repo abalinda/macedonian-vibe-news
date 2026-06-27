@@ -3,7 +3,7 @@
 > The single source of truth for how **vibes.mk** looks, feels, and speaks.
 > **Every new feature, component, and commit to `web/` must follow this document.** When you add UI, match these tokens and recipes instead of inventing new ones. If a genuinely new pattern is needed, add it here in the same PR so the system stays whole.
 
-This system is **extracted from the live codebase** (`app/globals.css`, `app/layout.tsx`, `app/_components/*`, `app/page.tsx`, `app/najnovo/latest-feed.tsx`). It is descriptive of what exists *and* prescriptive for what comes next.
+This system is **extracted from the live codebase** (`app/globals.css`, `app/layout.tsx`, `app/_components/*`, `app/page.tsx`, `app/najnovo/latest-feed.tsx`, `lib/teaser.ts`). It is descriptive of what exists *and* prescriptive for what comes next.
 
 ---
 
@@ -20,14 +20,14 @@ This system is **extracted from the live codebase** (`app/globals.css`, `app/lay
 - **Младешки дух и свеж пристап** — fresh, energetic, modern.
 - **Заедница** — built *for and with* readers.
 
-**Design north star:** _editorial neo-brutalism_ — a clean off-white "paper" canvas, hard black hairline borders, crisp offset (zero-blur) shadows, big Playfair headlines, and one electric yellow that does all the shouting.
+**Design north star:** _editorial neo-brutalism_ — a clean off-white "paper" canvas, hard black hairline borders, crisp offset (zero-blur) shadows, big Alegreya headlines, one electric yellow that does all the shouting, and a single signature **ray-burst** mark (§6) — an abstract Macedonian sun.
 
 ---
 
 ## 2. Logo & wordmark
 
 - **Wordmark:** `VIBES.` — always **uppercase, with the trailing period.** The period is part of the mark; don't drop it.
-- **Type treatment:** Playfair Display, `font-black`, `tracking-tighter`. Responsive size `text-3xl md:text-5xl`.
+- **Type treatment:** Alegreya (the `.font-serif` display face), `font-black`, `tracking-tighter`. Responsive size `text-3xl md:text-5xl`.
 - **App/icon logo:** `public/logo_homepage.png`. In the navbar the hamburger icon (`public/hamburger-menu.svg`) cross-fades to the logo on hover.
 - **Voice in metadata:** "Vibes — Твои вести, секој ден."
 
@@ -41,7 +41,7 @@ This system is **extracted from the live codebase** (`app/globals.css`, `app/lay
 
 ## 3. Color system
 
-The palette is deliberately tiny: **paper + ink + one yellow**, with electric blue for interaction and coral reserved for "Иран"/alerts. Everything else is neutral gray.
+The palette is deliberately tiny: **paper + ink + one yellow**, with electric blue for interaction and coral for the **Иран** category (and, as a *separate* reserved semantic, breaking/alert). Everything else is neutral gray. **Apply brand colors through their token utilities — `bg-accent`, `text-link`, `bg-iran` — never raw hex.**
 
 ### Core tokens
 
@@ -50,9 +50,10 @@ The palette is deliberately tiny: **paper + ink + one yellow**, with electric bl
 | **Paper** | `#FDFBF7` | The universal background ("paper" feel). Also the PWA `theme-color`. Page bg, nav, drawers, modals. |
 | **Paper (alt)** | `#F8F6F0` | Rare slightly-deeper paper for subtle layering. |
 | **Ink** | `#000000` / `neutral-900` | Borders, text, the "invert" hover fill. Body text is `text-neutral-900`. |
-| **Signature Yellow** | `#FFD300` | **The brand accent.** CTAs, the "Најново" pill, hover accents, "read more" underline, admin badge, active highlights. Use it sparingly and on purpose — it's the loudest thing on the page. |
-| **Electric Blue** | `#002CFF` | Interactive/source accent: source labels, link hover (`group-hover:text-[#002CFF]`), blog-body links. |
-| **Iran / Alert Coral** | `#f26d6d` | Reserved for the **Иран** category pill and breaking/alert contexts. Pairs with a red-tinted shadow `#ff000012`. Do not use coral for generic decoration. |
+| **Signature Yellow** | `#FFD300` → `bg-accent` | **The brand accent.** CTAs, the "Најново" pill, hover accents, "read more" underline, the **ray-burst** mark (§6), active highlights. Use it sparingly and on purpose — it's the loudest thing on the page. Apply via `bg-accent`/`text-accent`/`border-accent`. |
+| **Electric Blue** | `#002CFF` → `text-link` | Interactive/source accent: source labels, link hover (`group-hover:text-link`), blog-body links. |
+| **Иран category** | `#f26d6d` → `bg-iran` | The **Иран** category pill. Pairs with the red-tinted offset shadow `var(--shadow-alert)`. Apply via `bg-iran`. |
+| **Alert (reserved)** | `#f26d6d` → `bg-alert` | Breaking/urgent **semantic** — a *separate role* from the Иран category so the two can diverge later. Same hue today; not yet used in UI. Never use coral for generic decoration. |
 
 ### Soft yellow fills (warm gradients / glows)
 
@@ -70,20 +71,17 @@ Grayscale ladder via Tailwind `neutral-*`. Common: `neutral-200` (hairlines/divi
 
 ### Shadow tints (the neo-brutalist signature)
 
-Shadows are **hard, offset, zero-blur**, in near-transparent black. This is a defining trait — never use soft blurred Material shadows.
+Shadows are **hard, offset, zero-blur**, in near-transparent black. This is a defining trait — never use soft blurred Material shadows. **The tint is a token; the offset geometry stays inline** — e.g. `shadow-[6px_6px_0_var(--shadow)]`. Tokens flip for dark mode, so an offset shadow never vanishes on the dark canvas (the old raw `#000000xx` literals did).
 
-| Tint | Approx | Use |
-|---|---|---|
-| `#0000000a` | ~4% | Lightest (subtle inputs) |
-| `#00000010` | ~6% | **Default** card/button shadow |
-| `#00000012` | ~7% | **Default** elevated/hover shadow |
-| `#00000015` | ~8% | Strong hover/modal |
-| `#e5e5e5` | solid | Opaque variant on white surfaces |
-| `#ff000012` | ~7% red | Iran/alert pill only |
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `var(--shadow)` | `rgba(0,0,0,.07)` | `rgba(0,0,0,.55)` | **Default** card / button / panel offset |
+| `var(--shadow-strong)` | `rgba(0,0,0,.10)` | `rgba(0,0,0,.65)` | Strong hover / modal / heavy CTA |
+| `var(--shadow-alert)` | `rgba(255,0,0,.07)` | `rgba(255,90,90,.22)` | Иран pill only (red-tinted) |
 
-> Rule of thumb: resting elements use the `00000010`/`00000012` tints; the **offset grows on hover** to imply lift (see §6 Elevation).
+> Rule of thumb: resting elements carry `var(--shadow)`; the **offset grows on hover** to imply lift (see §6 Elevation). `#e5e5e5` (token `border-line-soft`) remains an opaque hairline variant on light surfaces.
 
-**Color don'ts:** no new brand hues without adding them here; never introduce a second accent that competes with `#FFD300`; never use pure blurred shadows; keep coral exclusive to Iran/alerts.
+**Color don'ts:** no new brand hues without adding them here; never introduce a second accent that competes with `#FFD300`; never use pure blurred shadows; **apply brand colors/shadows through their token utilities, not raw hex**; keep coral to the Иран category / the reserved alert semantic.
 
 ### Dark mode (semantic tokens)
 
@@ -101,13 +99,15 @@ Dark mode is **class-based**: `<html>` gets `.dark` from a no-flash inline scrip
 | `border-line-soft` | `#E5E5E5` | `rgba(255,255,255,.10)` | Dividers, soft borders |
 | `text-link` | `#002CFF` | `#8AA0FF` | Interaction/source accent (blue lightens in dark) |
 | `bg-accent` | `#FFD300` | `#FFD300` | Signature yellow (unchanged — pops on both) |
+| `bg-iran` | `#f26d6d` | `#f26d6d` | Иран category accent (keeps dark text) |
 | `var(--shadow)` | `rgba(0,0,0,.07)` | `rgba(0,0,0,.55)` | Offset-shadow tint, e.g. `shadow-[6px_6px_0_var(--shadow)]` |
+| `var(--shadow-strong)` | `rgba(0,0,0,.10)` | `rgba(0,0,0,.65)` | Stronger offset (modals, heavy CTAs) |
 
 **How existing literals map (use these substitutions when converting a surface):**
-- `bg-[#FDFBF7]`→`bg-paper` · `text-neutral-900`→`text-ink` · `border-black`→`border-line` · `bg-white`→`bg-surface` · `border-neutral-200`→`border-line-soft` · `text-[#002CFF]`/`text-blue-600`→`text-link`.
+- `bg-[#FDFBF7]`→`bg-paper` · `text-neutral-900`→`text-ink` · `border-black`→`border-line` · `bg-white`→`bg-surface` · `border-neutral-200`→`border-line-soft` · `text-[#002CFF]`/`text-blue-600`→`text-link` · `bg-[#FFD300]`→`bg-accent` · `bg-[#f26d6d]`→`bg-iran` · `shadow-[…_#000000xx]`→`shadow-[…_var(--shadow)]`.
 - **Invert fills** (`bg-black text-white`, `hover:bg-black hover:text-white`) → `bg-ink text-paper` / `hover:bg-ink hover:text-paper`. These invert correctly in *both* themes (dark-on-light becomes light-on-dark) — the preferred pattern for primary buttons and hover-invert badges.
 - **Always-yellow / always-coral surfaces keep DARK text** (`text-black` / `text-neutral-900`) — never switch their text to `text-ink` (it would go light on a yellow chip). Likewise, overlay **scrims stay dark** in both themes (`bg-black/20`–`/50`).
-- Brand hues that read on both themes (`#FFD300`, `#f26d6d`) stay as literals.
+- Brand hues that read on both themes use their **always-on tokens** (`bg-accent` for `#FFD300`, `bg-iran` for the Иран coral) — identical in both themes, but kept as tokens so there's one source of truth.
 
 **Dark don'ts:** don't add parallel `dark:` hex values when a token exists; don't flip text on always-accent surfaces; don't let an offset shadow vanish on dark — use `var(--shadow)`.
 
@@ -115,16 +115,16 @@ Dark mode is **class-based**: `<html>` gets `.dark` from a no-flash inline scrip
 
 ## 4. Typography
 
-Three families, each with a fixed job. They are wired in `app/layout.tsx` and mapped to classes in `app/globals.css`.
+Three families, each with a fixed job. They are wired in `app/layout.tsx` and mapped to classes in `app/globals.css`. **Every font is loaded with the `cyrillic` subset** (`subsets: ['latin', 'cyrillic']`) — the product is Macedonian Cyrillic, and a latin-only subset silently falls back to system fonts for all real content.
 
 | Family | CSS var | Class | Job |
 |---|---|---|---|
-| **Playfair Display** | `--font-playfair` | `.font-serif` | **Headlines & editorial.** Logo, hero/H2/H3 titles, big statements. Almost always `font-black` or `font-bold`, tight tracking, tight leading. |
+| **Alegreya** | `--font-display` | `.font-serif` | **Headlines & editorial.** Logo, hero/H2/H3 titles, big statements. A distinctive editorial serif with a real Macedonian-Cyrillic cut (incl. localized italics) and weights to 900. Almost always `font-black`/`font-bold`, tight tracking, tight leading. |
 | **Inter** | `--font-inter` | `.font-sans` | **UI & body.** Section labels, buttons, paragraphs, navigation, modal copy. |
 | **Geist Mono** | `--font-geist-mono` | `.font-geist-mono` (also Tailwind `font-mono`) | **Metadata & teasers.** Dates, counters, source/category micro-labels, and the signature UPPERCASE teaser line. |
 
 ### The headline recipe
-Playfair, heavy, tight. Hero scales big; cards stay calmer.
+Alegreya, heavy, tight. Hero scales big; cards stay calmer.
 ```tsx
 // Hero
 <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-black leading-[0.9] break-words">…</h2>
@@ -133,22 +133,26 @@ Playfair, heavy, tight. Hero scales big; cards stay calmer.
 ```
 
 ### The teaser/metadata recipe (very distinctive — keep it consistent)
-**UPPERCASE, monospace, wide letter-spacing, small, muted.** Teaser text is force-uppercased in code (`getTeaserText`).
+**UPPERCASE, monospace, muted.** The teaser text helper *and* its type recipe live in **`lib/teaser.ts`** — import them, don't re-roll them:
 ```tsx
-<p className="font-mono text-xs uppercase tracking-[0.2em] text-neutral-600 line-clamp-3 leading-relaxed">…</p>
+import { getTeaserText, TEASER_CLASS } from "@/lib/teaser";
+// TEASER_CLASS = "font-mono uppercase tracking-[0.12em] leading-relaxed text-muted"
+<p className={`${TEASER_CLASS} text-xs md:text-sm line-clamp-3`}>{getTeaserText(post)}</p>
 ```
-Tracking scale for mono labels: `tracking-widest` (≈0.1em) for short labels → `tracking-[0.2em]`/`tracking-[0.3em]` for teasers and counters.
+Tracking is **capped at `0.12em`** — Cyrillic loses legibility past that at small sizes (it used to range 0.15–0.3em). Color is `text-muted` (theme-aware), so teasers no longer use fixed dark neutrals that vanished in dark mode. Short mono *labels* (dates, counters) may still use `tracking-widest`/`tracking-[0.2em]`.
 
 ### Section headers
-Sans, black weight, uppercase, with a **thick black underline** (`border-b-4 border-black`) — a core editorial signature.
+Sans, black weight, uppercase, with a **thick underline** (`border-b-4 border-line`) and a small **ray-burst tick** (§6) — a core editorial signature.
 ```tsx
-<h4 className="font-sans text-xs font-black uppercase tracking-widest border-b-4 border-black pb-2 mb-4">Последни новости</h4>
+<h4 className="flex items-center gap-2 font-sans text-xs font-black uppercase tracking-widest border-b-4 border-line pb-2 mb-4">
+  <RayBurst className="h-3.5 w-3.5 text-accent shrink-0" /> Последни новости
+</h4>
 ```
 
 ### Long-form (blog reader)
 Use the `.blog-body` class (defined in `globals.css`): serif, `line-height: 1.8`, links in `#002cff`, images `border-radius: 12px`.
 
-**Type don'ts:** no Playfair for body paragraphs or small UI; no sentence-case teasers (they're UPPERCASE mono); don't mix a fourth typeface.
+**Type don'ts:** no Alegreya (`.font-serif`) for body paragraphs or small UI; no sentence-case teasers (they're UPPERCASE mono); don't mix a fourth typeface; never load a font latin-only.
 
 ---
 
@@ -164,31 +168,43 @@ Use the `.blog-body` class (defined in `globals.css`): serif, `line-height: 1.8`
 
 ```tsx
 // Feed card shell (canonical)
-<article className="rounded-xl border border-neutral-200 bg-white shadow-[6px_6px_0_#00000010]
-                    transition-transform duration-200 hover:-translate-y-[3px] hover:shadow-[10px_10px_0_#00000012]">
+<article className="rounded-xl border border-line-soft bg-surface shadow-[6px_6px_0_var(--shadow)]
+                    transition-transform duration-200 hover:-translate-y-[3px] hover:shadow-[10px_10px_0_var(--shadow)]">
 ```
 
 ---
 
-## 6. Elevation & motion
+## 6. The signature, elevation & motion
 
-**Elevation = offset, not blur.** Resting shadow is a small hard offset; on hover the element **lifts** (`-translate-y`) and the **offset grows**. This "sticker peeling off the page" motion is the brand's signature interaction.
+### The one signature — the ray-burst mark
+Vibes has **one** identity mark: an abstract **ray-burst** (a "vibe" — a spark of rays around a solid core), an abstract Macedonian sun in the signature yellow. It is **not** the 16-ray Vergina sun (a politically contested symbol) — eight even rays, hard and geometric. Component: `app/_components/ray-burst.tsx`, drawn in `currentColor` so it picks up `text-accent`/ink and flips in dark mode.
+
+- **Hero (the memorable use):** the curated eyebrow — `<RayBurst className="h-3.5 w-3.5 text-accent" /> ИЗБОР НА ДЕНОТ` — above the lead headline.
+- **Supporting:** a small tick on section headers (§4); the empty-state graphic (muted, `text-neutral-300 dark:text-neutral-600`).
+- Keep it **intentional and rare** — it is the thing the page is remembered by. Don't sprinkle it as generic decoration.
+
+The **offset-shadow lift** below is the brand's signature *interaction*; the ray-burst is the signature *mark*. Everything else stays quiet.
+
+### Elevation = offset, not blur
+Resting shadow is a small hard offset; on hover the element **lifts** (`-translate-y`) and the **offset grows** — the "sticker peeling off the page" feel. **Use the shadow tokens** (§3), never raw `#000000xx`.
 
 | State | Pattern |
 |---|---|
-| Rest | `shadow-[4px_4px_0_#00000010]` (small) … `shadow-[10px_10px_0_#00000012]` (panels) |
-| Hover (lift) | add `hover:-translate-y-0.5` (or `-translate-y-[3px]`) **and** bump offset, e.g. `hover:shadow-[10px_10px_0_#00000012]` |
-| Hover (invert) | `hover:bg-black hover:text-white` — or the premium variant `hover:bg-black hover:text-[#FFD300]` |
-| Hover (yellow swap) | `hover:bg-[#FFD300] hover:text-black` (black buttons → yellow on hover) |
+| Rest | `shadow-[4px_4px_0_var(--shadow)]` (small) … `shadow-[10px_10px_0_var(--shadow)]` (panels) |
+| Hover (lift) | add `hover:-translate-y-0.5` (or `-translate-y-[3px]`) **and** bump offset, e.g. `hover:shadow-[10px_10px_0_var(--shadow)]` |
+| Hover (invert) | `hover:bg-ink hover:text-paper` — or the premium variant `hover:bg-ink hover:text-accent` |
+| Hover (yellow swap) | `hover:bg-accent hover:text-black` (ink buttons → yellow on hover) |
 
-**Motion tokens:**
+### Motion
 - **Easing:** `cubic-bezier(0.22,1,0.36,1)` (expo-out, the default) and `cubic-bezier(0.33,1,0.68,1)`.
 - **Duration:** `200–400ms`. Micro-interactions 200ms; layout/expansion 300–400ms.
-- **Accent flourishes:** `md:animate-pulse` on the live "Најново"/"Иран" pills; image `group-hover:scale-105` (700ms) on hero, `scale-[1.02]` on cards.
+- **Hero entrance (the orchestrated moment):** a staggered "rise" on load — `vibe-reveal` / `vibe-reveal-2` / `vibe-reveal-3` (eyebrow → headline → teaser), defined in `globals.css`. **Gated inside `@media (prefers-reduced-motion: no-preference)`** — reduced-motion users get the final state with no movement.
+- **Live pills:** the "Најново"/"Иран" pulse is **`md:motion-safe:animate-pulse`** — always gate looping motion with `motion-safe:`.
+- **Image hover:** `group-hover:scale-105` (700ms) on hero, `scale-[1.02]` on cards.
 - **Headline hover:** `group-hover:underline decoration-2 underline-offset-4`.
-- **"Read more" hover:** a yellow underline grows in — `border-b-2 border-transparent group-hover:border-[#FFD300]`.
+- **"Read more" hover:** a yellow underline grows in — `border-b-2 border-transparent group-hover:border-accent`.
 
-Respect `prefers-reduced-motion` for new large/looping animations.
+Respect `prefers-reduced-motion` for **all** looping/large animations — gate with the `motion-safe:` variant or a `no-preference` block.
 
 ---
 
@@ -200,25 +216,25 @@ Copy these. They are the canonical building blocks — extend them, don't replac
 
 ```tsx
 // PRIMARY (ink) — default action
-<button className="px-5 py-3 rounded-xl border border-black bg-black text-white
+<button className="px-5 py-3 rounded-xl border border-line bg-ink text-paper
   text-xs font-bold uppercase tracking-[0.25em]
   transition-all duration-200 ease-out
-  hover:-translate-y-0.5 hover:bg-neutral-900 hover:shadow-[10px_12px_0_#00000015]
-  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black">
+  hover:-translate-y-0.5 hover:shadow-[10px_12px_0_var(--shadow-strong)]
+  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--ink)]">
   Најново денес
 </button>
 
 // YELLOW CTA — high-intent (sign up, key conversion)
-<button className="flex items-center justify-between border border-black bg-[#FFD300] text-black
+<button className="flex items-center justify-between border border-line bg-accent text-black
   px-4 py-3 text-[11px] font-bold uppercase tracking-[0.3em]
-  shadow-[6px_6px_0_#00000012] transition-all hover:-translate-y-0.5 hover:shadow-[10px_10px_0_#00000012]">
+  shadow-[6px_6px_0_var(--shadow)] transition-all hover:-translate-y-0.5 hover:shadow-[10px_10px_0_var(--shadow)]">
   <span>Креирај профил</span><span className="font-mono">+</span>
 </button>
 
 // GHOST — secondary, inverts to yellow
-<button className="px-5 py-3 rounded-xl border border-black/50 bg-white text-neutral-800
+<button className="px-5 py-3 rounded-xl border border-line/50 bg-surface text-ink
   text-xs font-bold uppercase tracking-[0.25em] transition-all
-  hover:border-black hover:bg-[#FFD300] hover:text-black hover:-translate-y-0.5 hover:shadow-[8px_10px_0_#00000012]">
+  hover:border-line hover:bg-accent hover:text-black hover:-translate-y-0.5 hover:shadow-[8px_10px_0_var(--shadow)]">
   За нас
 </button>
 ```
@@ -227,54 +243,63 @@ Copy these. They are the canonical building blocks — extend them, don't replac
 
 ```tsx
 // Live category pill — "Најново" (yellow) / "Иран" (coral)
-<span className="px-3 py-1 rounded-full border border-black bg-[#FFD300] text-black
-  text-sm font-bold uppercase tracking-widest shadow-[3px_3px_0_#00000012] md:animate-pulse">Најново</span>
-<span className="px-3 py-1 rounded-full border border-black bg-[#f26d6d] text-black
-  text-sm font-bold uppercase tracking-widest shadow-[3px_3px_0_#ff000012] md:animate-pulse">Иран</span>
+<span className="px-3 py-1 rounded-full border border-line bg-accent text-black
+  text-sm font-bold uppercase tracking-widest shadow-[3px_3px_0_var(--shadow)] md:motion-safe:animate-pulse">Најново</span>
+<span className="px-3 py-1 rounded-full border border-line bg-iran text-black
+  text-sm font-bold uppercase tracking-widest shadow-[3px_3px_0_var(--shadow-alert)] md:motion-safe:animate-pulse">Иран</span>
 
 // Source badge (editorial) — inverts on hover
-<span className="inline-block border border-black px-2 py-0.5 text-xs font-bold uppercase tracking-widest
-  hover:bg-black hover:text-white transition-colors">{source}</span>
+<span className="inline-block border border-line px-2 py-0.5 text-xs font-bold uppercase tracking-widest
+  hover:bg-ink hover:text-paper transition-colors">{source}</span>
 
 // Freshness badge — "Тазе" (yellow) vs time (ink)
 <span className="text-[10px] font-black uppercase tracking-widest rounded-full px-2 py-1
-  bg-[#FFD300] text-black">Тазе</span>  // else: bg-black text-white → "пред 12 минути"
+  bg-accent text-black">Тазе</span>  // else: bg-ink text-paper → "пред 12 минути"
 ```
 
 ### Icon buttons (circular, hard border)
 
 ```tsx
-<a className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black bg-white text-black
-  transition-all hover:bg-[#FFD300] hover:shadow-[4px_4px_0_#00000012]">{/* inline SVG */}</a>
+<a className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface text-ink
+  transition-all hover:bg-accent hover:text-black hover:shadow-[4px_4px_0_var(--shadow)]">{/* inline SVG */}</a>
 ```
+
+### Signature ray-burst (§6)
+
+```tsx
+import { RayBurst } from "./_components/ray-burst";
+<RayBurst className="h-3.5 w-3.5 text-accent" />                        // section tick / hero eyebrow
+<RayBurst className="h-8 w-8 text-neutral-300 dark:text-neutral-600" /> // empty-state graphic
+```
+> Inherits `currentColor`; size with `h-`/`w-`. One memorable use (the hero), small supporting ticks elsewhere — never decorative spam.
 
 ### Search input
 
 ```tsx
-<input className="h-11 w-full rounded-full border border-black/20 bg-white px-12 text-sm font-sans
-  placeholder:text-neutral-500 shadow-[3px_3px_0_#0000000a]
-  focus:border-black focus:outline-none focus:ring-2 focus:ring-[#FFD300]/60 transition-all" />
+<input className="h-11 w-full rounded-full border border-line/20 bg-surface px-12 text-sm font-sans
+  placeholder:text-neutral-500 shadow-[3px_3px_0_var(--shadow)]
+  focus:border-line focus:outline-none focus:ring-2 focus:ring-accent/60 transition-all" />
 ```
-> **Focus ring is yellow** (`focus:ring-[#FFD300]/60`). Use this for all focusable inputs.
+> **Focus ring is yellow** (`focus:ring-accent/60`). Use this for all focusable inputs.
 
 ### Share
 
 `<ShareButton url={…} title={…} />` (`app/_components/share-button.tsx`) uses the **Web Share API** on mobile and falls back to a brand-styled menu (Copy link, WhatsApp, Viber, Facebook, Telegram, X, LinkedIn, Email). Variants: `icon` (compact circle for cards/overlays) and `pill` (icon + "Сподели" for article headers). It captures a PostHog `share_clicked` event with the method.
 - **`url`** is a path (`/blog/12`) or an absolute source URL — `toAbsoluteUrl` (`lib/share.ts`) resolves it. Share the **canonical vibes URL for our own content** (blog) and the **source link for external stories** (best social preview).
 - Story cards are wrapped in anchors, so render `ShareButton` as a **sibling overlay** (`absolute right-3 top-3 z-20`) of the card link — never nested inside it (keeps valid HTML; the button also calls `preventDefault`/`stopPropagation`). The host's outer wrapper must **not** be `overflow-hidden`, or the menu clips.
-- The reading view (`app/blog/[id]`) pairs the pill share with a `ReadingProgress` bar (`app/_components/reading-progress.tsx`) — a thin `#FFD300` top bar that fills on scroll.
+- The reading view (`app/blog/[id]`) pairs the pill share with a `ReadingProgress` bar (`app/_components/reading-progress.tsx`) — a thin `bg-accent` top bar that fills on scroll.
 
 ### Modals, drawers & panels
 
 - **Overlay:** `bg-black/20` (drawer) to `bg-black/50` (modal) + `backdrop-blur-sm`.
-- **Surface:** `bg-[#FDFBF7] border border-black` + a big offset shadow (`shadow-[14px_14px_0_#00000010]`), `rounded-2xl` for modals, square-edged for the slide-in drawer.
+- **Surface:** `bg-paper border border-line` + a big offset shadow (`shadow-[14px_14px_0_var(--shadow)]`), `rounded-2xl` for modals, square-edged for the slide-in drawer.
 - **Invite panels:** add a soft yellow radial/linear glow (see §3 soft fills).
 - **Z-index ladder (keep consistent):** content `z-20` → sticky nav `z-50` → drawer `z-[60]` → search dropdown `z-[70]` → welcome modal `z-[80]`.
 
 ### "Read more" affordance
 ```tsx
 <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest
-  border-b-2 border-transparent group-hover:border-[#FFD300]">Прочитај повеќе →</span>
+  border-b-2 border-transparent group-hover:border-accent">Прочитај повеќе →</span>
 ```
 
 ---
@@ -283,9 +308,10 @@ Copy these. They are the canonical building blocks — extend them, don't replac
 
 - **Container widths:** content `max-w-[1500px]`, category bar `max-w-[1400px]`, navbar `max-w-[1350px]`, all centered `mx-auto`.
 - **Page padding:** `px-4 md:px-8` (nav) / `px-5 md:px-10` (content). Always give mobile breathing room.
-- **The editorial grid (homepage):** 12-col on `lg`, split **3 / 6 / 3** — left "Последни новости" sidebar, center hero + 2 secondary heroes, right "Останати приказни" sidebar. Columns separated by `border-neutral-300` rules. Stacks to one column on mobile with explicit `order-*` (hero first).
+- **The editorial grid (homepage):** 12-col on `lg`, split **3 / 6 / 3** — left "Последни новости" sidebar, center hero + 2 secondary heroes, right "Останати приказни" sidebar. Columns separated by `border-line-soft` rules. Stacks to one column on mobile with explicit `order-*` (hero first).
+- **The hero is a thesis.** The lead story carries a curated eyebrow — the ray-burst mark + "Избор на денот" — and an orchestrated staggered reveal (§6), to dramatize that the story is *chosen*, not dumped. Keep the hero about curation, not just a big headline.
 - **Feed grid (`/najnovo`):** `grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4`.
-- **Sticky nav:** `sticky top-0 z-50 border-b border-black bg-[#FDFBF7]`.
+- **Sticky nav:** `sticky top-0 z-50 border-b border-line bg-paper`.
 
 ---
 
@@ -318,27 +344,28 @@ Copy these. They are the canonical building blocks — extend them, don't replac
 | Empty state | "Нема пронајдени приказни" |
 | Welcome | "Еј, добредојде на Vibes!" |
 | Sections | "Последни новости", "Останати приказни", "Архива", "Најново" |
+| Hero curated eyebrow | "Избор на денот" |
 
-Buttons/labels are **UPPERCASE**; headlines are sentence-case Playfair; teasers are UPPERCASE mono.
+Buttons/labels are **UPPERCASE**; headlines are sentence-case Alegreya; teasers are UPPERCASE mono.
 
 ---
 
 ## 11. Accessibility
 
 - Every icon-only control needs an `aria-label` (and `sr-only` text where used today).
-- **Focus:** visible focus on all interactive elements — yellow ring for inputs (`focus:ring-[#FFD300]/60`), `focus-visible:outline-black` for buttons. Never remove focus styling.
+- **Focus:** visible focus on all interactive elements — yellow ring for inputs (`focus:ring-accent/60`), `focus-visible:outline-[color:var(--ink)]` for buttons. Never remove focus styling.
 - **Contrast:** ink-on-paper and black-on-yellow are AA-strong — keep them. Be careful with `text-neutral-400/500` on `#FDFBF7` for anything essential (it's for de-emphasis only).
 - **Modals/drawers:** trap `Escape` to close and lock body scroll (`overflow: hidden`) — match existing patterns.
-- Respect `prefers-reduced-motion` for new looping/large animations.
+- Respect `prefers-reduced-motion` for **all** looping/large animations — gate with `motion-safe:` (e.g. `md:motion-safe:animate-pulse`) or a `no-preference` media query (the hero `vibe-reveal`). Teaser tracking is capped at `0.12em` for Cyrillic legibility (§4).
 
 ---
 
 ## 12. Tech notes for implementers
 
-- **Tailwind v4, no config file.** Tokens live in `app/globals.css` (`@import "tailwindcss"` + custom font classes). Brand colors are applied as **arbitrary values** (`bg-[#FFD300]`, `shadow-[6px_6px_0_#00000012]`). Match that convention.
-- **No component/icon library** — icons are hand-rolled inline SVG (`viewBox="0 0 24 24"`, `strokeWidth={1.5}` for line icons, `fill="currentColor"` for brand glyphs). Keep new icons inline and consistent.
+- **Tailwind v4, no config file.** Tokens live in `app/globals.css` — semantic colors via `@theme inline` (`--color-accent`, `--color-link`, `--color-iran`, `--color-alert`, plus paper/surface/ink/line/muted) and shadow tints as CSS vars (`--shadow`, `--shadow-strong`, `--shadow-alert`). **Apply brand colors through their token utilities** (`bg-accent`/`text-link`/`bg-iran`) and shadows as `shadow-[<offset>_var(--shadow)]` — **not** raw hex. (The only documented hex exceptions are the soft-yellow glow fills in §3, used inside one decorative gradient.)
+- **No component/icon library** — icons are hand-rolled inline SVG (`viewBox="0 0 24 24"`, `strokeWidth={1.5}` for line icons, `fill="currentColor"` for brand glyphs). The signature **ray-burst** lives in `app/_components/ray-burst.tsx` (§6). Keep new icons inline and consistent.
 - **No CSS-in-JS, no styled-components.** Utility classes only; shared snippets via small components in `app/_components/`.
-- If a value will repeat 3+ times (a new accent, a new shadow), promote it to a token in `globals.css` and document it here rather than copy-pasting arbitrary values.
+- If a value will repeat 3+ times (a new accent, a new shadow), promote it to a token in `globals.css` and document it here rather than copy-pasting arbitrary values. Shared logic does the same — e.g. the teaser helper + recipe live in `lib/teaser.ts` (§4).
 
 ---
 
@@ -346,14 +373,28 @@ Buttons/labels are **UPPERCASE**; headlines are sentence-case Playfair; teasers 
 
 - [ ] Background is `#FDFBF7`; text is ink/neutral, not pure gray-on-gray.
 - [ ] Borders are hard hairlines (`border-black` editorial / `border-neutral-200` soft); **no blurred shadows** — offset-zero-blur only.
-- [ ] The **one** accent is `#FFD300`; blue `#002CFF` only for interaction; coral `#f26d6d` only for Иран/alerts.
-- [ ] Headlines = Playfair (`font-serif`) heavy; teasers/metadata = UPPERCASE mono wide-tracking; body/UI = Inter.
-- [ ] Hover states lift (`-translate-y`) + grow the offset shadow, or invert to black/yellow.
+- [ ] Brand colors via **tokens** (`bg-accent`/`text-link`/`bg-iran`), never raw hex. One accent (yellow); blue `text-link` only for interaction; coral `bg-iran` for the Иран category (`bg-alert` reserved for breaking).
+- [ ] Headlines = Alegreya (`font-serif`) heavy; teasers via `TEASER_CLASS` from `lib/teaser.ts` (mono, ≤0.12em, `text-muted`); body/UI = Inter. Fonts loaded with the `cyrillic` subset.
+- [ ] Hover states lift (`-translate-y`) + grow the offset shadow, or invert to ink/yellow.
+- [ ] Looping/large motion is gated for reduced-motion (`motion-safe:` or a `no-preference` block); the ray-burst signature is used intentionally (one memorable spot), not as decoration.
 - [ ] Interactive elements have visible focus (yellow ring / black outline) and `aria-label`s on icon buttons.
 - [ ] Images: correct aspect ratio, `object-cover`, `referrerPolicy="no-referrer"`, and a `Vibes.mk` placeholder fallback.
 - [ ] Copy is Macedonian Cyrillic, informal, reuses the established lexicon (§10); zero clickbait.
-- [ ] **Works in both themes:** built with semantic tokens (`bg-paper`/`bg-surface`/`text-ink`/`text-muted`/`border-line`/`var(--shadow)`), not hardcoded canvas colors; text on always-yellow/coral surfaces stays dark; verified by flipping the theme toggle.
+- [ ] **Works in both themes:** built with semantic tokens (`bg-paper`/`bg-surface`/`text-ink`/`text-muted`/`border-line`/`bg-accent`/`var(--shadow)`), not hardcoded canvas colors or raw `#000000xx` shadows; text on always-yellow/coral surfaces stays dark; verified by flipping the theme toggle.
 - [ ] Reused an existing recipe (§7) or added the new pattern to this doc in the same PR.
+
+---
+
+## 14. Visual references
+
+Screenshots of the canonical states keep this doc honest — capture and drop them in `web/DESIGN_SYSTEM_assets/` and link them here:
+
+- [ ] Homepage hero (light **and** dark) — curated eyebrow + ray-burst, headline, teaser.
+- [ ] A feed card (`/najnovo`) at rest and on hover (the offset-shadow lift).
+- [ ] The ray-burst mark at its three sizes (hero eyebrow, section tick, empty state).
+- [ ] One **do vs. don't**: token utilities vs. raw-hex literals; teaser at `0.12em` vs. the old wide tracking.
+
+> Until captured, the recipes above plus the live homepage are the reference. Regenerate these after any change to the hero, palette, or signature.
 
 ---
 

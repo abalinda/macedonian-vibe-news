@@ -30,7 +30,7 @@ export default async function NewBlogPage() {
 
       <div className="max-w-4xl mx-auto px-4 md:px-8 pt-10">
         <header className="mb-8 space-y-3">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#002CFF]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-link">
             Админ панел
           </p>
           <h1 className="font-serif text-4xl font-black leading-tight">

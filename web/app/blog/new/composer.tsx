@@ -270,7 +270,7 @@ export const BlogComposer = ({ defaultAuthor }: BlogComposerProps) => {
         <button
           type="submit"
           disabled={saving}
-          className="inline-flex items-center gap-2 border border-black bg-black text-white px-5 py-3 text-[11px] font-bold uppercase tracking-[0.3em] rounded-lg transition-all hover:shadow-[6px_6px_0_#00000010] disabled:opacity-60"
+          className="inline-flex items-center gap-2 border border-black bg-black text-white px-5 py-3 text-[11px] font-bold uppercase tracking-[0.3em] rounded-lg transition-all hover:shadow-[6px_6px_0_var(--shadow)] disabled:opacity-60"
         >
           {saving ? "Се зачувува..." : "Објави"}
         </button>

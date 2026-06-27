@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { ShareButton } from "../_components/share-button";
 import { getRelativePostTime } from "@/lib/time";
+import { getTeaserText, TEASER_CLASS } from "@/lib/teaser";
 
 const CATEGORY_LABELS: Record<string, string> = {
   Tech: "Технологија",
@@ -15,15 +16,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   Sports: "Спорт",
   Iran: "Иран",
   Blog: "Блог",
-};
-
-const stripHtml = (value: string) => value.replace(/<[^>]*>/g, "");
-
-const getTeaserText = (post: any) => {
-  const rawTeaser = post?.teaser?.trim();
-  if (rawTeaser) return rawTeaser.toUpperCase();
-  const summaryFallback = post?.summary ? stripHtml(post.summary).substring(0, 140).trim() : "";
-  return summaryFallback ? summaryFallback.toUpperCase() : "";
 };
 
 const CardLink = ({ post, className, children }: { post: any; className?: string; children: ReactNode }) => {
@@ -108,7 +100,7 @@ const LatestCard = ({ post, index, now }: { post: any; index: number; now: numbe
 
           {teaserWithEllipsis && (
             <>
-              <p className="text-xs md:text-sm text-neutral-600 font-mono uppercase tracking-[0.2em] leading-relaxed line-clamp-4">
+              <p className={`${TEASER_CLASS} text-xs md:text-sm line-clamp-4`}>
                 {teaserWithEllipsis}
               </p>
               <div className="flex justify-end">

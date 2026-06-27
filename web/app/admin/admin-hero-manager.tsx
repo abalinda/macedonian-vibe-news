@@ -193,7 +193,7 @@ export const AdminHeroManager = ({ isLocal }: AdminHeroManagerProps) => {
     <div className="space-y-4">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#002CFF]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-link">
             Hero контролa
           </p>
           <p className="text-sm text-neutral-700">
@@ -233,7 +233,7 @@ export const AdminHeroManager = ({ isLocal }: AdminHeroManagerProps) => {
           return (
             <div
               key={slot.slotId}
-              className="rounded-2xl border border-black bg-white/90 p-4 shadow-[6px_6px_0_#00000010]"
+              className="rounded-2xl border border-black bg-white/90 p-4 shadow-[6px_6px_0_var(--shadow)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
@@ -249,7 +249,7 @@ export const AdminHeroManager = ({ isLocal }: AdminHeroManagerProps) => {
                 </div>
                 <span
                   className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ${
-                    isLocked ? "bg-[#FFD300] text-black" : "bg-green-600 text-white"
+                    isLocked ? "bg-accent text-black" : "bg-green-600 text-white"
                   }`}
                 >
                   {isLocked ? `Заклучен ${lockCountdown}` : "Отклучен"}
@@ -278,7 +278,7 @@ export const AdminHeroManager = ({ isLocal }: AdminHeroManagerProps) => {
                   type="button"
                   onClick={() => handleOverride(slot.slotId)}
                   disabled={!selectValue || savingSlot === slot.slotId}
-                  className="w-full rounded-lg border border-black bg-black px-4 py-2 text-[11px] font-bold uppercase tracking-[0.3em] text-white transition-all hover:shadow-[4px_4px_0_#00000012] disabled:opacity-50"
+                  className="w-full rounded-lg border border-black bg-black px-4 py-2 text-[11px] font-bold uppercase tracking-[0.3em] text-white transition-all hover:shadow-[4px_4px_0_var(--shadow)] disabled:opacity-50"
                 >
                   {savingSlot === slot.slotId ? "Се снима..." : "Постави hero"}
                 </button>

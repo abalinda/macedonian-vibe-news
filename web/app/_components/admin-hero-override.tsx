@@ -150,10 +150,10 @@ export const AdminHeroOverride = ({
   };
 
   return (
-    <div className="mt-4 mb-8 rounded-2xl border border-black bg-white/90 shadow-[6px_6px_0_#0000000a] p-4">
+    <div className="mt-4 mb-8 rounded-2xl border border-black bg-white/90 shadow-[6px_6px_0_var(--shadow)] p-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#002CFF]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-link">
             Админ: Hero override ({slotId})
           </p>
           <p className="text-sm text-neutral-800">
@@ -184,7 +184,7 @@ export const AdminHeroOverride = ({
             type="button"
             onClick={() => handleOverride()}
             disabled={!selectedId || isSaving}
-            className="whitespace-nowrap border border-black bg-black text-white px-4 py-2 text-xs font-bold uppercase tracking-[0.3em] rounded-lg transition-all hover:shadow-[4px_4px_0_#00000010] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="whitespace-nowrap border border-black bg-black text-white px-4 py-2 text-xs font-bold uppercase tracking-[0.3em] rounded-lg transition-all hover:shadow-[4px_4px_0_var(--shadow)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSaving ? "Се снима..." : "Препиши hero"}
           </button>

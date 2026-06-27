@@ -71,7 +71,7 @@ export const WelcomeModal = () => {
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
 
       <div className="relative max-w-[580px] w-full bg-paper border border-line rounded-2xl shadow-[14px_14px_0_var(--shadow)] overflow-hidden">
-        <div className="absolute -left-10 -top-10 h-28 w-28 bg-[#FFD300] rounded-full blur-3xl opacity-60 pointer-events-none" />
+        <div className="absolute -left-10 -top-10 h-28 w-28 bg-accent rounded-full blur-3xl opacity-60 pointer-events-none" />
         <div className="absolute -right-12 bottom-0 h-28 w-28 bg-neutral-200 rounded-full blur-3xl opacity-60 pointer-events-none" />
 
         <div className="relative p-6 md:p-8 space-y-5">
@@ -125,7 +125,7 @@ export const WelcomeModal = () => {
             </button>
             <a href="../about/"><button
               onClick={handleClose}
-              className="w-full md:w-auto px-5 py-3 bg-surface text-ink font-bold text-xs uppercase tracking-[0.25em] rounded-xl border border-line/50 transition-all duration-200 ease-out hover:border-line hover:bg-[#FFD300] hover:text-black hover:-translate-y-0.5 hover:shadow-[8px_10px_0_var(--shadow)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--ink)]"
+              className="w-full md:w-auto px-5 py-3 bg-surface text-ink font-bold text-xs uppercase tracking-[0.25em] rounded-xl border border-line/50 transition-all duration-200 ease-out hover:border-line hover:bg-accent hover:text-black hover:-translate-y-0.5 hover:shadow-[8px_10px_0_var(--shadow)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--ink)]"
             >За нас
             </button></a>
           </div>
