@@ -89,11 +89,11 @@ Settings → **Variables and secrets**:
 | `CURATOR_FALLBACK` | *(unset)* | Set to `groq` to fall back to Groq when a Claude call fails. Leave **unset** for an honest trial |
 | `CLAUDE_TIMEOUT_S` | `180` | Per-call CLI timeout |
 | `CLAUDE_MAX_CONSECUTIVE_FAILURES` | `3` | After this many consecutive CLI failures, stop curating for the run |
-| `MAX_AI_ARTICLES_PER_RUN` | `100` | Global cap on articles sent to Claude per run. Higher = more curated, more Max quota + longer runs |
+| `MAX_AI_ARTICLES_PER_RUN` | `100` | Per-run budget; excess (lowest-priority) articles defer to a later run. Higher = more curated, more Max quota + longer runs |
+| `CURATION_BATCH_SIZE` | `12` | Headlines sent to Claude per call (batched across feeds). Bigger = fewer calls + more token-efficient |
 | `ENTRIES_PER_FEED` | `4` | How many entries to pull per feed each run |
-| `MIN_CURATION_INTERVAL_MINUTES` | `30` | Min minutes between curation passes (lower = curate more often) |
+| `MIN_CURATION_INTERVAL_MINUTES` | `10` | Min minutes between curation passes. **All feeds now curate**, so keep this below the 15-min run cadence or a cooldown blocks every save. Raise it to throttle Max quota |
 | `MIN_HERO_SCORE` | `60` | Min hero_score for a story to take a homepage hero slot |
-| `BATCH_SIZE` | `8` | (Largely vestigial in the current per-feed flow; kept tunable) |
 
 ---
 
@@ -110,6 +110,12 @@ The Claude curator now sorts accepted stories into two tiers:
 This is stored in a new `posts.good_vibes` column (auto-created by the scraper on startup,
 `DEFAULT 1` so legacy posts stay visible). The homepage (`web/app/page.tsx`) filters
 `good_vibes = 1`; najnovo/archive/search are unchanged.
+
+**All feeds now route through Claude** (PHASE 2 batched curation): the fetch sweep accumulates
+fresh articles, then they're curated in batches of `CURATION_BATCH_SIZE` — broad General/Local
+feeds first (so they're never starved by the budget), topic feeds keep their
+category. This closed the gap where ~63 topic feeds used to save directly with `good_vibes=1`.
+Watch the `🧠 PHASE 2: Batched curation of N article(s)` log line.
 
 > ⚠️ **The homepage filter is a `web/` change that must be deployed to Cloudflare separately**
 > (`cd web && npm run deploy`). The scraper change (this Space) creates the column and tags

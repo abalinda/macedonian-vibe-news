@@ -116,41 +116,8 @@ def _generate_with_claude(prompt: str) -> str:
     return stdout
 
 
-def _build_prompt(payload: List[Dict[str, Any]], strict_iran_only: bool) -> str:
+def _build_prompt(payload: List[Dict[str, Any]]) -> str:
     """Editorial prompt for vibes.mk. Two tiers: accepted (feed) vs good_vibes (homepage)."""
-    if strict_iran_only:
-        return f"""
-RETURN ONLY VALID JSON. NO CODE. NO EXPLANATIONS. JUST JSON.
-
-Your response must start with {{ and contain a JSON object with a "results" array.
-
-You are the editor of vibes.mk. Evaluate these headlines for IRAN-SPECIFIC relevance:
-{json.dumps(payload, ensure_ascii=False)}
-
-For each article, return:
-{{
-  "id": <number>,
-  "status": "accepted" or "rejected",
-  "reason": "<short, required if rejected>",
-  "category": "Iran",
-  "tone": "neutral" or "positive",
-  "good_vibes": true or false,
-  "hero_score": <0-100>,
-  "teaser": "<6-9 words in UPPERCASE, required if good_vibes=true, else \\"\\">",
-  "summary": "<one elegant Macedonian sentence, max 22 words, required if good_vibes=true, else \\"\\">"
-}}
-
-Rules:
-- ACCEPT only if the story is explicitly about Iran (state, society, diplomacy, economy, military, culture, or direct actions involving Iran).
-- REJECT if it is about other countries/conflicts and Iran is missing or only mentioned in passing.
-- For every accepted item, category MUST be "Iran".
-- good_vibes=true ONLY for the most homepage-worthy Iran stories: high-quality, substantive, broad interest. At most one or two per batch; it is fine for none to be good_vibes.
-- hero_score (0-100) ranks homepage-worthiness; high only when good_vibes=true.
-- If good_vibes=false: teaser="", summary="", low hero_score. If rejected: good_vibes=false, hero_score=0, teaser="", summary="".
-- Return format: {{"results": [...]}}
-- NO markdown, NO code blocks, ONLY JSON.
-""".strip()
-
     return f"""
 RETURN ONLY VALID JSON. NO CODE. NO EXPLANATIONS. JUST JSON.
 
@@ -164,7 +131,7 @@ For each article, return:
   "id": <number>,
   "status": "accepted" or "rejected",
   "reason": "<short, only if rejected>",
-  "category": "Tech" or "Culture" or "Lifestyle" or "Business" or "Sports" or "Iran",
+  "category": "Tech" or "Culture" or "Lifestyle" or "Business" or "Sports",
   "tone": "neutral" or "positive",
   "good_vibes": true or false,
   "hero_score": <0-100>,
@@ -175,7 +142,7 @@ For each article, return:
 REJECT (status="rejected") anything that is yellow press / tabloid / junk:
 - clickbait or "shocking / you won't believe / this is why" framing
 - celebrity gossip, scandal, relationship drama, reality-TV / influencer chatter
-- crime, accidents, violence, tragedy, death, disaster (the Iran category is the only exception)
+- crime, accidents, violence, tragedy, death, disaster
 - horoscopes, astrology, lottery, betting, psychics
 - rage-bait, outrage, fear-mongering, doom-and-gloom
 - content-farm listicles, quizzes, "X things you must..." filler
@@ -202,7 +169,7 @@ Rules:
 
 
 def analyze_news_batch(
-    articles: List[Dict[str, Any]], strict_iran_only: bool = False
+    articles: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
     """Claude-backed equivalent of curator_groq.analyze_news_batch (same signature & output)."""
     global _consecutive_failures
@@ -216,7 +183,6 @@ def analyze_news_batch(
             "engine": "claude",
             "model": CLAUDE_MODEL,
             "count": len(articles),
-            "mode": "strict_iran" if strict_iran_only else "default",
             "articles": [_article_summary_for_log(a) for a in articles],
         },
     )
@@ -228,7 +194,7 @@ def analyze_news_batch(
 
     for article in articles:
         snippet = (article.get("summary_text") or "")[:200]
-        if not strict_iran_only and _is_coarse_reject(article.get("title", ""), snippet):
+        if _is_coarse_reject(article.get("title", ""), snippet):
             log_event(
                 "curator_coarse_reject",
                 {"title": article.get("title", ""), "source": article.get("source", "")},
@@ -254,12 +220,11 @@ def analyze_news_batch(
         {
             "engine": "claude",
             "count": len(filtered_articles),
-            "mode": "strict_iran" if strict_iran_only else "default",
             "articles": [_article_summary_for_log(a) for a in filtered_articles],
         },
     )
 
-    prompt = _build_prompt(payload, strict_iran_only)
+    prompt = _build_prompt(payload)
 
     # ---- Call Claude; on failure, optionally fall back to Groq, else count toward exhaustion ----
     try:
@@ -281,7 +246,7 @@ def analyze_news_batch(
             print("↩️ Falling back to Groq curator for this batch.")
             from curator_groq import analyze_news_batch as groq_analyze
 
-            return groq_analyze(articles, strict_iran_only=strict_iran_only)
+            return groq_analyze(articles)
 
         if _consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
             log_event(
@@ -351,20 +316,6 @@ def analyze_news_batch(
             )
             continue
 
-        if strict_iran_only:
-            declared_category = str(item.get("category") or "").strip().lower()
-            if declared_category and declared_category != "iran":
-                rejected_count += 1
-                rejected_details.append(
-                    {
-                        "title": original.get("title", ""),
-                        "link": original.get("link", ""),
-                        "source": original.get("source", ""),
-                        "reason": "strict_iran_category_mismatch",
-                    }
-                )
-                continue
-
         good_vibes = bool(item.get("good_vibes", False))
         if good_vibes:
             good_vibes_count += 1
@@ -388,9 +339,7 @@ def analyze_news_batch(
                 "image_url": original.get("image_url"),
                 "summary": summary,
                 "teaser": teaser,
-                "category": "Iran"
-                if strict_iran_only
-                else (item.get("category") or "Lifestyle"),
+                "category": item.get("category") or "Lifestyle",
                 "tone": item.get("tone", ""),
                 # good_vibes is the homepage tier; only good_vibes stories compete for heroes.
                 "good_vibes": good_vibes,
@@ -409,7 +358,6 @@ def analyze_news_batch(
             "rejected_count": rejected_count,
             "approved": [_article_summary_for_log(a) for a in final_articles],
             "rejected": rejected_details,
-            "mode": "strict_iran" if strict_iran_only else "default",
         },
     )
     print(

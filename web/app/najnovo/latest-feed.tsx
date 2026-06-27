@@ -14,7 +14,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   Lifestyle: "Животен стил",
   Business: "Бизнис",
   Sports: "Спорт",
-  Iran: "Иран",
   Blog: "Блог",
 };
 

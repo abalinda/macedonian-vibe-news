@@ -7,7 +7,7 @@ codebase powers both Spaces without code changes:
   CURATOR=groq    (default)  -> curator_groq   (Llama via Groq REST)
   CURATOR=claude             -> curator_claude (Claude Code CLI, Max subscription)
 
-Both modules expose the identical seam: analyze_news_batch(articles, strict_iran_only)
+Both modules expose the identical seam: analyze_news_batch(articles)
 and ModelExhaustedError. Defaulting to groq keeps production behaviour unchanged.
 """
 
