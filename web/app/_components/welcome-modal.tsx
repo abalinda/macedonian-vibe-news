@@ -70,7 +70,7 @@ export const WelcomeModal = () => {
     <div className="fixed inset-0 z-[80] flex items-center justify-center px-4 md:px-0">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
 
-      <div className="relative max-w-[580px] w-full bg-[#FDFBF7] border border-black rounded-2xl shadow-[14px_14px_0_#00000010] overflow-hidden">
+      <div className="relative max-w-[580px] w-full bg-paper border border-line rounded-2xl shadow-[14px_14px_0_var(--shadow)] overflow-hidden">
         <div className="absolute -left-10 -top-10 h-28 w-28 bg-[#FFD300] rounded-full blur-3xl opacity-60 pointer-events-none" />
         <div className="absolute -right-12 bottom-0 h-28 w-28 bg-neutral-200 rounded-full blur-3xl opacity-60 pointer-events-none" />
 
@@ -80,10 +80,10 @@ export const WelcomeModal = () => {
               {/* <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-neutral-600">
                 Еј, добредојде на Vibes!
               </p> */}
-              <h2 className="font-serif text-3xl md:text-4xl font-black leading-[1.05] text-neutral-900">
+              <h2 className="font-serif text-3xl md:text-4xl font-black leading-[1.05] text-ink">
                 Еј, добредојде на Vibes!
               </h2>
-              <p className="text-sm md:text-base text-neutral-700 leading-relaxed font-sans max-w-xl mx-auto">
+              <p className="text-sm md:text-base text-neutral-700 dark:text-neutral-300 leading-relaxed font-sans max-w-xl mx-auto">
                 Нашиот нов агрегатор го прилагодува прегледот според твоите избори за најдобро корисничко искуство.
               </p>
             </div>
@@ -119,13 +119,13 @@ export const WelcomeModal = () => {
           <div className="flex flex-col md:flex-row md:items-center gap-3 items-center justify-center text-center">
             <button
               onClick={handleClose}
-              className="w-full md:w-auto px-5 py-3 bg-black text-white font-bold text-xs uppercase tracking-[0.25em] rounded-xl border border-black transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[10px_12px_0_#00000015] hover:bg-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+              className="w-full md:w-auto px-5 py-3 bg-ink text-paper font-bold text-xs uppercase tracking-[0.25em] rounded-xl border border-line transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[10px_12px_0_var(--shadow)] hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--ink)]"
             >
               Најново денес
             </button>
             <a href="../about/"><button
               onClick={handleClose}
-              className="w-full md:w-auto px-5 py-3 bg-white text-neutral-800 font-bold text-xs uppercase tracking-[0.25em] rounded-xl border border-black/50 transition-all duration-200 ease-out hover:border-black hover:bg-[#FFD300] hover:text-black hover:-translate-y-0.5 hover:shadow-[8px_10px_0_#00000012] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+              className="w-full md:w-auto px-5 py-3 bg-surface text-ink font-bold text-xs uppercase tracking-[0.25em] rounded-xl border border-line/50 transition-all duration-200 ease-out hover:border-line hover:bg-[#FFD300] hover:text-black hover:-translate-y-0.5 hover:shadow-[8px_10px_0_var(--shadow)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--ink)]"
             >За нас
             </button></a>
           </div>

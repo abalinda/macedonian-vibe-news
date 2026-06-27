@@ -15,7 +15,7 @@ import {
 import { useUser } from '@clerk/nextjs';
 import { isAdminEmail } from "@/lib/admins";
 import { searchPosts, type SearchResult } from "@/app/actions/search";
-import { useFeatureFlagEnabled } from "posthog-js/react";
+import { ThemeToggle } from "./theme-toggle";
 
 const MIN_NAV_QUERY_LENGTH = 2;
 
@@ -186,7 +186,7 @@ const NavSearch = ({
             onExpand?.();
           }}
           aria-label="Отвори пребарување"
-          className={`absolute inset-0 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-black bg-white text-black shadow-[4px_4px_0_#00000012] transition-all duration-250 ease-[cubic-bezier(0.33,1,0.68,1)] hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#00000012] ${
+          className={`absolute inset-0 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-black shadow-[4px_4px_0_#00000012] transition-all duration-250 ease-[cubic-bezier(0.33,1,0.68,1)] hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#00000012] ${
             isExpanded ? "pointer-events-none opacity-0 scale-95" : "opacity-100 scale-100"
           }`}
         >
@@ -210,7 +210,7 @@ const NavSearch = ({
           }}
           placeholder="Пребарувај"
           ref={inputRef}
-          className="h-11 w-full rounded-full border border-black/20 bg-white px-12 text-sm font-sans placeholder:text-neutral-500 shadow-[3px_3px_0_#0000000a] focus:border-black focus:outline-none focus:ring-2 focus:ring-[#FFD300]/60 transition-all duration-200"
+          className="h-11 w-full rounded-full border border-line/20 bg-surface px-12 text-sm font-sans placeholder:text-neutral-500 shadow-[3px_3px_0_#0000000a] focus:border-line focus:outline-none focus:ring-2 focus:ring-[#FFD300]/60 transition-all duration-200"
         />
         {showFormUI && (
           <>
@@ -225,7 +225,7 @@ const NavSearch = ({
                 <button
                   type="button"
                   onClick={() => onCollapse?.()}
-                  className="flex h-7 w-7 items-center justify-center rounded-full border border-black bg-white text-black shadow-[3px_3px_0_#00000010] transition-all hover:-translate-y-0.5 hover:bg-black hover:text-[#FFD300]"
+                  className="flex h-7 w-7 items-center justify-center rounded-full border border-line bg-surface text-black shadow-[3px_3px_0_#00000010] transition-all hover:-translate-y-0.5 hover:bg-black hover:text-[#FFD300]"
                   aria-label="Затвори пребарување"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5}>
@@ -242,18 +242,18 @@ const NavSearch = ({
       </form>
 
       {showDropdown && (
-        <div className="absolute right-0 top-[110%] z-[70] w-[min(90vw,420px)] sm:w-[360px] rounded-md border border-black bg-white shadow-[10px_10px_0_#00000010]">
-          <div className="max-h-[70vh] overflow-y-auto divide-y divide-neutral-200">
+        <div className="absolute right-0 top-[110%] z-[70] w-[min(90vw,420px)] sm:w-[360px] rounded-md border border-line bg-surface shadow-[10px_10px_0_#00000010]">
+          <div className="max-h-[70vh] overflow-y-auto divide-y divide-line-soft">
             {results.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => handleResultClick(item)}
-                className="flex w-full items-start justify-between gap-3 p-3 text-left hover:bg-neutral-50 transition-colors"
+                className="flex w-full items-start justify-between gap-3 p-3 text-left hover:bg-surface-2 transition-colors"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">
-                    <span className="text-[#002CFF] truncate max-w-[160px]">
+                    <span className="text-link truncate max-w-[160px]">
                       {item.source || "Vibes"}
                     </span>
                     <span className="text-neutral-300">•</span>
@@ -261,7 +261,7 @@ const NavSearch = ({
                       {item.category || "Вести"}
                     </span>
                   </div>
-                  <p className="mt-1 font-serif text-sm font-semibold leading-snug text-neutral-900 line-clamp-2">
+                  <p className="mt-1 font-serif text-sm font-semibold leading-snug text-ink line-clamp-2">
                     {item.title}
                   </p>
                 </div>
@@ -276,11 +276,11 @@ const NavSearch = ({
             )}
           </div>
 
-          <div className="border-t border-neutral-200 bg-neutral-50 p-2">
+          <div className="border-t border-line-soft bg-surface-2 p-2">
             <button
               type="button"
               onClick={() => submitSearch(query)}
-              className="w-full rounded-sm border border-black bg-black px-3 py-2 text-[11px] font-bold uppercase tracking-[0.25em] text-white transition-colors hover:bg-[#FFD300] hover:text-black"
+              className="w-full rounded-sm border border-line bg-black px-3 py-2 text-[11px] font-bold uppercase tracking-[0.25em] text-white transition-colors hover:bg-[#FFD300] hover:text-black"
             >
               Сите резултати во архивата →
             </button>
@@ -295,7 +295,6 @@ export const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLocal, setIsLocal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const flagEnabled = useFeatureFlagEnabled('title-change-flag');
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const { user, isLoaded } = useUser();
   const currentDate = new Date().toLocaleDateString("mk-MK", {
@@ -341,12 +340,6 @@ export const NavBar = () => {
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    if (flagEnabled) {
-      console.log("FLAG-ENABLED: The title change flag is enabled!");
-    }
-  }, [flagEnabled]);
-
   const email =
     user?.primaryEmailAddress?.emailAddress ||
     user?.emailAddresses?.[0]?.emailAddress ||
@@ -371,7 +364,7 @@ export const NavBar = () => {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 border-b border-black bg-[#FDFBF7] py-3 px-4 md:px-8 flex items-center gap-4 relative">
+      <nav className="sticky top-0 z-50 border-b border-line bg-paper py-3 px-4 md:px-8 flex items-center gap-4 relative">
         <div className="w-full max-w-[1350px] mx-auto flex items-center gap-4 relative">
           <div className="flex items-center gap-4 flex-1">
             <button
@@ -381,7 +374,7 @@ export const NavBar = () => {
                 setIsOpen((prev) => !prev);
                 setIsMobileSearchOpen(false);
               }}
-              className="group relative h-11 w-11 p-1 flex items-center justify-center hover:bg-black hover:text-white transition-colors rounded-full border border-transparent hover:border-black overflow-hidden"
+              className="group relative h-11 w-11 p-1 flex items-center justify-center hover:bg-black hover:text-white transition-colors rounded-full border border-transparent hover:border-line overflow-hidden"
             >
               <Image
                 src="/hamburger-menu.svg"
@@ -402,6 +395,9 @@ export const NavBar = () => {
                 priority
               />
             </button>
+            <div className="hidden sm:block">
+              <ThemeToggle />
+            </div>
             <span className="text-[11px] font-bold tracking-[0.3em] uppercase font-sans hidden md:block">
             </span>
           </div>
@@ -410,11 +406,7 @@ export const NavBar = () => {
   className="font-serif text-3xl md:text-5xl font-black tracking-tighter absolute left-1/2 transition-transform duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]"
   style={{ transform: `translateX(-50%) translateX(${titleShift}px)` }}
 >
-  {flagEnabled ? (
-    <a href="https://www.vibes.mk/">FLAG-ENABLED</a>
-  ) : (
-    <a href="https://www.vibes.mk/">VIBES.</a>
-  )}
+  <a href="https://www.vibes.mk/">VIBES.</a>
 </h1>
 
           <div className="flex-1 flex justify-end min-w-0 sm:min-w-[180px]">
@@ -441,7 +433,7 @@ export const NavBar = () => {
         />
 
         <aside
-          className={`absolute left-0 top-0 h-full w-[min(360px,85vw)] bg-[#FDFBF7] border-r border-black shadow-[0px_0_0_#0000000a] transition-transform duration-300 ease-out ${
+          className={`absolute left-0 top-0 h-full w-[min(360px,85vw)] bg-paper border-r border-line shadow-[0px_0_0_#0000000a] transition-transform duration-300 ease-out ${
             isOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -461,7 +453,7 @@ export const NavBar = () => {
                   <Link
                     href="/admin"
                     onClick={() => setIsOpen(false)}
-                    className="ml-1 inline-flex items-center gap-2 rounded-full border border-black bg-[#FFD300] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-black shadow-[4px_4px_0_#00000010] transition-colors hover:bg-black hover:text-white"
+                    className="ml-1 inline-flex items-center gap-2 rounded-full border border-line bg-[#FFD300] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em] text-black shadow-[4px_4px_0_#00000010] transition-colors hover:bg-black hover:text-white"
                   >
                     Admin page
                   </Link>
@@ -489,7 +481,7 @@ export const NavBar = () => {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
-                  className="group flex items-center justify-between border-b border-neutral-200 pb-3 text-lg font-serif font-black uppercase tracking-tight hover:border-black transition-all"
+                  className="group flex items-center justify-between border-b border-line-soft pb-3 text-lg font-serif font-black uppercase tracking-tight hover:border-line transition-all"
                 >
                   <span>{item.label}</span>
                   <span className="text-xs font-mono tracking-[0.3em] text-neutral-500 group-hover:text-neutral-800 transition-colors">
@@ -499,28 +491,29 @@ export const NavBar = () => {
               ))}
             </div>
 
-            <div className="pt-4 border-t border-neutral-200 space-y-3">
+            <div className="pt-4 border-t border-line-soft space-y-3">
               <Link
                 href="/about"
                 onClick={() => setIsOpen(false)}
-                className="group flex items-center justify-between border-b border-neutral-200 pb-3 text-lg font-serif font-black uppercase tracking-tight hover:border-black transition-all"
+                className="group flex items-center justify-between border-b border-line-soft pb-3 text-lg font-serif font-black uppercase tracking-tight hover:border-line transition-all"
               >
                 <span>За нас</span>
                 <span className="text-xs font-mono tracking-[0.3em] text-neutral-500 group-hover:text-neutral-800 transition-colors">
                   →
                 </span>
               </Link>
+              <ThemeToggle variant="row" />
               <SignedOut>
-                <div className="space-y-4 rounded-2xl border border-black/70 bg-[radial-gradient(circle_at_16%_20%,#ffe86a_0,rgba(255,232,106,0.18)_32%,transparent_55%),radial-gradient(circle_at_86%_0,#ffd300_0,rgba(255,211,0,0.2)_36%,transparent_55%),#FDFBF7] p-4 shadow-[10px_10px_0_#00000012]">
+                <div className="space-y-4 rounded-2xl border border-line/70 bg-[radial-gradient(circle_at_16%_20%,#ffe86a_0,rgba(255,232,106,0.18)_32%,transparent_55%),radial-gradient(circle_at_86%_0,#ffd300_0,rgba(255,211,0,0.2)_36%,transparent_55%),#FDFBF7] dark:bg-none dark:bg-surface p-4 shadow-[10px_10px_0_var(--shadow)]">
                   <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.28em] text-neutral-600">
                     <span>Вклучи се</span>
                     <span className="font-mono text-[10px] text-neutral-500">читач</span>
                   </div>
-                  <p className="text-sm font-serif text-neutral-800 leading-snug">
+                  <p className="text-sm font-serif text-neutral-800 dark:text-neutral-200 leading-snug">
                     Управувај со твоите вести, сочувај написи и добиј персонализирани вибрации.
                   </p>
                   <SignInButton mode="modal">
-                    <button className="group w-full flex items-center justify-between border border-black/80 bg-white px-4 py-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all hover:bg-black hover:text-[#FFD300] hover:shadow-[6px_6px_0_#00000012]">
+                    <button className="group w-full flex items-center justify-between border border-line/80 bg-surface px-4 py-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all hover:bg-black hover:text-[#FFD300] hover:shadow-[6px_6px_0_#00000012]">
                       <span>Најава</span>
                       <span className="text-[10px] font-mono tracking-[0.2em] group-hover:text-[#FFD300]">
                         →
@@ -528,7 +521,7 @@ export const NavBar = () => {
                     </button>
                   </SignInButton>
                   <SignUpButton mode="modal">
-                    <button className="w-full flex items-center justify-between border border-black bg-[#FFD300] text-black px-4 py-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all shadow-[6px_6px_0_#00000012] hover:-translate-y-0.5 hover:shadow-[10px_10px_0_#00000012]">
+                    <button className="w-full flex items-center justify-between border border-line bg-[#FFD300] text-black px-4 py-3 text-[11px] font-bold uppercase tracking-[0.3em] transition-all shadow-[6px_6px_0_#00000012] hover:-translate-y-0.5 hover:shadow-[10px_10px_0_#00000012]">
                       <span>Креирај профил</span>
                       <span className="text-[10px] font-mono tracking-[0.2em]">+</span>
                     </button>
@@ -537,16 +530,16 @@ export const NavBar = () => {
               </SignedOut>
 
               <SignedIn>
-                <div className="flex items-center gap-4 rounded-2xl border border-black/70 bg-[linear-gradient(120deg,#FFF8D8,#FDFBF7)] px-4 py-3 shadow-[10px_10px_0_#00000012]">
+                <div className="flex items-center gap-4 rounded-2xl border border-line/70 bg-[linear-gradient(120deg,#FFF8D8,#FDFBF7)] dark:bg-none dark:bg-surface px-4 py-3 shadow-[10px_10px_0_var(--shadow)]">
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-neutral-900 leading-tight">Vibes профил</p>
+                    <p className="text-sm font-semibold text-ink leading-tight">Vibes профил</p>
                     <p className="text-xs text-neutral-600">Подесувања</p>
                   </div>
                   <UserButton
                     appearance={{
                       elements: {
-                        avatarBox: "w-12 h-12 border border-black/70 rounded-full shadow-[4px_4px_0_#00000010]",
-                        userButtonPopoverCard: "border border-black/10 shadow-[12px_12px_0_#00000012] bg-[#FFFBEE]",
+                        avatarBox: "w-12 h-12 border border-line/70 rounded-full shadow-[4px_4px_0_#00000010]",
+                        userButtonPopoverCard: "border border-line/10 shadow-[12px_12px_0_#00000012] bg-[#FFFBEE]",
                         userButtonPopoverActionButton: "hover:bg-black hover:text-[#FFD300]",
                       },
                     }}
@@ -621,7 +614,7 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
   }, []);
 
   return (
-    <div className="bg-[#FDFBF7]">
+    <div className="bg-paper">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         <nav
           ref={scrollRef}
@@ -638,16 +631,16 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
 
               const baseClasses = `
                     text-sm md:text-base font-bold uppercase tracking-widest whitespace-nowrap
-                    transition-colors hover:text-black
+                    transition-colors hover:text-ink
                   `;
               const activeClasses = isActive
-                ? "text-black border-b-2 border-black pb-1"
+                ? "text-ink border-b-2 border-line pb-1"
                 : "text-neutral-500";
               const latestAccent = isLatest
-                ? "pl-3 pr-3 py-1 rounded-full border border-black bg-[#FFD300] text-black shadow-[3px_3px_0_#00000012] md:animate-pulse"
+                ? "pl-3 pr-3 py-1 rounded-full border border-line bg-[#FFD300] text-black shadow-[3px_3px_0_#00000012] md:animate-pulse"
                 : "";
               const iranAccent = isIran
-                ? "pl-3 pr-3 py-1 rounded-full border border-black bg-[#f26d6d] text-black shadow-[3px_3px_0_#ff000012] md:animate-pulse"
+                ? "pl-3 pr-3 py-1 rounded-full border border-line bg-[#f26d6d] text-black shadow-[3px_3px_0_#ff000012] md:animate-pulse"
                 : "";
 
               return (
@@ -666,10 +659,10 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
             href="/all"
             className={`
               ml-auto flex-shrink-0 text-xs font-bold uppercase tracking-widest whitespace-nowrap
-              border border-black px-1 py-1 rounded-full transition-all
+              border border-line px-1 py-1 rounded-full transition-all
               ${isAllPage 
-                ? "bg-black text-white shadow-[4px_4px_0_#000]" 
-                : "text-neutral-700 hover:bg-black hover:text-white"
+                ? "bg-ink text-paper shadow-[4px_4px_0_var(--shadow)]"
+                : "text-neutral-700 dark:text-neutral-300 hover:bg-ink hover:text-paper"
               }
             `}
           >
@@ -686,7 +679,7 @@ const IconButton = ({ href, label, children }: { href: string; label: string; ch
     href={href}
     target="_blank"
     rel="noreferrer"
-    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black bg-white text-black transition-all hover:bg-[#FFD300] hover:shadow-[4px_4px_0_#00000012]"
+    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface text-ink transition-all hover:bg-[#FFD300] hover:text-black hover:shadow-[4px_4px_0_var(--shadow)]"
   >
     <span className="sr-only">{label}</span>
     {children}

@@ -33,12 +33,12 @@ const quickLinks = [
 
 export default function OfflinePage() {
   return (
-    <main className="min-h-screen bg-[#FDFBF7] text-neutral-900 pb-20 selection:bg-yellow-200">
+    <main className="min-h-screen bg-paper text-ink pb-20 selection:bg-yellow-200">
       <NavBar />
       <CategoryNav activeCategory="Offline" />
 
       <div className="max-w-5xl mx-auto px-4 md:px-8 pt-12 space-y-12">
-        <header className="space-y-6 border-b border-black pb-10">
+        <header className="space-y-6 border-b border-line pb-10">
           <div className="inline-flex items-center gap-3">
             <span className="inline-flex items-center gap-2 rounded-full border border-black bg-[#FFD300] px-4 py-1 text-[10px] font-black uppercase tracking-[0.3em] shadow-[4px_4px_0_#00000012]">
               Offline
@@ -59,14 +59,14 @@ export default function OfflinePage() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 rounded-full border border-black bg-black px-5 py-3 text-[11px] font-bold uppercase tracking-[0.28em] text-white transition-colors hover:bg-neutral-800"
+              className="inline-flex items-center gap-2 rounded-full border border-line bg-ink px-5 py-3 text-[11px] font-bold uppercase tracking-[0.28em] text-paper transition-opacity hover:opacity-90"
             >
               Освежи страната
               <span aria-hidden>↻</span>
             </Link>
             <Link
               href="/all"
-              className="inline-flex items-center gap-2 rounded-full border border-black bg-white px-5 py-3 text-[11px] font-bold uppercase tracking-[0.28em] text-neutral-900 transition-all hover:bg-[#FFD300] hover:shadow-[4px_4px_0_#00000010]"
+              className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[11px] font-bold uppercase tracking-[0.28em] text-ink transition-all hover:bg-[#FFD300] hover:text-black hover:shadow-[4px_4px_0_var(--shadow)]"
             >
               Архива
               <span aria-hidden>→</span>
@@ -79,7 +79,7 @@ export default function OfflinePage() {
         </header>
 
         <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8 items-start">
-          <section className="bg-white border border-neutral-200 rounded-xl p-6 md:p-8 shadow-[6px_6px_0_#e5e5e5] space-y-5">
+          <section className="bg-surface border border-line-soft rounded-xl p-6 md:p-8 shadow-[6px_6px_0_var(--shadow)] space-y-5">
             <h2 className="font-serif text-2xl md:text-3xl font-bold uppercase tracking-tight">
               Како да се вратиш online
             </h2>
@@ -91,7 +91,7 @@ export default function OfflinePage() {
                 <li key={tip.title} className="flex gap-3">
                   <span className="mt-1.5 h-2 w-2 rounded-full bg-neutral-300" aria-hidden />
                   <div className="space-y-1">
-                    <p className="font-serif text-lg font-bold text-neutral-900">
+                    <p className="font-serif text-lg font-bold text-ink">
                       {tip.title}
                     </p>
                     <p className="font-sans text-sm text-neutral-600">{tip.body}</p>
@@ -122,7 +122,7 @@ export default function OfflinePage() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-[6px_6px_0_#e5e5e5] space-y-4">
+            <div className="rounded-xl border border-line-soft bg-surface p-6 shadow-[6px_6px_0_var(--shadow)] space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-serif text-xl font-bold uppercase tracking-tight">Брзи патеки</h3>
                 <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-neutral-400">
@@ -134,7 +134,7 @@ export default function OfflinePage() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="inline-flex items-center gap-2 rounded-full border border-black px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] text-neutral-900 transition-all hover:bg-black hover:text-white"
+                    className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] text-ink transition-all hover:bg-ink hover:text-paper"
                   >
                     {link.label}
                     <span aria-hidden>→</span>

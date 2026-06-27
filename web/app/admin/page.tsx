@@ -28,13 +28,13 @@ export default async function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#FDFBF7] text-neutral-900">
+    <main className="min-h-screen bg-paper text-ink">
       <NavBar />
       <CategoryNav activeCategory={null} />
 
       <div className="max-w-5xl mx-auto px-4 md:px-8 pt-10 pb-16 space-y-8">
         <header className="space-y-3">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#002CFF]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-link">
             Админ панел
           </p>
           <h1 className="font-serif text-4xl font-black leading-tight">

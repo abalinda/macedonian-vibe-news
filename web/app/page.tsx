@@ -6,6 +6,7 @@ import { CategoryNav, NavBar } from "./_components/navigation";
 import { AdminBlogCTA } from "./_components/admin-blog-cta";
 import { WelcomeModal } from "./_components/welcome-modal";
 import { AdminHeroOverride } from "./_components/admin-hero-override";
+import { getRelativePostTime } from "@/lib/time";
 
 // Revalidate every 60 seconds (ISR)
 export const revalidate = 60;
@@ -79,11 +80,12 @@ const StoryLink = ({
 const SideStory = ({ post }: { post: any }) => {
   const teaserText = getTeaserText(post);
   const imageUrl = post?.image_url;
+  const timeLabel = getRelativePostTime(post);
 
   return (
-    <StoryLink post={post} className="group block py-6 last:border-0 border-b border-neutral-200 lg:border-none">
+    <StoryLink post={post} className="group block py-6 last:border-0 border-b border-line-soft lg:border-none">
       <div className="flex gap-4">
-        <div className="relative w-32 aspect-[16/10] overflow-hidden bg-neutral-200 border border-black flex-shrink-0">
+        <div className="relative w-32 aspect-[16/10] overflow-hidden bg-surface-2 border border-line flex-shrink-0">
           {imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -102,9 +104,19 @@ const SideStory = ({ post }: { post: any }) => {
         </div>
 
         <div className="flex-1 min-w-0">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 mb-1 block">
-            {post.source}
-          </span>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-link">
+              {post.source}
+            </span>
+            {timeLabel && (
+              <>
+                <span className="text-[10px] text-neutral-300" aria-hidden>•</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-400">
+                  {timeLabel}
+                </span>
+              </>
+            )}
+          </div>
           <h3 className="font-serif text-lg leading-tight font-bold group-hover:underline decoration-2 underline-offset-4 mb-2 break-words">
             {post.title}
           </h3>
@@ -120,17 +132,19 @@ const SideStory = ({ post }: { post: any }) => {
 const HeroStory = ({ post }: { post: any }) => {
   const teaserText = getTeaserText(post);
   const heroImage = post?.image_url;
+  const timeLabel = getRelativePostTime(post);
 
   return (
     <StoryLink post={post} className="group block mb-12 md:mb-0">
-      <div className="w-full aspect-video bg-neutral-200 mb-6 flex items-center justify-center border border-black overflow-hidden relative">
+      <div className="w-full aspect-video bg-surface-2 mb-6 flex items-center justify-center border border-line overflow-hidden relative">
           {heroImage ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img 
-              src={heroImage} 
+            <img
+              src={heroImage}
               alt={post.title || "Слика за главната приказна"}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               loading="eager"
+              fetchPriority="high"
               decoding="async"
               referrerPolicy="no-referrer"
             />
@@ -140,16 +154,23 @@ const HeroStory = ({ post }: { post: any }) => {
       </div>
       
       <div className="text-center px-4">
-        <span className="inline-block border border-black px-2 py-0.5 text-xs font-bold uppercase tracking-widest mb-4 hover:bg-black hover:text-white transition-colors">
-          {post.source}
-        </span>
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <span className="inline-block border border-line px-2 py-0.5 text-xs font-bold uppercase tracking-widest hover:bg-ink hover:text-paper transition-colors">
+            {post.source}
+          </span>
+          {timeLabel && (
+            <span className="text-[11px] font-mono uppercase tracking-widest text-neutral-500">
+              {timeLabel}
+            </span>
+          )}
+        </div>
         <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-black leading-[0.9] mb-4 group-hover:underline transition-colors break-words">
           {post.title}
         </h2>
         <p className="text-sm md:text-base font-mono uppercase tracking-[0.15em] text-neutral-600 mb-6 max-w-2xl mx-auto">
           {teaserText}
         </p>
-        <div className="inline-flex items-center gap-2 text-xs font-bold text-neutral-900 uppercase tracking-widest border-b-2 border-transparent group-hover:border-[#FFD300]">
+        <div className="inline-flex items-center gap-2 text-xs font-bold text-ink uppercase tracking-widest border-b-2 border-transparent group-hover:border-[#FFD300]">
           Прочитај повеќе <span>&rarr;</span>
         </div>
       </div>
@@ -160,12 +181,13 @@ const HeroStory = ({ post }: { post: any }) => {
 const SecondaryHeroStory = ({ post, position }: { post: any; position: number }) => {
   const teaserText = getTeaserText(post);
   const heroImage = post?.image_url;
+  const timeLabel = getRelativePostTime(post);
   const categoryLabel = CATEGORY_LABELS[post?.category as keyof typeof CATEGORY_LABELS] ?? post?.category ?? "Вести";
 
   return (
     <StoryLink post={post} className="group block">
       <div className="flex flex-col gap-3">
-        <div className="relative aspect-[4/3] bg-neutral-100 border border-neutral-200 overflow-hidden">
+        <div className="relative aspect-[4/3] bg-surface-2 border border-line-soft overflow-hidden">
           {heroImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -183,17 +205,17 @@ const SecondaryHeroStory = ({ post, position }: { post: any; position: number })
           )}
 
           {/* <div className="absolute left-4 top-4 flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-widest bg-white/90 border border-black rounded-full px-2 py-1">
+            <span className="text-[10px] font-black uppercase tracking-widest bg-white/90 border border-line rounded-full px-2 py-1">
               #{String(position).padStart(2, "0")}
             </span>
-            <span className="text-[10px] font-black uppercase tracking-widest rounded-full px-2 py-1 bg-black text-white">
+            <span className="text-[10px] font-black uppercase tracking-widest rounded-full px-2 py-1 bg-ink text-paper">
               {categoryLabel}
             </span>
           </div> */}
         </div>
 
         <div className="flex flex-col gap-3">
-          <h3 className="font-serif text-2xl font-bold leading-tight text-neutral-900 group-hover:underline break-words">
+          <h3 className="font-serif text-2xl font-bold leading-tight text-ink group-hover:underline break-words">
             {post.title}
           </h3>
           {teaserText && (
@@ -202,10 +224,17 @@ const SecondaryHeroStory = ({ post, position }: { post: any; position: number })
             </p>
           )}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <span className="inline-block border border-black px-2 py-0.5 text-xs font-bold uppercase tracking-widest mb-0 sm:mb-0 hover:bg-black hover:text-white transition-colors">
-              {post.source}
-            </span>
-            <span className="inline-flex items-center gap-2 text-xs font-bold text-neutral-900 uppercase tracking-widest border-b-2 border-transparent group-hover:border-[#FFD300]">
+            <div className="flex items-center gap-2">
+              <span className="inline-block border border-line px-2 py-0.5 text-xs font-bold uppercase tracking-widest hover:bg-ink hover:text-paper transition-colors">
+                {post.source}
+              </span>
+              {timeLabel && (
+                <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-400">
+                  {timeLabel}
+                </span>
+              )}
+            </div>
+            <span className="inline-flex items-center gap-2 text-xs font-bold text-ink uppercase tracking-widest border-b-2 border-transparent group-hover:border-[#FFD300]">
               Прочитај повеќе <span aria-hidden>→</span>
             </span>
           </div>
@@ -218,10 +247,10 @@ const SecondaryHeroStory = ({ post, position }: { post: any; position: number })
 const EmptyState = ({ category, teaserMessage }: { category: string | null; teaserMessage?: string }) => (
   <div className="flex flex-col items-center justify-center py-20 px-4">
     <div className="text-center max-w-md">
-      <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4 text-neutral-800">
+      <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4 text-neutral-800 dark:text-neutral-100">
         Нема пронајдени приказни
       </h2>
-      <p className="font-serif text-lg text-neutral-600 italic">
+      <p className="font-serif text-lg text-neutral-600 dark:text-neutral-400 italic">
         {category 
           ? `Моментално нема написи во категоријата "${category}".`
           : "Нема написи во моментот."
@@ -229,7 +258,7 @@ const EmptyState = ({ category, teaserMessage }: { category: string | null; teas
       </p>
       <Link 
         href="/" 
-        className="inline-block mt-8 px-6 py-3 bg-black text-white font-sans text-xs font-bold uppercase tracking-widest hover:bg-neutral-800 transition-colors"
+        className="inline-block mt-8 px-6 py-3 bg-ink text-paper font-sans text-xs font-bold uppercase tracking-widest hover:bg-neutral-800 transition-colors"
       >
         Види ги сите приказни
       </Link>
@@ -328,7 +357,7 @@ export default async function Home({
   // 4. Handle Empty State
   if (posts.length === 0 && !heroPost) {
     return (
-      <main className="min-h-screen bg-[#FDFBF7] text-neutral-900">
+      <main className="min-h-screen bg-paper text-ink">
         <NavBar />
         <CategoryNav activeCategory={selectedCategory} />
         <EmptyState category={displayCategory} teaserMessage={blogTeaser} />
@@ -354,7 +383,7 @@ export default async function Home({
   });
 
   return (
-    <main className="min-h-screen bg-[#FDFBF7] text-neutral-900 pb-20">
+    <main className="min-h-screen bg-paper text-ink pb-20">
       <WelcomeModal />
       <NavBar />
       <CategoryNav activeCategory={selectedCategory} />
@@ -376,8 +405,8 @@ export default async function Home({
 
           
           {/* LEFT SIDEBAR */}
-          <div className="lg:col-span-3 lg:border-r border-neutral-300 lg:pr-8 order-2 lg:order-1">
-            <h4 className="font-sans text-xs font-black uppercase tracking-widest border-b-4 border-black pb-2 mb-4">
+          <div className="lg:col-span-3 lg:border-r border-line-soft lg:pr-8 order-2 lg:order-1">
+            <h4 className="font-sans text-xs font-black uppercase tracking-widest border-b-4 border-line pb-2 mb-4">
               {selectedCategory ? 'Најново' : 'Последни новости'}
             </h4>
             <div className="flex flex-col lg:gap-4">
@@ -400,15 +429,15 @@ export default async function Home({
           </div>
 
           {/* RIGHT SIDEBAR */}
-          <div className="lg:col-span-3 lg:border-l border-neutral-300 lg:pl-8 order-3">
-             <div className="flex items-center justify-between gap-3 border-b-4 border-black pb-2 mb-4">
+          <div className="lg:col-span-3 lg:border-l border-line-soft lg:pl-8 order-3">
+             <div className="flex items-center justify-between gap-3 border-b-4 border-line pb-2 mb-4">
               <h4 className="font-sans text-xs font-black uppercase tracking-widest">
                 {selectedCategory ? 'Повеќе' : 'Останати приказни'}
               </h4>
               {selectedCategory && (
                 <Link
                   href={`/all?category=${encodeURIComponent(selectedCategory)}`}
-                  className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 hover:text-black transition-colors"
+                  className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 hover:text-ink transition-colors"
                 >
                   Сите од оваа категорија
                 </Link>

@@ -21,13 +21,13 @@ type CategoryValue = keyof typeof CATEGORY_LABELS;
 const CATEGORY_VALUES = Object.keys(CATEGORY_LABELS) as CategoryValue[];
 
 const EmptyState = () => (
-  <div className="py-24 px-6 text-center border-2 border-dashed border-neutral-200 rounded-lg bg-neutral-50">
-    <div className="mx-auto w-12 h-12 mb-4 text-neutral-300">
+  <div className="py-24 px-6 text-center border-2 border-dashed border-line-soft rounded-lg bg-surface-2">
+    <div className="mx-auto w-12 h-12 mb-4 text-neutral-400">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
       </svg>
     </div>
-    <h2 className="font-serif text-2xl font-bold mb-2 text-neutral-800">
+    <h2 className="font-serif text-2xl font-bold mb-2 text-neutral-800 dark:text-neutral-100">
       Нема пронајдени вести
     </h2>
     <p className="text-neutral-500 font-sans text-sm max-w-md mx-auto">
@@ -101,14 +101,14 @@ export default async function AllStoriesPage({
   const categoryLabel = categoryFilter ? CATEGORY_LABELS[categoryFilter] : null;
 
   return (
-    <main className="min-h-screen bg-[#FDFBF7] text-neutral-900 pb-20">
+    <main className="min-h-screen bg-paper text-ink pb-20">
       <NavBar />
       <CategoryNav activeCategory={categoryFilter ?? null} isAllPage />
 
       <div className="max-w-[1300px] mx-auto px-5 md:px-10 pt-8">
         
         {/* Header Section */}
-        <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-10 pb-6 border-b border-black">
+        <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-10 pb-6 border-b border-line">
           <div>
             {/* <p className="text-xs font-bold uppercase tracking-widest text-[#FFD300] mb-2">Архива</p> */}
             <h1 className="font-serif text-4xl md:text-5xl font-black leading-tight mb-2">
@@ -136,8 +136,8 @@ export default async function AllStoriesPage({
         {posts.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="bg-white border border-neutral-200 shadow-[4px_4px_0_#e5e5e5] rounded-sm transition-shadow hover:shadow-[6px_6px_0_#e5e5e5]">
-            <div className="divide-y divide-neutral-100">
+          <div className="bg-surface border border-line-soft shadow-[4px_4px_0_var(--shadow)] rounded-sm transition-shadow hover:shadow-[6px_6px_0_var(--shadow)]">
+            <div className="divide-y divide-line-soft">
               <StoriesList posts={posts}/>
             </div>
           </div>

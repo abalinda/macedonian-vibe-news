@@ -8,14 +8,14 @@ export const metadata = {
 };
 
 const NavFallback = () => (
-  <div className="sticky top-0 z-40 border-b border-black bg-[#FDFBF7] py-3 px-4 md:px-8">
+  <div className="sticky top-0 z-40 border-b border-line bg-paper py-3 px-4 md:px-8">
     <div className="w-full max-w-[1400px] mx-auto h-11" />
   </div>
 );
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen bg-[#FDFBF7] text-neutral-900 pb-20 selection:bg-yellow-200">
+    <main className="min-h-screen bg-paper text-ink pb-20 selection:bg-yellow-200">
       <Suspense fallback={<NavFallback />}>
         <NavBar />
       </Suspense>
@@ -24,11 +24,11 @@ export default function AboutPage() {
       <div className="max-w-4xl mx-auto px-4 md:px-8 pt-12 md:pt-20 space-y-16">
         
         {/* HEADER */}
-        <header className="space-y-6 border-b border-neutral-900 pb-10">
-          <h1 className="font-serif text-5xl md:text-6xl font-black tracking-tight text-neutral-900 uppercase">
+        <header className="space-y-6 border-b border-line pb-10">
+          <h1 className="font-serif text-5xl md:text-6xl font-black tracking-tight text-ink uppercase">
             За нас
           </h1>
-          <p className="font-serif text-xl md:text-2xl leading-relaxed text-neutral-800">
+          <p className="font-serif text-xl md:text-2xl leading-relaxed text-ink">
             Добредојде на vibes.mk - вашиот нов начин да останете информирани без врева, без непотребна тежина и без бесконечни негативни содржини. Простор креиран од двајца ко-основачи кои решени да изградат медиум што ќе ја филтрира хаосната реалност во смирен, корисен и кул дигитален простор.
           </p>
         </header>
@@ -39,15 +39,15 @@ export default function AboutPage() {
             <h2 className="font-serif text-3xl font-bold mb-4">
               Зошто vibes.mk?
             </h2>
-            <p className="font-sans text-lg text-neutral-700 leading-relaxed">
+            <p className="font-sans text-lg text-ink leading-relaxed">
               Во време кога секојдневно сме преплавени од трагични вести, политички препукувања и информации што само ти ја трошат енергијата, ние решивме да понудиме нешто поразлично:
             </p>
-            <ul className="list-disc pl-5 space-y-2 font-serif text-lg text-neutral-800 marker:text-neutral-400">
+            <ul className="list-disc pl-5 space-y-2 font-serif text-lg text-ink marker:text-neutral-400">
               <li>вести што носат вредност,</li>
               <li>содржина што информира без да оптоварува,</li>
               <li>платформа што почитува како се чувствувате додека читате.</li>
             </ul>
-            <p className="font-sans text-lg text-neutral-700 leading-relaxed pt-2">
+            <p className="font-sans text-lg text-ink leading-relaxed pt-2">
               Селектираме квалитет, не квантитет. Објавуваме позитивни вести, инспиративни приказни, иновации, култура, спорт, наука, технологија - и сè што има здраво влијание.
             </p>
           </div>
@@ -56,7 +56,7 @@ export default function AboutPage() {
             <h2 className="font-serif text-3xl font-bold mb-4">
               Што можеш да најдеш кај нас?
             </h2>
-            <ul className="space-y-3 font-sans text-lg text-neutral-800">
+            <ul className="space-y-3 font-sans text-lg text-ink">
               {[
                 "Позитивни вести и теми што инспирираат.",
                 "Технологија, наука, иновации и трендови.",
@@ -74,7 +74,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <hr className="border-neutral-200" />
+        <hr className="border-line-soft" />
 
         {/* SECTION 2: MISIJA & TIM - UPDATED */}
         <section className="space-y-12">
@@ -83,7 +83,7 @@ export default function AboutPage() {
             <h3 className="font-serif text-3xl font-bold mb-4">
               Нашата мисија
             </h3>
-            <div className="space-y-4 font-sans text-lg text-neutral-700 leading-relaxed">
+            <div className="space-y-4 font-sans text-lg text-ink leading-relaxed">
               <p>Да создадеме дигитално место каде информирањето не исцрпува, туку е корисно и пријатно.</p>
               <p>Да понудиме платформа што ве разбира.</p>
               <p>Да изградиме медиум што нема само да ги пренесува вестите - туку ќе помогне да го живееш денот подобро, со добри вибрации.</p>
@@ -94,14 +94,14 @@ export default function AboutPage() {
             <h3 className="font-serif text-3xl font-bold mb-4">
               Кој стои зад vibes.mk?
             </h3>
-            <p className="font-sans text-lg text-neutral-700 leading-relaxed">
+            <p className="font-sans text-lg text-ink leading-relaxed">
               Не сме голема редакција, но сме тим со визија, страст кон медиумите и желба за подобра информативна култура. Зад vibes.mk стоиме сите заедно и заедно создаваме нов начин на информирање, секогаш со позитивна нота.
             </p>
           </div>
         </section>
 
         {/* VALUES SECTION */}
-        <section className="bg-white border border-neutral-200 p-8 md:p-12 rounded-xl">
+        <section className="bg-surface border border-line-soft p-8 md:p-12 rounded-xl">
           <h3 className="font-serif text-3xl font-bold mb-8 text-center uppercase tracking-widest">
             Вредности
           </h3>
@@ -116,7 +116,7 @@ export default function AboutPage() {
             ].map((val, i) => (
               <div key={i} className="flex gap-4">
                 <span className="font-serif text-2xl text-neutral-300 font-bold">{i + 1}.</span>
-                <p className="font-sans text-lg text-neutral-800">{val}</p>
+                <p className="font-sans text-lg text-ink">{val}</p>
               </div>
             ))}
           </div>
@@ -124,10 +124,10 @@ export default function AboutPage() {
 
         {/* FOOTER QUOTE */}
         <section className="text-center py-1 space-y-2">
-          <p className="font-serif text-2xl md:text-3xl font-bold text-neutral-900">
+          <p className="font-serif text-2xl md:text-3xl font-bold text-ink">
             vibes.mk не е само место за вести.
           </p>
-          <p className="font-serif text-xl md:text-2xl text-neutral-700">
+          <p className="font-serif text-xl md:text-2xl text-ink">
             Тоа е дигитално искуство што расте заедно со тебе.
           </p>
           <p className="font-sans text-lg text-neutral-500 pt-1">
@@ -136,10 +136,10 @@ export default function AboutPage() {
         </section>
 
         {/* NEW CONTACT SECTION */}
-        <section className="border-t-2 border-black pt-12 pb-8">
+        <section className="border-t-2 border-line pt-12 pb-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <p className="font-serif text-2xl md:text-3xl text-neutral-900 font-bold max-w-lg">
+                    <p className="font-serif text-2xl md:text-3xl text-ink font-bold max-w-lg">
                         Имате прашање, предлог или сакате да соработуваме?
                     </p>
                 </div>

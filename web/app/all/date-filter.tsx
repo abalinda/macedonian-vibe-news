@@ -63,7 +63,7 @@ export function DateFilter() {
   return (
     <div
       key={paramsKey}
-      className="w-full flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 bg-white border border-neutral-300 px-4 py-3 rounded-sm shadow-sm"
+      className="w-full flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 bg-surface border border-line-soft px-4 py-3 rounded-sm shadow-sm"
     >
       <div className="flex flex-col gap-1 w-full sm:w-auto flex-1 min-w-[140px]">
         <label htmlFor="date-from" className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
@@ -75,7 +75,7 @@ export function DateFilter() {
           defaultValue={fromParam}
           max={today}
           ref={fromRef}
-          className="font-mono text-sm bg-transparent outline-none text-neutral-900 cursor-pointer border-b border-neutral-200 focus:border-black transition-colors w-full"
+          className="font-mono text-sm bg-transparent outline-none text-ink cursor-pointer border-b border-line-soft focus:border-line transition-colors w-full"
         />
       </div>
 
@@ -89,7 +89,7 @@ export function DateFilter() {
           defaultValue={toParam}
           max={today}
           ref={toRef}
-          className="font-mono text-sm bg-transparent outline-none text-neutral-900 cursor-pointer border-b border-neutral-200 focus:border-black transition-colors w-full"
+          className="font-mono text-sm bg-transparent outline-none text-ink cursor-pointer border-b border-line-soft focus:border-line transition-colors w-full"
         />
       </div>
 
@@ -102,7 +102,7 @@ export function DateFilter() {
             id="category"
             defaultValue={categoryParam}
             ref={categoryRef}
-            className="font-mono text-sm bg-transparent outline-none text-neutral-900 cursor-pointer border-b border-neutral-200 focus:border-black transition-colors w-full appearance-none pr-6"
+            className="font-mono text-sm bg-transparent outline-none text-ink cursor-pointer border-b border-line-soft focus:border-line transition-colors w-full appearance-none pr-6"
           >
             {CATEGORY_OPTIONS.map((option) => (
               <option key={option.value || 'all'} value={option.value}>
@@ -116,7 +116,7 @@ export function DateFilter() {
 
       <button
         onClick={handleSearch}
-        className="h-10 w-full sm:w-auto px-4 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-neutral-800 transition-colors rounded-sm"
+        className="h-10 w-full sm:w-auto px-4 bg-ink text-paper text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity rounded-sm"
       >
         Барај
       </button>
