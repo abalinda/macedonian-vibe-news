@@ -16,6 +16,7 @@ import { useUser } from '@clerk/nextjs';
 import { isAdminEmail } from "@/lib/admins";
 import { searchPosts, type SearchResult } from "@/app/actions/search";
 import { ThemeToggle } from "./theme-toggle";
+import { captureArticleClick } from "./article-link";
 
 const MIN_NAV_QUERY_LENGTH = 2;
 
@@ -166,6 +167,7 @@ const NavSearch = ({
 
   const handleResultClick = (result: SearchResult) => {
     const href = result.category === "Blog" ? `/blog/${result.id}` : `/go/${result.id}`;
+    captureArticleClick(result, "search");
     setIsOpenDropdown(false);
     onNavigate?.();
     router.push(href);

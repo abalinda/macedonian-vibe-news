@@ -1,10 +1,9 @@
 'use client';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { ReactNode } from "react";
 import { ShareButton } from "../_components/share-button";
+import { ArticleLink } from "../_components/article-link";
 import { getRelativePostTime } from "@/lib/time";
 import { getTeaserText, TEASER_CLASS } from "@/lib/teaser";
 
@@ -15,29 +14,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   Business: "Бизнис",
   Sports: "Спорт",
   Blog: "Блог",
-};
-
-const CardLink = ({ post, className, children }: { post: any; className?: string; children: ReactNode }) => {
-  const isBlog = post?.category === "Blog";
-  const href = isBlog
-    ? `/blog/${post.id}`
-    : post?.id
-      ? `/go/${post.id}`
-      : post?.link || "#";
-
-  if (isBlog) {
-    return (
-      <Link href={href} className={className}>
-        {children}
-      </Link>
-    );
-  }
-
-  return (
-    <a href={href} target="_blank" rel="noreferrer" className={className}>
-      {children}
-    </a>
-  );
 };
 
 const LatestCard = ({ post, index, now }: { post: any; index: number; now: number }) => {
@@ -51,7 +27,7 @@ const LatestCard = ({ post, index, now }: { post: any; index: number; now: numbe
 
   return (
     <div className="relative h-full">
-      <CardLink post={post} className="group block h-full">
+      <ArticleLink post={post} className="group block h-full" feed="latest" position={index + 1}>
       <article className="relative h-full overflow-hidden rounded-xl border border-line-soft bg-surface shadow-[6px_6px_0_var(--shadow)] transition-transform duration-200 hover:-translate-y-[3px] hover:shadow-[10px_10px_0_var(--shadow)]">
         <div className="relative aspect-[16/9] border-b border-line-soft bg-surface-2 overflow-hidden">
           {imageUrl ? (
@@ -120,7 +96,7 @@ const LatestCard = ({ post, index, now }: { post: any; index: number; now: numbe
           </div>
         </div>
       </article>
-      </CardLink>
+      </ArticleLink>
       <ShareButton
         url={shareUrl}
         title={post.title || "Vibes"}

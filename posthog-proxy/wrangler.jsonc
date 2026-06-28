@@ -1,0 +1,18 @@
+{
+  // Standalone Cloudflare Worker that reverse-proxies PostHog behind the
+  // first-party subdomain `t.vibes.mk`. This is SEPARATE from the Next.js app
+  // worker (web/wrangler.jsonc, name "macedonian-vibe-news") and deploys on its
+  // own. See README.md in this folder for setup + deploy steps.
+  "name": "posthog-proxy",
+  "main": "index.js",
+  "compatibility_date": "2024-09-23",
+  // Binds the worker to t.vibes.mk. `custom_domain: true` makes Wrangler create
+  // the DNS record and provision the TLS cert on deploy, provided the `vibes.mk`
+  // zone is on the same Cloudflare account you're authenticated against.
+  "routes": [
+    { "pattern": "t.vibes.mk", "custom_domain": true }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

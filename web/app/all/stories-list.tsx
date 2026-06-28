@@ -1,9 +1,9 @@
 'use client';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ShareButton } from "../_components/share-button";
+import { ArticleLink } from "../_components/article-link";
 import { getTeaserText, TEASER_CLASS } from "@/lib/teaser";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -26,11 +26,6 @@ const StoryRow = ({ post, index }: { post: any; index: number }) => {
   const teaserText = getTeaserText(post);
   const categoryLabel = CATEGORY_LABELS[post?.category] ?? post?.category ?? "Вести";
   const isBlog = post?.category === "Blog";
-  const href = isBlog
-    ? `/blog/${post.id}`
-    : post?.id
-      ? `/go/${post.id}`
-      : post?.link || "#";
   const shareUrl = isBlog ? `/blog/${post.id}` : `/go/${post.id}`;
   const wrapperClass = "group block pl-4 pr-14 md:pl-6 md:pr-16 py-5 hover:bg-surface-2 transition-colors";
   const content = (
@@ -69,19 +64,11 @@ const StoryRow = ({ post, index }: { post: any; index: number }) => {
     </div>
   );
 
-  const link = isBlog ? (
-    <Link href={href} className={wrapperClass}>
-      {content}
-    </Link>
-  ) : (
-    <a href={href} target="_blank" rel="noreferrer" className={wrapperClass}>
-      {content}
-    </a>
-  );
-
   return (
     <div className="relative">
-      {link}
+      <ArticleLink post={post} className={wrapperClass} feed="archive" position={index + 1}>
+        {content}
+      </ArticleLink>
       <ShareButton
         url={shareUrl}
         title={post.title || "Vibes"}

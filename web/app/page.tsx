@@ -9,6 +9,7 @@ import { AdminHeroOverride } from "./_components/admin-hero-override";
 import { getRelativePostTime } from "@/lib/time";
 import { getTeaserText, TEASER_CLASS } from "@/lib/teaser";
 import { RayBurst } from "./_components/ray-burst";
+import { ArticleLink } from "./_components/article-link";
 
 // Revalidate every 60 seconds (ISR)
 export const revalidate = 60;
@@ -36,45 +37,41 @@ const toPlain = (value: any) => JSON.parse(JSON.stringify(value));
 
 // -- HELPER COMPONENTS --
 
+// Thin wrapper over the shared ArticleLink: fixes feed="home" and forwards the
+// per-block placement/position so homepage clicks land in PostHog like the
+// other feeds. (Link import is still used elsewhere on this page.)
 const StoryLink = ({
   post,
   className,
   children,
+  placement,
+  position,
 }: {
   post: any;
   className?: string;
   children: ReactNode;
-}) => {
-  const isBlog = post?.category === "Blog";
-  const href = isBlog
-    ? `/blog/${post.id}`
-    : post?.id
-      ? `/go/${post.id}`
-      : post?.link || "#";
+  placement?: string;
+  position?: number;
+}) => (
+  <ArticleLink
+    post={post}
+    className={className}
+    feed="home"
+    placement={placement}
+    position={position}
+  >
+    {children}
+  </ArticleLink>
+);
 
-  if (isBlog) {
-    return (
-      <Link href={href} className={className}>
-        {children}
-      </Link>
-    );
-  }
-
-  return (
-    <a href={href} target="_blank" rel="noreferrer" className={className}>
-      {children}
-    </a>
-  );
-};
-
-const SideStory = ({ post }: { post: any }) => {
+const SideStory = ({ post, index }: { post: any; index?: number }) => {
   const teaserText = getTeaserText(post);
   const imageUrl = post?.image_url;
   const timeLabel = getRelativePostTime(post);
 
   return (
     <div className="relative py-6 last:border-0 border-b border-line-soft lg:border-none">
-      <StoryLink post={post} className="group block">
+      <StoryLink post={post} className="group block" placement="side" position={typeof index === "number" ? index + 1 : undefined}>
       <div className="flex gap-4">
         <div className="relative w-32 aspect-[16/10] overflow-hidden bg-surface-2 border border-line flex-shrink-0">
           {imageUrl ? (
@@ -128,7 +125,7 @@ const HeroStory = ({ post }: { post: any }) => {
 
   return (
     <div className="relative mb-12 md:mb-0">
-      <StoryLink post={post} className="group block">
+      <StoryLink post={post} className="group block" placement="hero" position={1}>
       <div className="w-full aspect-video bg-surface-2 mb-6 flex items-center justify-center border border-line overflow-hidden relative">
           {heroImage ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -184,7 +181,7 @@ const SecondaryHeroStory = ({ post, position }: { post: any; position: number })
 
   return (
     <div className="relative">
-      <StoryLink post={post} className="group block">
+      <StoryLink post={post} className="group block" placement="secondary" position={position}>
       <div className="flex flex-col gap-3">
         <div className="relative aspect-[4/3] bg-surface-2 border border-line-soft overflow-hidden">
           {heroImage ? (
@@ -429,8 +426,8 @@ export default async function Home({
               {selectedCategory ? 'Најново' : 'Последни новости'}
             </h4>
             <div className="flex flex-col lg:gap-4">
-              {leftColumnPosts.map((post) => (
-                <SideStory key={post.id} post={post} />
+              {leftColumnPosts.map((post, index) => (
+                <SideStory key={post.id} post={post} index={index} />
               ))}
             </div>
           </div>
@@ -464,8 +461,8 @@ export default async function Home({
               )}
             </div>
             <div className="flex flex-col lg:gap-4">
-              {rightColumnPosts.map((post) => (
-                <SideStory key={post.id} post={post} />
+              {rightColumnPosts.map((post, index) => (
+                <SideStory key={post.id} post={post} index={leftColumnPosts.length + index} />
               ))}
             </div>
           </div>
