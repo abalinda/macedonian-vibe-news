@@ -28,6 +28,10 @@ jobs:
     name: Ping Space
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      # secrets.* is not allowed in step `if:` expressions, so expose the
+      # token as job env and test env.HF_TOKEN in the conditions instead.
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
 
     steps:
       - name: 🌐 Ping Space URL
@@ -50,9 +54,7 @@ jobs:
           echo "ok=false" >> "$GITHUB_OUTPUT"
 
       - name: 🔁 Restart Space via HF API (fallback)
-        if: steps.ping.outputs.ok == 'false' && secrets.HF_TOKEN != ''
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        if: steps.ping.outputs.ok == 'false' && env.HF_TOKEN != ''
         run: |
           echo "Requesting restart of $SPACE_ID..."
           curl -sS -X POST \
@@ -67,7 +69,7 @@ jobs:
           [ "$status" = "200" ]
 
       - name: 🚨 Fail if Space is down
-        if: steps.ping.outputs.ok == 'false' && secrets.HF_TOKEN == ''
+        if: steps.ping.outputs.ok == 'false' && env.HF_TOKEN == ''
         run: |
           echo "Space is unreachable and no HF_TOKEN secret is set to attempt a restart."
           echo "Check the container logs: https://huggingface.co/spaces/$SPACE_ID?logs=container"
