@@ -1,7 +1,7 @@
 # Personalized Feed («За тебе») — Design Spec
 
 **Date:** 2026-07-04
-**Status:** Draft — Section 1 approved by user; Sections 2–3 presented, awaiting explicit sign-off.
+**Status:** Approved by user (2026-07-04), including the added §9 profile page scope.
 **Audience:** the implementing AI agent *and* a non-expert product owner. Every algorithmic choice is explained in plain language; every constant is named and lives in one file.
 
 ---
@@ -27,10 +27,12 @@ The user can always **see** what the algorithm thinks of them (the «Твојо�
 | Ranking behavior | **Boost, don't hide** — preferred categories float up, nothing is filtered out |
 | Transparency | Learned profile is visible (bars) and resettable |
 | Algorithm | "Points-jar" (exponentially-decayed category interest profile) in Turso; no external services |
+| Profile page (added) | `/profil`, signed-in only: Clerk account management + «Твојот вајб» + reading history + saved articles (bookmarking) — see §9 |
 
 ### Non-goals (v1)
 
 - No source-level or keyword/topic preferences.
+- No public profiles — `/profil` is private, only ever shows the signed-in user their own data.
 - No personalization of the homepage or Најново.
 - No PostHog dependency at feed-render time (PostHog stays analytics-only).
 - No Claude/LLM per-user scoring (possible v2 layer).
@@ -204,8 +206,54 @@ PostHog keeps receiving `article_click` exactly as today (now also with `feed: '
 
 ---
 
-## 8. Rollout & future ideas (explicitly out of scope)
+## 9. User profile page — `/profil` (added scope, approved 2026-07-04)
 
-Ship dark on a feature branch → preview → merge to main → announce via the existing welcome-modal slot if desired. No feature flag needed: the page is additive and signed-in-gated.
+Signed-in only (signed out → same pitch-and-sign-in pattern as `/za-tebe`). Private — a user only ever sees their own data. Four stacked sections, all per DESIGN_SYSTEM.md:
 
-Parked for v2: Claude-written taste summaries («Твојот вајб, напишан од АИ»), source preferences, digest emails, homepage hero nudging by aggregate jar data.
+1. **Сметка (account)** — Clerk's embedded `<UserProfile routing="hash" />` (name, email, avatar, security, delete account), wrapped in a brand-styled card via Clerk's `appearance` prop. We build no account CRUD ourselves.
+2. **Твојот вајб** — reuses the exact `vibe-profile.tsx` component from `/za-tebe` (bars + «Смени ги вибрациите», which links to `/za-tebe` with the wizard open).
+3. **Прочитано (reading history)** — last 20 clicked articles: `user_clicks` JOIN `posts`, newest first, rendered with the standard card recipe + `ArticleLink` (`feed: 'profile'`). Row limit keeps it one query, no pagination in v1.
+4. **Зачувано (saved articles)** — the bookmark list, with unsave buttons.
+
+### 9.1 Bookmarking («сочувај написи»)
+
+New table (same runtime-guard pattern, added to `ensurePersonalizationTables()`):
+
+```sql
+CREATE TABLE IF NOT EXISTS user_saved_posts (
+  user_id  TEXT NOT NULL,
+  post_id  INTEGER NOT NULL,
+  saved_at TEXT NOT NULL,
+  PRIMARY KEY (user_id, post_id)
+);
+```
+
+- **`web/app/actions/bookmarks.ts`** — server actions mirroring `actions/search.ts` style: `toggleBookmark(postId)` (upsert/delete, returns new state), `getSavedPosts()` (JOIN posts, newest-saved first, LIMIT 100), `getSavedIds(postIds[])` (for rendering initial button states on feed pages).
+- **`web/app/_components/save-button.tsx`** — client component: small bookmark icon button (hand-rolled inline SVG, per repo convention) rendered on article cards. Signed out → hidden (`SignedIn` wrapper). Optimistic toggle → `toggleBookmark`. Must `stopPropagation`/`preventDefault` so it never triggers the surrounding `ArticleLink` navigation. Saved state = `#FFD300` fill.
+- **Placement (v1):** cards on `/za-tebe`, `/najnovo`, and `/profil`'s saved/history lists. Homepage and `/all` are skipped in v1 (home is a shared ISR page — per-user saved-state would break its caching; `/all` can follow later using the same component).
+- **Signal coupling:** saving an article also adds **+1.0** to that category's jar via the same `applyClick` path (saving is at least as strong a signal as clicking). Unsaving does *not* subtract — keeps the mechanism one-directional and simple.
+- PostHog: fire `article_save` event (`post_id, category, source, feed, saved: true|false`) from the button, consistent with existing `article_click` instrumentation.
+
+### 9.2 Additional files/changes for §9
+
+| File | Purpose |
+|---|---|
+| `web/app/profil/page.tsx` | Server component assembling the four sections; fetches jars, history, saved list in parallel (`Promise.all`). |
+| `web/app/_components/save-button.tsx` | Shared bookmark toggle (above). |
+| `web/app/actions/bookmarks.ts` | Bookmark server actions (above). |
+| `web/app/_components/navigation.tsx` | Signed-in drawer area gets a «Профил» link (next to the existing `UserButton`). |
+| `web/app/_components/article-link.tsx` | `feed` union also gains `'profile'`. |
+
+### 9.3 §9 additions to error handling & testing
+
+- History/saved sections that fail to load render an inline Macedonian error card; the rest of `/profil` still works.
+- Deleted posts referenced by saves/clicks: JOIN naturally drops them; no cleanup needed.
+- Manual checklist additions: save/unsave from `/za-tebe` and `/najnovo` (button doesn't navigate!), state survives reload and appears on `/profil`; saving bumps the jar (verify in DB); reading history shows the 3 Culture clicks from the earlier checklist step; Clerk account panel loads styled.
+
+---
+
+## 10. Rollout & future ideas (explicitly out of scope)
+
+Ship dark on a feature branch → preview → merge to main → announce via the existing welcome-modal slot if desired. No feature flag needed: the pages are additive and signed-in-gated.
+
+Parked for v2: Claude-written taste summaries («Твојот вајб, напишан од АИ»), source preferences, digest emails, homepage hero nudging by aggregate jar data, save buttons on the homepage/`/all`, public profiles.
