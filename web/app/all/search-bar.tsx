@@ -2,6 +2,7 @@
 
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useRef, useState, useTransition } from 'react';
+import posthog from 'posthog-js';
 
 export function SearchBar() {
   const searchParams = useSearchParams();
@@ -40,7 +41,13 @@ export function SearchBar() {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    handleSearch(value.trim());
+    const term = value.trim();
+    // Fire on explicit submit only (not on debounced typing) to keep search
+    // analytics low-noise — one event per intentional search.
+    if (term) {
+      posthog.capture('search', { query: term, query_length: term.length, source: 'archive' });
+    }
+    handleSearch(term);
   };
 
   const handleChange = (next: string) => {

@@ -124,7 +124,7 @@ export default async function BlogPostPage({
 
   return (
     <main className="min-h-screen bg-paper text-ink">
-      <ReadingProgress />
+      <ReadingProgress postId={postId} title={post?.title} />
       <a
         href="#content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[80] focus:rounded-full focus:border focus:border-line focus:bg-surface focus:px-4 focus:py-2 focus:text-xs focus:font-bold focus:uppercase focus:tracking-widest"

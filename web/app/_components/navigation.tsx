@@ -18,6 +18,7 @@ import { searchPosts, type SearchResult } from "@/app/actions/search";
 import { buildHighlightRegex } from "@/lib/transliterate";
 import { ThemeToggle } from "./theme-toggle";
 import { captureArticleClick } from "./article-link";
+import posthog from "posthog-js";
 
 const MIN_NAV_QUERY_LENGTH = 2;
 
@@ -132,6 +133,12 @@ const NavSearch = ({
   const submitSearch = (term: string) => {
     const trimmed = term.trim();
     if (!trimmed || trimmed.length < MIN_NAV_QUERY_LENGTH) return;
+    posthog.capture('search', {
+      query: trimmed,
+      query_length: trimmed.length,
+      results_count: results.length,
+      source: 'nav',
+    });
     setIsOpenDropdown(false);
     onNavigate?.();
     router.push(`/all?q=${encodeURIComponent(trimmed)}`);
@@ -666,6 +673,13 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
                 <Link
                   key={cat.name}
                   href={href}
+                  onClick={() =>
+                    posthog.capture('category_nav', {
+                      category: cat.value ?? 'Home',
+                      label: cat.name,
+                      source: isAllPage ? 'all' : 'home',
+                    })
+                  }
                   className={`${baseClasses} ${activeClasses} ${latestAccent}`}
                 >
                   {cat.name}
