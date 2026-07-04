@@ -379,6 +379,7 @@ export const NavBar = () => {
   const showAdminLink = (isLoaded && isAdminEmail(email)) || isLocal;
 
   const menuLinks = [
+    { label: "За тебе", href: "/za-tebe" },
     { label: "Најново", href: "/najnovo" },
     { label: "Почетна", href: "/" },
     { label: "Технологија", href: "/?category=Tech" },
@@ -595,6 +596,7 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
   const hideScrollbarTimeout = useRef<NodeJS.Timeout | null>(null);
   const [isScrollbarHidden, setIsScrollbarHidden] = useState(true);
   const categories = [
+    { name: "За тебе", value: "ForYou", href: "/za-tebe" },
     { name: "Најново", value: "Latest", href: "/najnovo" },
     { name: "Почетна", value: null, href: "/" },
     { name: "Технологија", value: "Tech" },

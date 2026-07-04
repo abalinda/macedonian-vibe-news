@@ -335,6 +335,19 @@ A bold mono label that fronts curated copy to make it scannable (the Axios "why-
   border-b-2 border-transparent group-hover:border-accent">Прочитај повеќе →</span>
 ```
 
+### Vibe bars («Твојот вајб»)
+Horizontal progress bars showing the user's live category weights (see
+`app/_components/vibe-profile.tsx`). Track: `h-4 border border-line
+bg-surface-2 rounded-sm`; fill: `bg-accent border-r border-line`, width =
+percentage (min 2% so a bar is always visible). Label: mono UPPERCASE
+`tracking-[0.2em]`; picked categories get a `★`. Never animate the fill.
+
+### Selectable category card (wizard)
+Toggle card used in the «За тебе» wizard (`app/za-tebe/vibe-wizard.tsx`).
+Unselected: `bg-surface-2 border border-line`; selected: `bg-accent
+text-black shadow-[6px_6px_0_var(--shadow)] -translate-y-0.5` with a mono
+`✓ Избрано` micro-label. Always toggled via `<button aria-pressed>`.
+
 ---
 
 ## 8. Layout & grid
