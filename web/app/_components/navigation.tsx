@@ -2,7 +2,7 @@
 'use client'
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 import {
@@ -15,6 +15,7 @@ import {
 import { useUser } from '@clerk/nextjs';
 import { isAdminEmail } from "@/lib/admins";
 import { searchPosts, type SearchResult } from "@/app/actions/search";
+import { buildHighlightRegex } from "@/lib/transliterate";
 import { ThemeToggle } from "./theme-toggle";
 import { captureArticleClick } from "./article-link";
 
@@ -25,6 +26,27 @@ const formatSearchDate = (value?: string | null) => {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return "Ново";
   return parsed.toLocaleDateString("mk-MK", { day: "2-digit", month: "short" });
+};
+
+/**
+ * Wrap the runs of `title` that matched the (transliteration-aware) query in a
+ * yellow <mark>, so a Latin query visibly highlights its Cyrillic match — and
+ * vice-versa. Splitting on a single capturing group puts the matched runs at the
+ * odd indices, preserving the headline's original casing.
+ */
+const renderHighlightedTitle = (title: string, regex: RegExp | null): ReactNode => {
+  if (!regex || !title) return title;
+  const parts = title.split(regex);
+  if (parts.length <= 1) return title;
+  return parts.map((part, index) =>
+    index % 2 === 1 ? (
+      <mark key={index} className="rounded-[2px] bg-accent/40 px-0.5 text-ink">
+        {part}
+      </mark>
+    ) : (
+      <span key={index}>{part}</span>
+    ),
+  );
 };
 
 type NavSearchProps = {
@@ -52,6 +74,7 @@ const NavSearch = ({
   const requestRef = useRef(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const highlightRegex = useMemo(() => buildHighlightRegex(query), [query]);
 
   useEffect(() => {
     const nextQuery = searchParams.get("q")?.toString() ?? "";
@@ -264,7 +287,7 @@ const NavSearch = ({
                     </span>
                   </div>
                   <p className="mt-1 font-serif text-sm font-semibold leading-snug text-ink line-clamp-2">
-                    {item.title}
+                    {renderHighlightedTitle(item.title, highlightRegex)}
                   </p>
                 </div>
                 <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400 whitespace-nowrap">

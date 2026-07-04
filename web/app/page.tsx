@@ -7,9 +7,10 @@ import { AdminBlogCTA } from "./_components/admin-blog-cta";
 import { WelcomeModal } from "./_components/welcome-modal";
 import { AdminHeroOverride } from "./_components/admin-hero-override";
 import { getRelativePostTime } from "@/lib/time";
-import { getTeaserText, TEASER_CLASS } from "@/lib/teaser";
+import { getTeaserText, getStandfirstText, TEASER_CLASS, KICKER_CLASS, DECK_CLASS } from "@/lib/teaser";
 import { RayBurst } from "./_components/ray-burst";
 import { ArticleLink } from "./_components/article-link";
+import { AiDisclosure } from "./_components/ai-disclosure";
 
 // Revalidate every 60 seconds (ISR)
 export const revalidate = 60;
@@ -119,12 +120,21 @@ const SideStory = ({ post, index }: { post: any; index?: number }) => {
 };
 
 const HeroStory = ({ post }: { post: any }) => {
-  const teaserText = getTeaserText(post);
+  const standfirst = getStandfirstText(post);
   const heroImage = post?.image_url;
   const timeLabel = getRelativePostTime(post);
 
   return (
     <div className="relative mb-12 md:mb-0">
+      {/* Curation eyebrow — lifted OUT of the story link so the AI-disclosure
+          control is independently interactive (no nested button inside an <a>).
+          The ray-burst is Vibes' AI-curation mark. See DESIGN_SYSTEM.md §6/§7. */}
+      <div className="relative z-20 flex items-center justify-center gap-2 mb-4 vibe-reveal">
+        <RayBurst className="h-3.5 w-3.5 text-accent" />
+        <span className={`${KICKER_CLASS} text-[10px] tracking-[0.3em]`}>Избор на денот</span>
+        <AiDisclosure />
+      </div>
+
       <StoryLink post={post} className="group block" placement="hero" position={1}>
       <div className="w-full aspect-video bg-surface-2 mb-6 flex items-center justify-center border border-line overflow-hidden relative">
           {heroImage ? (
@@ -142,12 +152,8 @@ const HeroStory = ({ post }: { post: any }) => {
              <span className="text-neutral-400 font-mono text-4xl font-bold opacity-20">VIBES</span>
           )}
       </div>
-      
+
       <div className="text-center px-4">
-        <div className="flex items-center justify-center gap-2 mb-3 vibe-reveal">
-          <RayBurst className="h-3.5 w-3.5 text-accent" />
-          <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted">Избор на денот</span>
-        </div>
         <div className="flex items-center justify-center gap-3 mb-4 vibe-reveal">
           <span className="inline-block border border-line px-2 py-0.5 text-xs font-bold uppercase tracking-widest hover:bg-ink hover:text-paper transition-colors">
             {post.source}
@@ -161,9 +167,11 @@ const HeroStory = ({ post }: { post: any }) => {
         <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-black leading-[0.9] mb-4 group-hover:underline transition-colors break-words vibe-reveal-2">
           {post.title}
         </h2>
-        <p className={`${TEASER_CLASS} text-sm md:text-base mb-6 max-w-2xl mx-auto vibe-reveal-3`}>
-          {teaserText}
-        </p>
+        {standfirst && (
+          <p className={`${DECK_CLASS} text-base md:text-lg mb-6 max-w-2xl mx-auto vibe-reveal-3`}>
+            {standfirst}
+          </p>
+        )}
         <div className="inline-flex items-center gap-2 text-xs font-bold text-ink uppercase tracking-widest border-b-2 border-transparent group-hover:border-accent">
           Прочитај повеќе <span>&rarr;</span>
         </div>

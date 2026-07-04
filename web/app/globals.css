@@ -43,7 +43,7 @@
   --line-soft: #e5e5e5;
   --accent: #ffd300;
   --link: #002cff;
-  --alert: #f26d6d;          /* semantic: breaking / urgent (reserved) */
+  --alert: #f26d6d;          /* semantic: breaking / urgent — the "ВАЖНО / Тренд" signpost label (DESIGN_SYSTEM.md §3/§7). Recipe defined; goes live with the curator urgency flag. */
   --shadow: rgba(0, 0, 0, 0.07);
   --shadow-strong: rgba(0, 0, 0, 0.1);
   --shadow-alert: rgba(255, 0, 0, 0.07);

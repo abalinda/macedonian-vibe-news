@@ -45,3 +45,26 @@ export function buildSearchVariants(input: string): string[] {
 
   return Array.from(variants);
 }
+
+/** Escape a string so it is safe to embed literally inside a RegExp. */
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Build a case-insensitive RegExp that matches ANY transliteration variant of
+ * the query (Latin↔Cyrillic). Lets search-result highlighting show *why* a
+ * Cyrillic headline matched a Latin query (and vice-versa) by wrapping the
+ * matched run. Case variants are redundant under the `i` flag, so we collapse
+ * to the distinct base terms (longest-first, so the fullest match wins).
+ * Returns null when there is nothing meaningful (≥2 chars) to highlight.
+ */
+export function buildHighlightRegex(input: string): RegExp | null {
+  const terms = Array.from(new Set(buildSearchVariants(input).map(v => v.toLowerCase())))
+    .filter(v => v.length >= 2)
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegExp);
+
+  if (terms.length === 0) return null;
+  return new RegExp(`(${terms.join('|')})`, 'gi');
+}

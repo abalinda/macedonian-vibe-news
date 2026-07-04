@@ -52,7 +52,7 @@ The palette is deliberately tiny: **paper + ink + one yellow**, with electric bl
 | **Ink** | `#000000` / `neutral-900` | Borders, text, the "invert" hover fill. Body text is `text-neutral-900`. |
 | **Signature Yellow** | `#FFD300` → `bg-accent` | **The brand accent.** CTAs, the "Најново" pill, hover accents, "read more" underline, the **ray-burst** mark (§6), active highlights. Use it sparingly and on purpose — it's the loudest thing on the page. Apply via `bg-accent`/`text-accent`/`border-accent`. |
 | **Electric Blue** | `#002CFF` → `text-link` | Interactive/source accent: source labels, link hover (`group-hover:text-link`), blog-body links. |
-| **Alert (reserved)** | `#f26d6d` → `bg-alert` | Breaking/urgent **semantic**, reserved for future use — not yet wired into any UI. Never use coral for generic decoration. |
+| **Alert** | `#f26d6d` → `bg-alert` | The **ВАЖНО / Тренд** urgency semantic — the *one* sanctioned use of coral, as the alert variant of the signpost label (§7). Recipe is defined and documented; it goes live only when the curator emits an urgency flag. Never use coral for generic decoration. |
 
 ### Soft yellow fills (warm gradients / glows)
 
@@ -119,7 +119,7 @@ Three families, each with a fixed job. They are wired in `app/layout.tsx` and ma
 |---|---|---|---|
 | **Alegreya** | `--font-display` | `.font-serif` | **Headlines & editorial.** Logo, hero/H2/H3 titles, big statements. A distinctive editorial serif with a real Macedonian-Cyrillic cut (incl. localized italics) and weights to 900. Almost always `font-black`/`font-bold`, tight tracking, tight leading. |
 | **Inter** | `--font-inter` | `.font-sans` | **UI & body.** Section labels, buttons, paragraphs, navigation, modal copy. |
-| **Geist Mono** | `--font-geist-mono` | `.font-geist-mono` (also Tailwind `font-mono`) | **Metadata & teasers.** Dates, counters, source/category micro-labels, and the signature UPPERCASE teaser line. |
+| **Geist Mono** | `--font-geist-mono` | `.font-geist-mono` (also Tailwind `font-mono`) | **Metadata, teasers & the label voice.** Dates, counters, source/category micro-labels, the signature UPPERCASE teaser line, and **all chrome labels/kickers** (the one "label voice" — see the kicker recipe below). |
 
 ### The headline recipe
 Alegreya, heavy, tight. Hero scales big; cards stay calmer.
@@ -138,6 +138,23 @@ import { getTeaserText, TEASER_CLASS } from "@/lib/teaser";
 <p className={`${TEASER_CLASS} text-xs md:text-sm line-clamp-3`}>{getTeaserText(post)}</p>
 ```
 Tracking is **capped at `0.12em`** — Cyrillic loses legibility past that at small sizes (it used to range 0.15–0.3em). Color is `text-muted` (theme-aware), so teasers no longer use fixed dark neutrals that vanished in dark mode. Short mono *labels* (dates, counters) may still use `tracking-widest`/`tracking-[0.2em]`.
+
+### The label voice — kickers & chrome
+The mono UPPERCASE "label voice" is the **single recipe for all chrome labels**: hero/section eyebrows, signpost labels, source micro-labels. It lives in `lib/teaser.ts` so chrome stays consistent:
+```tsx
+import { KICKER_CLASS } from "@/lib/teaser";
+// KICKER_CLASS = "font-mono uppercase text-muted"   (tracking set per context)
+<span className={`${KICKER_CLASS} text-[10px] tracking-[0.3em]`}>Избор на денот</span>
+```
+Tracking is deliberately **not** baked in: short labels can take `0.2–0.3em`, denser Cyrillic stays at `0.12em`. Set it per use so the `tracking-*` utilities never collide.
+
+### The standfirst / deck — PRIMARY tier only
+The hero's lead line is a **serif italic standfirst in natural case** (not the mono teaser). It reads as a magazine deck and visually marks the hero as the *primary* story, distinct from the mono-teaser cards (density tiers, §8). **Cards keep the mono teaser.**
+```tsx
+import { getStandfirstText, DECK_CLASS } from "@/lib/teaser";
+// DECK_CLASS = "font-serif italic leading-snug text-ink/85"
+<p className={`${DECK_CLASS} text-base md:text-lg max-w-2xl mx-auto`}>{getStandfirstText(post)}</p>
+```
 
 ### Section headers
 Sans, black weight, uppercase, with a **thick underline** (`border-b-4 border-line`) and a small **ray-burst tick** (§6) — a core editorial signature.
@@ -177,7 +194,8 @@ Use the `.blog-body` class (defined in `globals.css`): serif, `line-height: 1.8`
 ### The one signature — the ray-burst mark
 Vibes has **one** identity mark: an abstract **ray-burst** (a "vibe" — a spark of rays around a solid core), an abstract Macedonian sun in the signature yellow. It is **not** the 16-ray Vergina sun (a politically contested symbol) — eight even rays, hard and geometric. Component: `app/_components/ray-burst.tsx`, drawn in `currentColor` so it picks up `text-accent`/ink and flips in dark mode.
 
-- **Hero (the memorable use):** the curated eyebrow — `<RayBurst className="h-3.5 w-3.5 text-accent" /> ИЗБОР НА ДЕНОТ` — above the lead headline.
+- **Hero (the memorable use):** the curated eyebrow — `<RayBurst className="h-3.5 w-3.5 text-accent" /> ИЗБОР НА ДЕНОТ` — **crowns** the lead story, sitting *above* the hero image (lifted out of the story link so the disclosure stays interactive).
+- **The AI-curation mark:** the ray-burst doubles as Vibes' "curated by AI" glyph. Wherever curation/AI is surfaced, pair the ray-burst with the one-tap disclosure (§7) — this is how the *"hand/AI-curated"* promise (§1) becomes visible. Reuse this one mark for that meaning; don't invent a second AI icon.
 - **Supporting:** a small tick on section headers (§4); the empty-state graphic (muted, `text-neutral-300 dark:text-neutral-600`).
 - Keep it **intentional and rare** — it is the thing the page is remembered by. Don't sprinkle it as generic decoration.
 
@@ -268,6 +286,25 @@ import { RayBurst } from "./_components/ray-burst";
 <RayBurst className="h-8 w-8 text-neutral-300 dark:text-neutral-600" /> // empty-state graphic
 ```
 > Inherits `currentColor`; size with `h-`/`w-`. One memorable use (the hero), small supporting ticks elsewhere — never decorative spam.
+
+### AI-curation disclosure
+Vibes is AI-curated — **say so, in one tap.** A small "?" beside a curation label opens a plain-language panel (`app/_components/ai-disclosure.tsx`). Render it as a **sibling** of the story link (like Share), never nested inside the anchor.
+```tsx
+import { AiDisclosure } from "./_components/ai-disclosure";
+<AiDisclosure />   // lives in the hero eyebrow, beside ИЗБОР НА ДЕНОТ
+```
+Canonical copy — truthful: we *select & summarize* and always link the source; we do **not** claim per-article editor review:
+> **Курирано со ВИ** · „Vibes користи вештачка интелигенција за да избере и резимира вести од македонски извори. Изворот е секогаш означен — допри „Прочитај повеќе“ за целата приказна.“
+
+### Signpost label (incl. the ВАЖНО / alert variant)
+A bold mono label that fronts curated copy to make it scannable (the Axios "why-it-matters" pattern). One shape; **tone via the left rule**, keeping the text ink (accessible). The **alert** rule is the one sanctioned use of coral (§3):
+```tsx
+// default — accent rule
+<span className={`${KICKER_CLASS} text-[10px] tracking-[0.2em] text-ink border-l-2 border-accent pl-2`}>ЗОШТО Е ВАЖНО</span>
+// alert / breaking — coral rule
+<span className={`${KICKER_CLASS} text-[10px] tracking-[0.2em] text-ink border-l-2 border-alert pl-2`}>ВАЖНО</span>
+```
+> Vocabulary: **ЗОШТО Е ВАЖНО · НАКРАТКО · КОНТЕКСТ · ВАЖНО/ТРЕНД**. The label content (and the alert flag) comes from the curator — until that data lands, these stay defined-but-unused (never decorative). See `VIBES_V2_PLAN.md` Themes B/C.
 
 ### Search input
 
