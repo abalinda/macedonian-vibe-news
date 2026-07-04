@@ -563,10 +563,10 @@ export const NavBar = () => {
 
               <SignedIn>
                 <div className="flex items-center gap-4 rounded-2xl border border-line/70 bg-[linear-gradient(120deg,#FFF8D8,#FDFBF7)] dark:bg-none dark:bg-surface px-4 py-3 shadow-[10px_10px_0_var(--shadow)]">
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-ink leading-tight">Vibes профил</p>
-                    <p className="text-xs text-neutral-600">Подесувања</p>
-                  </div>
+                  <Link href="/profil" onClick={() => setIsOpen(false)} className="flex-1 group">
+                    <p className="text-sm font-semibold text-ink leading-tight group-hover:underline">Vibes профил</p>
+                    <p className="text-xs text-neutral-600">Профил · Подесувања</p>
+                  </Link>
                   <UserButton
                     appearance={{
                       elements: {
