@@ -2,9 +2,12 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 import { ShareButton } from "../_components/share-button";
 import { ArticleLink } from "../_components/article-link";
 import type { ArticleFeed } from "../_components/article-link";
+import { SaveButton } from "../_components/save-button";
+import { getSavedIds } from "@/app/actions/bookmarks";
 import { getRelativePostTime } from "@/lib/time";
 import { getTeaserText, TEASER_CLASS } from "@/lib/teaser";
 
@@ -17,7 +20,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   Blog: "Блог",
 };
 
-const LatestCard = ({ post, index, now, feed }: { post: any; index: number; now: number; feed: ArticleFeed }) => {
+const LatestCard = ({ post, index, now, feed, saved }: { post: any; index: number; now: number; feed: ArticleFeed; saved: boolean }) => {
   const teaserText = getTeaserText(post);
   const teaserWithEllipsis =
     teaserText && !teaserText.trimEnd().endsWith("...") ? `${teaserText.trimEnd()}...` : teaserText;
@@ -106,6 +109,16 @@ const LatestCard = ({ post, index, now, feed }: { post: any; index: number; now:
         align="right"
         className="absolute right-3 top-3 z-20"
       />
+      <div className="absolute right-3 top-14 z-20">
+        <SaveButton
+          key={`${post.id}-${saved}`}
+          postId={Number(post.id)}
+          saved={saved}
+          context={feed}
+          category={post?.category ?? null}
+          source={post?.source ?? null}
+        />
+      </div>
     </div>
   );
 };
@@ -115,11 +128,25 @@ export const LatestFeed = ({ posts, feed = "latest" }: { posts: any[]; feed?: Ar
   const [now, setNow] = useState(() => Date.now());
   const [isMobile, setIsMobile] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const { user } = useUser();
+  const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSavedIds(new Set());
+      return;
+    }
+    const ids = posts.map((p) => Number(p.id)).filter(Number.isFinite);
+    getSavedIds(ids)
+      .then((saved) => setSavedIds(new Set(saved)))
+      .catch(() => setSavedIds(new Set()));
+  }, [user?.id, posts]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");
@@ -156,7 +183,14 @@ export const LatestFeed = ({ posts, feed = "latest" }: { posts: any[]; feed?: Ar
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {visiblePosts.map((post, index) => (
-          <LatestCard key={post.id ?? `${post.title}-${index}`} post={post} index={index} now={now} feed={feed} />
+          <LatestCard
+            key={post.id ?? `${post.title}-${index}`}
+            post={post}
+            index={index}
+            now={now}
+            feed={feed}
+            saved={savedIds.has(Number(post.id))}
+          />
         ))}
       </div>
 
