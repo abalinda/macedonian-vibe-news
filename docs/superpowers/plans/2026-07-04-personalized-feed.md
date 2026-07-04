@@ -13,6 +13,8 @@
 ## Global Constraints
 
 - All work happens in `web/` on a feature branch: `git checkout -b feature/za-tebe` (from `v2`). Run all npm/npx commands **from `web/`**.
+- **One-time setup before Task 2:** `tsx` is not installed and `npx` cannot auto-confirm in a non-interactive shell. Run `npm install -D tsx` from `web/` and include the `package.json`/`package-lock.json` change in the Task 2 commit.
+- **Shell is zsh:** always QUOTE paths containing brackets (`"web/app/go/[id]/route.ts"`, `"app/blog/[id]/record-read.tsx"`) in every git/eslint/ls command, or zsh aborts with `no matches found`.
 - Algorithm constants (exact values, defined once in `web/lib/personalization.ts`): `SEED_PICKED = 5.0`, `SEED_UNPICKED = 1.0`, `CLICK_POINTS = 1.0`, `DECAY_HALF_LIFE_DAYS = 14`, `RECENCY_HALF_LIFE_HOURS = 36`, `BOOST_CAP = 3.0`, `GOOD_VIBES_BONUS = 1.2`, `FEED_FETCH_LIMIT = 150`, `CLICK_DEDUPE_HOURS = 24`, `CLICK_RETENTION_DAYS = 90`, `DEFAULT_WEIGHT = 1.0`.
 - Categories (exact DB values): `Tech`, `Culture`, `Lifestyle`, `Business`, `Sports`, `Blog`. Macedonian labels: Технологија, Култура, Животен стил, Бизнис, Спорт, Блог.
 - Macedonian copy (verbatim): page «За тебе»; wizard headline «Избери ги твоите вибрации», sub «Одбери барем една категорија — остатокот го учиме од тебе.», CTA «Зачувај», re-pick warning «Зачувувањето ги ресетира научените вибрации.»; profile bars «Твојот вајб»; button «Смени ги вибрациите»; profile page «Профил» with sections «Сметка», «Твојот вајб», «Прочитано», «Зачувано».
@@ -109,6 +111,11 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
   - `rankPosts<T extends ScoredPostInput>(posts: T[], jars: Jar[], nowIso: string): T[]`
   - `profileShares(jars: Jar[], nowIso: string): { category: Category; label: string; share: number; picked: boolean }[]`
   - `type ScoredPostInput = { category?: string | null; published_at?: string | null; scraped_at?: string | null; good_vibes?: number | boolean | null }`
+
+- [ ] **Step 0: Install the script runner**
+
+Run (from `web/`): `npm install -D tsx`
+Expected: exits 0; `package.json` devDependencies now include `tsx`.
 
 - [ ] **Step 1: Write the failing check script**
 
@@ -373,7 +380,7 @@ Expected: no new errors.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add web/lib/personalization.ts web/scripts/personalization-check.ts
+git add web/lib/personalization.ts web/scripts/personalization-check.ts web/package.json web/package-lock.json
 git commit -m "feat(web): pure points-jar personalization algorithm + check script
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
@@ -621,10 +628,13 @@ export async function recordClick(userId: string, postId: number, category: stri
   if (!isCategory(category) || !Number.isFinite(postId)) return;
   await ensurePersonalizationTables();
 
+  // clicked_at is stored as ISO-8601 with 'T'/'Z' (new Date().toISOString()),
+  // so thresholds must be formatted the same way — plain datetime('now',...)
+  // yields "YYYY-MM-DD HH:MM:SS", which compares wrongly against 'T'.
   const duplicate = await turso.execute({
     sql: `SELECT 1 FROM user_clicks
           WHERE user_id = ? AND post_id = ?
-            AND clicked_at >= datetime('now', '-${CLICK_DEDUPE_HOURS} hours')
+            AND clicked_at >= strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-${CLICK_DEDUPE_HOURS} hours')
           LIMIT 1`,
     args: [userId, postId],
   });
@@ -639,7 +649,7 @@ export async function recordClick(userId: string, postId: number, category: stri
       },
       {
         sql: `DELETE FROM user_clicks
-              WHERE user_id = ? AND clicked_at < datetime('now', '-${CLICK_RETENTION_DAYS} days')`,
+              WHERE user_id = ? AND clicked_at < strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-${CLICK_RETENTION_DAYS} days')`,
         args: [userId],
       },
     ],
@@ -847,13 +857,14 @@ import { recordBlogRead } from "@/app/actions/read-tracking";
 // so only the browser knows who is reading.
 export function RecordRead({ postId }: { postId: number }) {
   const { user } = useUser();
+  const userId = user?.id;
 
   useEffect(() => {
-    if (!user || !Number.isFinite(postId)) return;
+    if (!userId || !Number.isFinite(postId)) return;
     recordBlogRead(postId).catch(() => {
       /* learning is best-effort; never surface errors to the reader */
     });
-  }, [user?.id, postId]);
+  }, [userId, postId]);
 
   return null;
 }
@@ -904,10 +915,10 @@ Run (from `web/`): `npm run dev`, then:
 
 - [ ] **Step 5: Typecheck + lint, then commit**
 
-Run (from `web/`): `npx tsc --noEmit && npx eslint app/go app/blog/[id]/record-read.tsx`
+Run (from `web/`): `npx tsc --noEmit && npx eslint app/go "app/blog/[id]/record-read.tsx"` (quotes required — zsh)
 
 ```bash
-git add web/app/go/[id]/route.ts web/app/blog/[id]/record-read.tsx web/app/blog/[id]/page.tsx
+git add "web/app/go/[id]/route.ts" "web/app/blog/[id]/record-read.tsx" "web/app/blog/[id]/page.tsx"
 git commit -m "feat(web): learn category interest from /go clicks and blog reads
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
