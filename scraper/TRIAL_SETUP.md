@@ -1,23 +1,10 @@
-# Claude curation — trial Space setup
+# Claude curation — Space setup
 
-This is a **trial** that swaps the AI curator from Groq/Llama to **Claude**, authenticated
-through your **Claude Max subscription** (not an API key), running as a separate HuggingFace
-Space that writes to the **production** Turso DB.
+The scraper curates with **Claude**, authenticated through a **Claude Max subscription** (not an
+API key), running as a HuggingFace Space that writes to the **production** Turso DB.
 
-The same `scraper/` codebase powers both Spaces — the engine is chosen at runtime by the
-`CURATOR` env var (`groq` default, `claude` for the trial). No code changes needed to switch.
-
----
-
-## ⚠️ Before you start: pause the production scraper
-
-The trial writes to the **live** Turso DB. If the existing Groq scraper Space and this trial
-Space both run at once, they will both insert posts **and** both rotate `featured_slots` —
-racing over the homepage hero slots.
-
-**Pause the existing Groq Space** (its Settings → *Pause this Space*) for the duration of the
-trial. Then it's a clean A/B on vibes.mk: same pipeline, same DB, Claude swapped in for Groq.
-Unpause it (and pause/delete the trial) to revert.
+Claude is the only curation engine (`curator_claude.py`). There is **no** pre-LLM keyword filter:
+every fetched article is sent to Claude, and the editorial prompt alone decides signal vs. noise.
 
 ---
 
@@ -41,7 +28,7 @@ huggingface.co → **New Space**:
 | Setting | Value |
 |---|---|
 | Owner | `vibesmk` |
-| Space name | e.g. `scraper-claude-test` |
+| Space name | e.g. `scraper` |
 | SDK | **Docker → Blank** |
 | Hardware | **CPU basic (free)** |
 | Visibility | **Private** |
@@ -50,10 +37,10 @@ Make sure the Space's `README.md` frontmatter declares the Docker port (run_loca
 
 ```yaml
 ---
-title: Scraper Claude Test
+title: Macedonian Vibes News Scraper
 emoji: 🗞️
-colorFrom: yellow
-colorTo: blue
+colorFrom: blue
+colorTo: purple
 sdk: docker
 app_port: 7860
 pinned: false
@@ -79,14 +66,11 @@ Settings → **Variables and secrets**:
 | `CLAUDE_CODE_OAUTH_TOKEN` | the token from step 1 |
 | `TURSO_DATABASE_URL` | **production** Turso URL |
 | `TURSO_AUTH_TOKEN` | **production** Turso token |
-| `GROQ_API_KEY` | *(only if you enable the Groq fallback below)* |
 
 **Variables** (plain, optional — these are the defaults baked into the code):
 | Name | Value | Meaning |
 |---|---|---|
-| `CURATOR` | `claude` | **Required** — selects the Claude engine (default is `groq`) |
-| `CLAUDE_MODEL` | `sonnet` | Model alias; `sonnet` → latest Sonnet 4.6. Use `haiku` to save quota, `opus` for max quality |
-| `CURATOR_FALLBACK` | *(unset)* | Set to `groq` to fall back to Groq when a Claude call fails. Leave **unset** for an honest trial |
+| `CLAUDE_MODEL` | `sonnet` | Model alias; `sonnet` → latest Sonnet. Use `haiku` to save quota, `opus` for max quality |
 | `CLAUDE_TIMEOUT_S` | `180` | Per-call CLI timeout |
 | `CLAUDE_MAX_CONSECUTIVE_FAILURES` | `3` | After this many consecutive CLI failures, stop curating for the run |
 | `MAX_AI_ARTICLES_PER_RUN` | `100` | Per-run budget; excess (lowest-priority) articles defer to a later run. Higher = more curated, more Max quota + longer runs |
@@ -97,25 +81,32 @@ Settings → **Variables and secrets**:
 
 ---
 
-## Two-tier curation (good vibes → homepage)
+## Editorial policy: signal vs. noise, then two tiers
 
-The Claude curator now sorts accepted stories into two tiers:
+The prompt lives in `curator_claude.py` (`_build_prompt`). It works in two steps:
 
-- **`good_vibes = true`** → homepage-eligible. The strict "high-quality & positive-leaning"
-  tier (achievements, culture, science, sport wins, human interest, constructive tech/business).
-- **`good_vibes = false`** → still saved, but appears **only** in *most recent* (najnovo) and
-  *archive* (all) — never on the homepage.
-- Everything tabloid/yellow-press/junk is **rejected** and not saved at all.
+1. **Signal vs. noise.** Claude **rejects** noise — clickbait, gossip, tabloid crime blotter,
+   horoscopes/betting, PR puff, and **daily political theatre** ("X official said / promised /
+   accused Y", party point-scoring, procedural back-and-forth). It **accepts** substantive news
+   even when serious or not cheerful — including politics/policy that actually matters (laws,
+   budgets, infrastructure, international agreements) and weighty stories like the death of a
+   notable person or a major event of real consequence. Rejected stories are **not saved**.
 
-This is stored in a new `posts.good_vibes` column (auto-created by the scraper on startup,
+2. **Two quality tiers** for accepted stories:
+   - **`good_vibes = true`** → homepage-eligible. High-quality, substantive, broadly interesting —
+     front-of-house favours achievements/breakthroughs/wins, but a genuinely significant serious
+     story can also earn the homepage.
+   - **`good_vibes = false`** → still saved, but appears **only** in *most recent* (najnovo) and
+     *archive* (all) — never on the homepage.
+
+This is stored in a `posts.good_vibes` column (auto-created by the scraper on startup,
 `DEFAULT 1` so legacy posts stay visible). The homepage (`web/app/page.tsx`) filters
 `good_vibes = 1`; najnovo/archive/search are unchanged.
 
-**All feeds now route through Claude** (PHASE 2 batched curation): the fetch sweep accumulates
-fresh articles, then they're curated in batches of `CURATION_BATCH_SIZE` — broad General/Local
-feeds first (so they're never starved by the budget), topic feeds keep their
-category. This closed the gap where ~63 topic feeds used to save directly with `good_vibes=1`.
-Watch the `🧠 PHASE 2: Batched curation of N article(s)` log line.
+**All feeds route through Claude** (PHASE 2 batched curation): the fetch sweep accumulates fresh
+articles, then they're curated in batches of `CURATION_BATCH_SIZE` — broad General/Local feeds
+first (so they're never starved by the budget), topic feeds keep their category. Watch the
+`🧠 PHASE 2: Batched curation of N article(s)` log line.
 
 > ⚠️ **The homepage filter is a `web/` change that must be deployed to Cloudflare separately**
 > (`cd web && npm run deploy`). The scraper change (this Space) creates the column and tags
@@ -134,15 +125,3 @@ Watch the Space **Logs** tab — the structured JSONL events tell you exactly wh
 
 If the first calls fail, the logged `stderr` will say why (most likely auth: a missing/expired
 `CLAUDE_CODE_OAUTH_TOKEN`, or a CLI flag the installed `claude` version doesn't accept).
-
----
-
-## Reverting
-
-- Trial done → **pause or delete** the trial Space and **unpause** the production Groq Space.
-- To flip the *trial* Space back to Groq without deleting it: set `CURATOR=groq` (needs `GROQ_API_KEY`).
-
-> Note: this `scraper/` Dockerfile now installs Node + the `claude` CLI. That's harmless for the
-> production Groq Space (unused weight), but it does make the prod image larger the next time you
-> redeploy prod from this directory. If you'd rather keep prod's image lean, keep a Node-free
-> Dockerfile on the prod Space's branch.

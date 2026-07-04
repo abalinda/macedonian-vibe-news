@@ -10,7 +10,7 @@ from threading import Thread, Event
 from urllib.parse import urljoin
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
-from curator import analyze_news_batch, ModelExhaustedError
+from curator_claude import analyze_news_batch, ModelExhaustedError
 import cloudscraper
 import libsql_client
 
@@ -28,9 +28,9 @@ if not URL or not TOKEN:
 HERO_ROTATION_MINUTES = 60
 HERO_LOCK_MINUTES = 60
 HERO_FALLBACK_LOOKBACK_HOURS = 24
-# AI curation throughput — env-tunable so the Claude trial Space can be dialed up without a
-# redeploy (Claude Max has far more headroom than the Groq free tier). Higher = more articles
-# curated per run, but more Claude calls = more Max quota used + longer wall-clock per run.
+# AI curation throughput — env-tunable so the Space can be dialed up without a redeploy
+# (Claude Max has plenty of headroom). Higher = more articles curated per run, but more
+# Claude calls = more Max quota used + longer wall-clock per run.
 MAX_AI_ARTICLES_PER_RUN = int(os.getenv("MAX_AI_ARTICLES_PER_RUN", "100"))
 # All feeds now route through curation, so a cooldown blocks every save — keep this below
 # the run cadence (15 min) so each run curates. Raise it to throttle Max quota.
@@ -850,8 +850,8 @@ def turso_persist_worker():
                     art.get('image_url'),
                     art.get('published_at'),
                     art.get('scraped_at'),
-                    # Default to homepage-eligible (1) when the engine doesn't set good_vibes
-                    # (Groq path, direct-save feeds, legacy) so production behaviour is preserved.
+                    # Default to homepage-eligible (1) when good_vibes is absent
+                    # (direct-save feeds, legacy rows) so existing behaviour is preserved.
                     int(bool(art.get('good_vibes', True))),
                 ]
                 statements.append(libsql_client.Statement(sql, params))

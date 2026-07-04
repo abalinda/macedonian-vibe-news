@@ -13,9 +13,8 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js 20 + the Claude Code CLI (used only when CURATOR=claude).
+# Install Node.js 20 + the Claude Code CLI — the curation engine shells out to `claude`.
 # Installed as root so the `claude` binary lands on the shared PATH for all users.
-# Harmless for the default Groq path — it's just unused weight.
 RUN mkdir -p /etc/apt/keyrings \
     && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
         | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
@@ -54,6 +53,5 @@ EXPOSE 7860
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:7860').read()"
 
-# Run the consolidated root daemon (binds port 7860).
-# Curation engine is selected at runtime by the CURATOR env var (groq default, or claude).
+# Run the consolidated daemon (binds port 7860); curation runs through Claude (curator_claude.py).
 CMD ["python", "run_local.py"]
