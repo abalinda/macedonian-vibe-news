@@ -21,7 +21,7 @@ const NavFallback = () => (
 
 const SignedOutPitch = () => (
   <div className="max-w-xl mx-auto text-center border-2 border-dashed border-line-soft rounded-xl bg-surface-2 px-6 py-16">
-    <h1 className="font-serif text-3xl md:text-4xl font-black text-ink mb-3">Твои Вести</h1>
+    // <h1 className="font-serif text-3xl md:text-4xl font-black text-ink mb-3">Твои Вести</h1>
     <p className="text-sm text-neutral-600 mb-6 max-w-sm mx-auto">
       Управувај со твоите вести, сочувај написи и добиј персонализирани вибрации.
       Најави се за да ги избереш твоите категории.
