@@ -18,6 +18,7 @@ import { searchPosts, type SearchResult } from "@/app/actions/search";
 import { buildHighlightRegex } from "@/lib/transliterate";
 import { ThemeToggle } from "./theme-toggle";
 import { captureArticleClick } from "./article-link";
+import posthog from "posthog-js";
 
 const MIN_NAV_QUERY_LENGTH = 2;
 
@@ -132,6 +133,12 @@ const NavSearch = ({
   const submitSearch = (term: string) => {
     const trimmed = term.trim();
     if (!trimmed || trimmed.length < MIN_NAV_QUERY_LENGTH) return;
+    posthog.capture('search', {
+      query: trimmed,
+      query_length: trimmed.length,
+      results_count: results.length,
+      source: 'nav',
+    });
     setIsOpenDropdown(false);
     onNavigate?.();
     router.push(`/all?q=${encodeURIComponent(trimmed)}`);
@@ -372,6 +379,7 @@ export const NavBar = () => {
   const showAdminLink = (isLoaded && isAdminEmail(email)) || isLocal;
 
   const menuLinks = [
+    { label: "Твои Вести", href: "/tvoi-vesti" },
     { label: "Најново", href: "/najnovo" },
     { label: "Почетна", href: "/" },
     { label: "Технологија", href: "/?category=Tech" },
@@ -555,10 +563,10 @@ export const NavBar = () => {
 
               <SignedIn>
                 <div className="flex items-center gap-4 rounded-2xl border border-line/70 bg-[linear-gradient(120deg,#FFF8D8,#FDFBF7)] dark:bg-none dark:bg-surface px-4 py-3 shadow-[10px_10px_0_var(--shadow)]">
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-ink leading-tight">Vibes профил</p>
-                    <p className="text-xs text-neutral-600">Подесувања</p>
-                  </div>
+                  <Link href="/profil" onClick={() => setIsOpen(false)} className="flex-1 group">
+                    <p className="text-sm font-semibold text-ink leading-tight group-hover:underline">Vibes профил</p>
+                    <p className="text-xs text-neutral-600">Профил · Подесувања</p>
+                  </Link>
                   <UserButton
                     appearance={{
                       elements: {
@@ -588,6 +596,7 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
   const hideScrollbarTimeout = useRef<NodeJS.Timeout | null>(null);
   const [isScrollbarHidden, setIsScrollbarHidden] = useState(true);
   const categories = [
+    { name: "Твои Вести", value: "ForYou", href: "/tvoi-vesti" },
     { name: "Најново", value: "Latest", href: "/najnovo" },
     { name: "Почетна", value: null, href: "/" },
     { name: "Технологија", value: "Tech" },
@@ -666,6 +675,13 @@ export const CategoryNav = ({ activeCategory, isAllPage = false }: CategoryNavPr
                 <Link
                   key={cat.name}
                   href={href}
+                  onClick={() =>
+                    posthog.capture('category_nav', {
+                      category: cat.value ?? 'Home',
+                      label: cat.name,
+                      source: isAllPage ? 'all' : 'home',
+                    })
+                  }
                   className={`${baseClasses} ${activeClasses} ${latestAccent}`}
                 >
                   {cat.name}

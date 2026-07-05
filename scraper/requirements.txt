@@ -1,7 +1,6 @@
 feedparser
 supabase
 python-dotenv
-groq
 cloudscraper
 beautifulsoup4
 libsql-client

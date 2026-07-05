@@ -335,6 +335,29 @@ A bold mono label that fronts curated copy to make it scannable (the Axios "why-
   border-b-2 border-transparent group-hover:border-accent">Прочитај повеќе →</span>
 ```
 
+### Vibe bars («Твојот вајб»)
+Horizontal progress bars showing the user's live category weights (see
+`app/_components/vibe-profile.tsx`). Track: `h-4 border border-line
+bg-surface-2 rounded-sm`; fill: `bg-accent border-r border-line`, width =
+percentage (min 2% so a bar is always visible). Label: mono UPPERCASE
+`tracking-[0.2em]`; picked categories get a `★`. Never animate the fill.
+
+**Collapsible variant:** on the «Твои Вести» feed page the card is a native
+`<details defaultCollapsed>` disclosure — closed by default, `<summary>` holds
+the «Твојот вајб» heading + an «Отвори» mono hint (hidden when open) and a
+chevron that rotates via `group-open:rotate-180`. Drop the native marker with
+`list-none [&::-webkit-details-marker]:hidden` and keep a `focus-visible`
+outline for keyboard users. On `/profil` the card stays expanded.
+
+### Selectable category card (wizard)
+Toggle card used in the «Твои Вести» wizard (`app/tvoi-vesti/vibe-wizard.tsx`).
+Unselected: `bg-surface-2 border border-line`; selected: `bg-accent
+text-black shadow-[6px_6px_0_var(--shadow)] -translate-y-0.5` with a mono
+`✓ Избрано` micro-label. Always toggled via `<button aria-pressed>`.
+
+### Save button (article card bookmark toggle)
+Icon-button toggle for bookmarking articles, rendered in the top-right corner of feed cards. Shape: `h-9 w-9 rounded-full border border-line`. Idle state: `bg-surface/90 text-ink` with `hover:bg-ink hover:text-paper` transition. Saved state: `bg-accent text-black`. Uses `aria-pressed` for toggle state and `aria-label` for screen readers. **Must call `preventDefault` and `stopPropagation`** on click — the card is wrapped in an `ArticleLink`, and saving must never navigate.
+
 ---
 
 ## 8. Layout & grid

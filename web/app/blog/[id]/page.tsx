@@ -8,6 +8,7 @@ import { sanitizeRichText, stripHtml, toParagraphHtml } from "@/lib/rich-text";
 import { CategoryNav, NavBar } from "../../_components/navigation";
 import { ShareButton } from "../../_components/share-button";
 import { ReadingProgress } from "../../_components/reading-progress";
+import { RecordRead } from "./record-read";
 
 // Revalidate every 2 minutes
 export const revalidate = 120;
@@ -124,7 +125,8 @@ export default async function BlogPostPage({
 
   return (
     <main className="min-h-screen bg-paper text-ink">
-      <ReadingProgress />
+      <ReadingProgress postId={postId} title={post?.title} />
+      <RecordRead postId={postId} />
       <a
         href="#content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[80] focus:rounded-full focus:border focus:border-line focus:bg-surface focus:px-4 focus:py-2 focus:text-xs focus:font-bold focus:uppercase focus:tracking-widest"

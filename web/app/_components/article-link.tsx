@@ -6,7 +6,7 @@ import posthog from "posthog-js";
 import type { ReactNode } from "react";
 
 // Where the click happened, so dashboards can compare click-through by surface.
-export type ArticleFeed = "home" | "latest" | "archive" | "search";
+export type ArticleFeed = "home" | "latest" | "archive" | "search" | "tvoi-vesti" | "profile";
 
 type ArticleLinkProps = {
   post: any;

@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { CategoryNav, NavBar } from "./_components/navigation";
 import { AdminBlogCTA } from "./_components/admin-blog-cta";
 import { WelcomeModal } from "./_components/welcome-modal";
+import { TvoiVestiPromoModal } from "./_components/tvoi-vesti-promo-modal";
 import { AdminHeroOverride } from "./_components/admin-hero-override";
 import { getRelativePostTime } from "@/lib/time";
 import { getTeaserText, getStandfirstText, TEASER_CLASS, KICKER_CLASS, DECK_CLASS } from "@/lib/teaser";
@@ -408,6 +409,7 @@ export default async function Home({
   return (
     <main className="min-h-screen bg-paper text-ink pb-20">
       <WelcomeModal />
+      <TvoiVestiPromoModal />
       <NavBar />
       <CategoryNav activeCategory={selectedCategory} />
       <AdminBlogCTA />

@@ -17,10 +17,14 @@ node_modules
 web/.pnp
 web/.next/
 web/out/
+web/*.tsbuildinfo
 web/.DS_Store
 
 # macOS
 .DS_Store
+
+# Git worktrees (local scratch, not part of the repo)
+.worktrees/
 
 # IDE
 .vscode/

@@ -45,6 +45,11 @@ export const WelcomeModal = () => {
     if (!hasSeenWelcome()) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsOpen(true);
+      try {
+        sessionStorage.setItem("vibes_welcome_shown_session", "1");
+      } catch {
+        // Non-blocking: storage could be disabled
+      }
     }
   }, []);
 

@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 AI-curated Macedonian news aggregator (live at **vibes.mk**). Two active components share one **Turso (libSQL)** database as the single source of truth:
 
 - **`web/`** — Next.js 16 (App Router, React 19) frontend, deployed to **Cloudflare Workers** via **OpenNext**. Reads/writes Turso, Clerk auth, PostHog + Google Analytics, PWA.
-- **`scraper/`** — Python 3.11 pipeline that ingests RSS feeds, classifies with Groq/Llama, and writes posts + rotates homepage hero slots into Turso. Runs in production as a **HuggingFace Spaces** Docker daemon (every 15 min).
+- **`scraper/`** — Python 3.11 pipeline that ingests RSS feeds, curates with **Claude** (via a Claude Max subscription, using the Claude Code CLI), and writes posts + rotates homepage hero slots into Turso. Runs in production as a **HuggingFace Spaces** Docker daemon (every 15 min).
 
 Everything else is inactive: `my-clerk-app/` (Clerk starter sandbox), root `hugging/` (an older, Gemini-based scraper copy — see Gotchas), and root `package.json` (vestigial; the real frontend manifest is `web/package.json`).
 
@@ -51,13 +51,13 @@ There are **no automated tests** in this repo (`scraper/benchmark.py` is a model
 ## Environment
 
 - **Web** (`web/.env.local`): `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, Clerk keys (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`), `NEXT_PUBLIC_POSTHOG_KEY`. GA id is hardcoded in `app/layout.tsx`.
-- **Scraper** (`scraper/.env.local`): `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `GROQ_API_KEY`.
+- **Scraper** (`scraper/.env.local`): `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN` (Claude Max OAuth token; mint with `claude setup-token`).
 
 ## Architecture
 
 ### Data flow
 ```
-RSS feeds → scraper (cloudscraper + feedparser) → dedup → Groq/Llama curation
+RSS feeds → scraper (cloudscraper + feedparser) → dedup → Claude curation
           → Turso (posts + featured_slots) → Next.js (Cloudflare Workers) → browser
 ```
 
@@ -91,14 +91,14 @@ The homepage hero and per-category highlights are driven by `featured_slots`. Tw
 ### Scraper pipeline (`scraper/scraper_local.py`)
 `process_feeds()` is the entry point. Config constants live at the top of the file:
 - `MAX_AI_ARTICLES_PER_RUN = 30`, `BATCH_SIZE = 5`, `TITLE_SIMILARITY_THRESHOLD = 0.9`, `MIN_CURATION_INTERVAL_MINUTES = 30`.
-- Flow: fetch (cloudscraper) → parse (feedparser) → dedup by link + fuzzy title (`SequenceMatcher`, seeded from recent DB titles) → coarse keyword reject → AI-budgeted queue → Groq classification → background **persist worker thread** (`turso_persist_worker`) batch-inserts and updates `featured_slots`.
-- **AI curation** (`scraper/curator_groq.py`): `analyze_news_batch()` calls Groq with a model fallback chain (`MODEL_PRIORITY`: `llama-3.1-8b-instant` → `llama-4-scout-17b-16e-instruct`) plus a per-model circuit breaker (`mark_model_failure` / cooldowns). Raises `ModelExhaustedError` when all models are unavailable.
+- Flow: fetch (cloudscraper) → parse (feedparser) → dedup by link + fuzzy title (`SequenceMatcher`, seeded from recent DB titles) → AI-budgeted queue → Claude curation → background **persist worker thread** (`turso_persist_worker`) batch-inserts and updates `featured_slots`. **There is no pre-LLM keyword filter** — every queued article is judged by the model; the editorial prompt alone decides signal vs. noise.
+- **AI curation** (`scraper/curator_claude.py`): `analyze_news_batch()` shells out to the Claude Code CLI (`claude --print --output-format json`, authenticated via `CLAUDE_CODE_OAUTH_TOKEN` on a Claude Max plan — there is no API key). The editorial prompt (`_build_prompt`) is a signal-vs-noise + two-tier policy: rejects yellow-press/tabloid/**daily political theatre**, accepts substantive news (incl. serious/important stories like notable deaths and consequential politics), and tags homepage-worthy ones `good_vibes=true`. After `CLAUDE_MAX_CONSECUTIVE_FAILURES` (default 3) consecutive CLI failures it raises `ModelExhaustedError`. Model via `CLAUDE_MODEL` (default `sonnet`).
 - Logging: structured JSONL via `logger.py` → `scraper/logs/scraper_log.jsonl`.
 
 ## Gotchas
 
-- **The GitHub Actions workflow `.github/workflows/scraper.yml` is stale and would fail if run**: its schedule is commented out (manual `workflow_dispatch` only), it runs `python scraper_2.py` (doesn't exist — the real entry is `scraper_local.py`), and injects `GEMINI_API_KEY` (the curator actually uses `GROQ_API_KEY`). Production scraping happens on **HuggingFace Spaces**, not here.
-- **The scraper has one production entrypoint** (consolidated 2026-06-27): the HuggingFace Space `vibesmk/scraper` `Dockerfile` runs `python run_local.py` — the **root** daemon, which starts an HTTP server on **port 7860** (required, or HF flags the Space `RUNTIME_ERROR`) and then runs the root `scraper_local.py` + `curator_groq.py` (Groq). The old Gemini-based `scraper/hugging/` copy has been deleted; a separate, also-inactive root `hugging/` copy still exists. The Space's `.dockerignore` must **not** list `run_local.py` (doing so excludes the entrypoint from the image → `can't open file '/app/run_local.py'`). Deploy = `git push` to the HF git remote (separate from GitHub `origin`).
+- **The GitHub Actions workflow `.github/workflows/scraper.yml` is stale and would fail if run**: its schedule is commented out (manual `workflow_dispatch` only), it runs `python scraper_2.py` (doesn't exist — the real entry is `scraper_local.py`), and injects `GEMINI_API_KEY` (the curator actually uses `CLAUDE_CODE_OAUTH_TOKEN`). Production scraping happens on **HuggingFace Spaces**, not here.
+- **The scraper has one production entrypoint** (consolidated 2026-06-27): the HuggingFace Space `vibesmk/scraper` `Dockerfile` runs `python run_local.py` — the **root** daemon, which starts an HTTP server on **port 7860** (required, or HF flags the Space `RUNTIME_ERROR`) and then runs `scraper_local.py` + `curator_claude.py` (Claude via the Claude Code CLI; the Dockerfile installs Node + the `claude` CLI). The old Gemini-based `scraper/hugging/` copy has been deleted; a separate, also-inactive root `hugging/` copy still exists. The Space's `.dockerignore` must **not** list `run_local.py` (doing so excludes the entrypoint from the image → `can't open file '/app/run_local.py'`). Deploy = `git push` to the HF git remote (separate from GitHub `origin`).
 - Multiple READMEs disagree on details (70+ vs 95+ feeds, Supabase vs Turso, GitHub Action vs HuggingFace, 1h vs 4h lock). **Trust the code constants over the prose.**
 - Categories live in three places that must stay in sync: the scraper `FEATURE_SLOTS`, the homepage `CATEGORY_SLOT_MAP`/nav in `web/app`, and the `/all` + `/najnovo` label maps. Adding or removing a category means editing all three; a removal also needs a one-off Turso cleanup (delete the `featured_slots` row + matching `posts`). The original `iran` category was removed this way.
 - Preview deploy: pushing a feature branch publishes to `<branch>.macedonian-vibe-news.balinda-centar.workers.dev` (e.g. `feature/foo` → `feature-foo.…`).

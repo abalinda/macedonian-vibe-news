@@ -15,7 +15,9 @@ Automated news aggregator for [vibes.mk](https://vibes.mk) - scraping 95+ Macedo
 ## Features
 
 - **95+ RSS Feeds**: Tech, Culture, Lifestyle, Business, Sports, and Local News
-- **AI Curation**: Groq AI (llama-3.1-8b-instant) filters politics/crime/low-quality content
+- **AI Curation**: Claude (via a Claude Max subscription) separates signal from noise — it keeps
+  substantive news (including serious/important stories) and drops yellow-press, tabloid, and
+  daily political theatre. No pre-LLM keyword filter: every article is judged by the model.
 - **Smart Deduplication**: Title similarity matching and link-based dedup
 - **Featured Slots**: Automatic hero rotation for homepage
 - **Streaming Architecture**: Articles appear in DB within 60 seconds
@@ -29,11 +31,11 @@ Visit the [app URL] to see the health status.
 ## Architecture
 
 ```
-RSS Feeds → Fetch → AI Filter → Turso DB → vibes.mk
+RSS Feeds → Fetch → Claude curation → Turso DB → vibes.mk
 ```
 
 - **Language**: Python 3.11
-- **AI**: Groq API (llama-3.1-8b-instant)
+- **AI**: Claude Code CLI (Claude Max subscription; see `TRIAL_SETUP.md`)
 - **Database**: Turso (libSQL)
 - **Deployment**: HuggingFace Spaces (Docker)
 
@@ -43,7 +45,9 @@ Required secrets (set in HuggingFace Space settings):
 
 - `TURSO_DATABASE_URL`: Your Turso database URL
 - `TURSO_AUTH_TOKEN`: Turso authentication token
-- `GROQ_API_KEY`: Groq API key for AI curation
+- `CLAUDE_CODE_OAUTH_TOKEN`: Claude Max OAuth token for AI curation (mint with `claude setup-token`)
+
+Optional tuning variables are documented in `TRIAL_SETUP.md` (`CLAUDE_MODEL`, `MAX_AI_ARTICLES_PER_RUN`, etc.).
 
 ## Logs
 
