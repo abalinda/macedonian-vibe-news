@@ -91,7 +91,6 @@ export default async function ProfilePage() {
         </header>
 
         <section>
-          <SectionTitle>Твојот вајб</SectionTitle>
           {jars === null ? (
             <SectionError label="«Твојот вајб»" />
           ) : jars.length === 0 ? (
