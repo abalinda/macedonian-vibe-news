@@ -348,6 +348,9 @@ Unselected: `bg-surface-2 border border-line`; selected: `bg-accent
 text-black shadow-[6px_6px_0_var(--shadow)] -translate-y-0.5` with a mono
 `✓ Избрано` micro-label. Always toggled via `<button aria-pressed>`.
 
+### Save button (article card bookmark toggle)
+Icon-button toggle for bookmarking articles, rendered in the top-right corner of feed cards. Shape: `h-9 w-9 rounded-full border border-line`. Idle state: `bg-surface/90 text-ink` with `hover:bg-ink hover:text-paper` transition. Saved state: `bg-accent text-black`. Uses `aria-pressed` for toggle state and `aria-label` for screen readers. **Must call `preventDefault` and `stopPropagation`** on click — the card is wrapped in an `ArticleLink`, and saving must never navigate.
+
 ---
 
 ## 8. Layout & grid

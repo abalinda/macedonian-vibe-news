@@ -80,7 +80,7 @@ export function VibeWizard({
         })}
       </div>
 
-      {error && <p className="text-sm font-bold text-[#f26d6d] mb-3">{error}</p>}
+      {error && <p className="text-sm font-bold text-alert mb-3">{error}</p>}
 
       <button
         type="button"
