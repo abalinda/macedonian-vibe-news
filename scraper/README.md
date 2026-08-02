@@ -24,9 +24,7 @@ Automated news aggregator for [vibes.mk](https://vibes.mk) - scraping 95+ Macedo
 
 ## Status
 
-🟢 **Running** - Scraper processes feeds every 15 minutes
-
-Visit the [app URL] to see the health status.
+🟢 **Running** — Docker container on a private Hetzner VPS, processing feeds every 15 minutes (migrated off HuggingFace Spaces, Aug 2026; the old Space is paused/deprecated).
 
 ## Architecture
 
@@ -37,11 +35,11 @@ RSS Feeds → Fetch → Claude curation → Turso DB → vibes.mk
 - **Language**: Python 3.11
 - **AI**: Claude Code CLI (Claude Max subscription; see `TRIAL_SETUP.md`)
 - **Database**: Turso (libSQL)
-- **Deployment**: HuggingFace Spaces (Docker)
+- **Deployment**: Docker Compose on a private Hetzner VPS (1.5 GB memory cap, localhost-only health server on 7860)
 
 ## Environment Variables
 
-Required secrets (set in HuggingFace Space settings):
+Required secrets (in production: `.env` next to the compose file on the box; locally: `.env.local`):
 
 - `TURSO_DATABASE_URL`: Your Turso database URL
 - `TURSO_AUTH_TOKEN`: Turso authentication token
@@ -51,7 +49,7 @@ Optional tuning variables are documented in `TRIAL_SETUP.md` (`CLAUDE_MODEL`, `M
 
 ## Logs
 
-Check the HuggingFace Space logs to monitor scraper activity:
+`docker logs --tail 50 scraper` on the box (or the Telegram ops bot's `/logs`) to monitor scraper activity:
 - ✅ Successful article saves
 - 🧠 AI curation decisions
 - ⚠️ Errors and retries

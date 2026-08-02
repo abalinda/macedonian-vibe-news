@@ -7,7 +7,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js)](https://nextjs.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python)](https://www.python.org/)
 
-AI-curated Macedonian news aggregator. A Python scraper ingests 95+ RSS feeds, classifies articles with Groq/Llama (or Claude via Max subscription), writes to Turso, and a Next.js 16 + Clerk frontend serves category views, a latest feed, blog posts, and admin controls.
+AI-curated Macedonian news aggregator. A Python scraper ingests 95+ RSS feeds, curates articles with Claude (Claude Max subscription via the Claude Code CLI), writes to Turso, and a Next.js 16 + Clerk frontend serves category views, a latest feed, blog posts, and admin controls.
 
 **Live:** [vibes.mk](https://vibes.mk)
 
@@ -20,7 +20,7 @@ AI-curated Macedonian news aggregator. A Python scraper ingests 95+ RSS feeds, c
 - **Two-tier homepage:** Stories tagged `good_vibes = 1` appear on the homepage; lower-quality accepted stories go only to *most recent* and *archive*. Tabloid/junk is rejected entirely.
 - **Database:** Turso (libSQL) as single source of truth; 7 hero slots rotate automatically.
 - **Auth:** Clerk (Edge middleware); admin-only areas gated by `web/lib/admins.ts`.
-- **Scraper:** Python daemon running on **HuggingFace Spaces** every 15 min. Curator engine is runtime-switchable: `CURATOR=groq` (default, Llama via Groq REST) or `CURATOR=claude` (Claude Max OAuth, trial Space).
+- **Scraper:** Python daemon running as a **Docker container on a private Hetzner VPS** every 15 min (migrated off HuggingFace Spaces, Aug 2026). Curation is Claude-only (`curator_claude.py`, Claude Max OAuth via the Claude Code CLI).
 - **Analytics:** Google Analytics + PostHog (initialised in `web/app/layout.tsx` and `web/instrumentation-client.ts`).
 - **PWA:** Service worker (`web/public/sw.js`), offline page, install prompt.
 
@@ -36,12 +36,11 @@ Browser/PWA ─┬─ Cloudflare Workers (Next.js 16, nodejs_compat)
                  ▼
             Turso (libSQL)
                  ▲
-      HuggingFace Space: vibesmk/scraper
-      run_local.py (daemon, port 7860)
+      Hetzner VPS (Docker container `scraper`)
+      run_local.py (daemon, health server on 7860, localhost-only)
         └─ scraper_local.py  process_feeds()
              ├─ cloudscraper + feedparser
-             ├─ curator.py  ─ CURATOR=groq  → curator_groq.py  (Groq/Llama, default)
-             │               CURATOR=claude → curator_claude.py (Claude Max OAuth, trial)
+             ├─ curator_claude.py (Claude Max OAuth via Claude Code CLI)
              └─ batch insert + featured_slots rotation
 ```
 
@@ -83,19 +82,13 @@ Browser/PWA ─┬─ Cloudflare Workers (Next.js 16, nodejs_compat)
 
 1. Fetch each feed (cloudscraper) → parse (feedparser) → take up to `ENTRIES_PER_FEED` (default 4) entries.
 2. Deduplicate by link + fuzzy title (`SequenceMatcher`, threshold 0.9, seeded from recent DB titles).
-3. Coarse keyword reject (shared filter in `curator_groq.py`).
-4. AI budget queue — at most `MAX_AI_ARTICLES_PER_RUN` (default 100) articles sent to the curator per run.
-5. Curator classifies: **accept + `good_vibes=true`** (homepage tier) / **accept + `good_vibes=false`** (archive-only) / **reject** (dropped).
-6. Background persist thread (`turso_persist_worker`) batch-inserts posts and rotates `featured_slots`.
+3. AI budget queue — at most `MAX_AI_ARTICLES_PER_RUN` (default 100) articles sent to the curator per run. There is **no pre-LLM keyword filter**: every queued article is judged by the model.
+4. Curator classifies: **accept + `good_vibes=true`** (homepage tier) / **accept + `good_vibes=false`** (archive-only) / **reject** (dropped).
+5. Background persist thread (`turso_persist_worker`) batch-inserts posts and rotates `featured_slots`.
 
-### Curator engines
+### Curation (Claude-only)
 
-`scraper/curator.py` routes to the correct engine at startup based on `CURATOR`:
-
-| `CURATOR` | Module | How |
-|---|---|---|
-| `groq` (default) | `curator_groq.py` | Groq REST API, Llama model fallback chain (`llama-3.1-8b-instant` → `llama-4-scout-17b-16e-instruct`) with per-model circuit breakers |
-| `claude` | `curator_claude.py` | Shells out to the Claude Code CLI, authenticated via `CLAUDE_CODE_OAUTH_TOKEN` (Claude Max subscription). Supports `CLAUDE_MODEL` alias (`sonnet` / `haiku` / `opus`), `CURATOR_FALLBACK=groq` safety net |
+`scraper/curator_claude.py` shells out to the Claude Code CLI (`claude --print --output-format json`), authenticated via `CLAUDE_CODE_OAUTH_TOKEN` (Claude Max subscription — no API key). The editorial prompt is a signal-vs-noise policy: it rejects yellow-press/tabloid/daily political theatre, keeps substantive news, and tags homepage-worthy stories `good_vibes=true`. The old Groq/Llama curator has been deleted.
 
 ### Two-tier curation (`good_vibes`)
 
@@ -109,30 +102,30 @@ The `good_vibes` column is auto-created by the scraper with `DEFAULT 1` so all l
 
 | Var | Default | Meaning |
 |---|---|---|
-| `CURATOR` | `groq` | `groq` or `claude` |
 | `MAX_AI_ARTICLES_PER_RUN` | `100` | Cap on articles sent to the curator per run |
 | `ENTRIES_PER_FEED` | `4` | Entries pulled per feed each run |
-| `MIN_CURATION_INTERVAL_MINUTES` | `30` | Min minutes between curation passes |
+| `MIN_CURATION_INTERVAL_MINUTES` | `10` | Min minutes between curation passes |
 | `MIN_HERO_SCORE` | `60` | Min hero_score to occupy a homepage slot |
-| `BATCH_SIZE` | `8` | Curator batch size (mostly vestigial now) |
-| `CLAUDE_MODEL` | `sonnet` | Claude model alias (when `CURATOR=claude`) |
-| `CLAUDE_TIMEOUT_S` | `180` | Per-call CLI timeout (Claude path) |
+| `CURATION_BATCH_SIZE` | `12` | Articles per curator batch |
+| `CLAUDE_MODEL` | `sonnet` | Claude model alias (`sonnet` / `haiku` / `opus`) |
+| `CLAUDE_TIMEOUT_S` | `180` | Per-call CLI timeout |
 | `CLAUDE_MAX_CONSECUTIVE_FAILURES` | `3` | Stop curating after this many consecutive CLI failures |
-| `CURATOR_FALLBACK` | *(unset)* | Set to `groq` to fall back when Claude fails |
 
-### Production deployment (HuggingFace Spaces)
+### Production deployment (Hetzner VPS, since Aug 2026)
 
-- **Production Space:** `vibesmk/scraper` — `CURATOR=groq` (default), runs `run_local.py`, binds port 7860, curates every 15 min. Deploy = `git push` to the HF git remote.
-- **Trial Space:** `vibesmk/scraper-claude-test` (or similar) — `CURATOR=claude`, uses `CLAUDE_CODE_OAUTH_TOKEN`. **Pause the prod Space while the trial runs** to avoid dual writes to `featured_slots`. See `scraper/TRIAL_SETUP.md` for full setup.
+- Runs as a Docker Compose service (container `scraper`) on a **private Hetzner VPS** shared with another workload: image built from `scraper/Dockerfile` (Python 3.11 + Node 20 + Claude Code CLI), 1.5 GB memory cap, `restart: unless-stopped`, port 7860 bound to localhost only (healthcheck; nothing exposed publicly).
+- Secrets (`CLAUDE_CODE_OAUTH_TOKEN`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`) live in an `.env` on the box — never in git.
+- Redeploy = rsync `scraper/` to the box, then `docker compose up -d --build`. A Telegram ops bot on the host provides `/status`, `/logs`, `/restart` from a phone.
+- The former **HuggingFace Space** (`vibesmk/scraper_claude_test`) is **paused and deprecated**. Do not unpause it — two instances would double-write Turso and double-spend Claude usage.
 
-> ⚠️ The `.github/workflows/scraper.yml` GitHub Action is **stale and broken** (wrong entrypoint, wrong API key, schedule commented out). Production scraping happens on HuggingFace, not GitHub Actions. Do not rely on or try to fix the Action without a clear reason.
+> ⚠️ The `.github/workflows/scraper.yml` GitHub Action is **stale and broken** (wrong entrypoint, wrong API key, schedule commented out). Production scraping happens on the Hetzner box, not GitHub Actions. Do not rely on or try to fix the Action without a clear reason.
 
 ### Local run
 
 ```bash
 cd scraper
 pip install -r requirements.txt
-cp .env.local.example .env.local  # fill TURSO_* + GROQ_API_KEY (or CLAUDE_CODE_OAUTH_TOKEN)
+cp .env.local.example .env.local  # fill TURSO_* + CLAUDE_CODE_OAUTH_TOKEN (mint with `claude setup-token`)
 python scraper_local.py   # one pass
 python run_local.py       # daemon (every 15 min, health server on 7860)
 ```
@@ -163,9 +156,7 @@ macedonian-vibes-news/
 │   └── open-next.config.ts     # OpenNext adapter config
 ├── scraper/                    # Python scraper + curator
 │   ├── scraper_local.py        # Main pipeline (process_feeds)
-│   ├── curator.py              # Engine selector (CURATOR env var)
-│   ├── curator_groq.py         # Groq/Llama curator (production default)
-│   ├── curator_claude.py       # Claude Max curator (trial)
+│   ├── curator_claude.py       # Claude Max curator (the only curator)
 │   ├── logger.py               # Structured JSONL logging
 │   ├── run_local.py            # Daemon: health server (7860) + 15-min schedule
 │   ├── Dockerfile              # Node 20 + claude CLI + Python 3.11
@@ -185,8 +176,7 @@ macedonian-vibes-news/
 | Component | Where | How |
 |---|---|---|
 | Frontend | Cloudflare Workers | `cd web && npm run deploy` |
-| Scraper (prod) | HuggingFace Space `vibesmk/scraper` | `git push` to HF remote |
-| Scraper (trial) | HuggingFace Space `vibesmk/scraper-claude-test` | `git push` to trial HF remote |
+| Scraper (prod) | Private Hetzner VPS (Docker Compose) | rsync `scraper/` to the box, `docker compose up -d --build` |
 
 **Frontend commands (run from `web/`):**
 
@@ -204,9 +194,9 @@ npx eslint .      # lint (no npm lint script)
 
 ## Gotchas
 
-- **Scraper runs on HuggingFace, not GitHub Actions.** The `.github/workflows/scraper.yml` workflow is stale: wrong entrypoint (`scraper_2.py`), wrong API key (`GEMINI_API_KEY`), schedule commented out.
-- **Port 7860 is required.** HuggingFace Docker Spaces mark a Space `RUNTIME_ERROR` unless the app listens on its declared `app_port`. `run_local.py` starts an HTTP server there before the daemon loop.
-- **Two Spaces can race.** If the Groq Space and the Claude trial Space both run at once, they will both rotate `featured_slots`. Pause the prod Space during any trial run. See `TRIAL_SETUP.md`.
+- **Scraper runs on a Hetzner VPS, not GitHub Actions or HuggingFace.** The `.github/workflows/scraper.yml` workflow is stale: wrong entrypoint (`scraper_2.py`), wrong API key (`GEMINI_API_KEY`), schedule commented out. The old HF Space is paused/deprecated.
+- **Two instances can race.** If the paused HF Space is ever resumed alongside the Hetzner container, both will rotate `featured_slots` and both will burn Claude usage. Keep exactly one instance running.
+- **Port 7860 is the health endpoint.** `run_local.py` starts an HTTP server there before the daemon loop; in production it's bound to localhost on the box and used by the Docker healthcheck.
 - **No migrations tooling.** Schema changes use idempotent runtime guards (e.g. `ensureAdminChoiceColumn()`, the scraper's `ensure_good_vibes_column()`). Add guards for any new column or slot rather than a migration file.
 - **Admin override lock is 4 hours**, not 1 hour (the old README was wrong). Trust `FOUR_HOURS_MS` in `web/app/api/featured-slots/route.ts`.
 - **`good_vibes` homepage filter** requires a web deploy to take effect. The scraper creates the column and tags posts; the homepage only filters on it after `npm run deploy`. The query falls back to unfiltered if the column doesn't exist, so deploy order doesn't break the site.
@@ -221,4 +211,4 @@ npx eslint .      # lint (no npm lint script)
 MIT
 
 Made with ❤️ in Macedonia  
-*Last updated: June 2026*
+*Last updated: August 2026*
