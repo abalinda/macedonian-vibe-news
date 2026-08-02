@@ -297,7 +297,6 @@ def filter_existing_links(articles):
 def backfill_images_for_recent_posts(limit: int = 200):
     """After scraping, try to add images to recent posts; delete if none can be found."""
     print(f"🖼️ Backfilling images for up to {limit} recent posts missing images...")
-    scraper = cloudscraper.create_scraper()
     updated = 0
     deleted = 0
     checked = 0
@@ -307,6 +306,8 @@ def backfill_images_for_recent_posts(limit: int = 200):
     except Exception as e:
         print(f"⚠️ Unable to open DB for image backfill: {e}")
         return
+
+    scraper = cloudscraper.create_scraper()
 
     try:
         rs = client.execute(
@@ -322,6 +323,7 @@ def backfill_images_for_recent_posts(limit: int = 200):
     except Exception as e:
         print(f"⚠️ Unable to fetch posts missing images: {e}")
         client.close()
+        scraper.close()
         return
 
     for row in rows:
@@ -359,6 +361,7 @@ def backfill_images_for_recent_posts(limit: int = 200):
                 print(f"⚠️ Failed to delete post without image ({link}): {e}")
 
     client.close()
+    scraper.close()
     print(f"🖼️ Image backfill complete. Checked {checked}, updated {updated}, deleted {deleted}.")
 
 # --- FEEDS CONFIGURATION ---
@@ -909,6 +912,10 @@ def process_feeds():
 
     ai_budget = AIBudget(MAX_AI_ARTICLES_PER_RUN)
 
+    # One shared HTTP session for the whole run: a per-feed session leaks its
+    # keep-alive sockets (CLOSE_WAIT pile-up → EMFILE after a few hours).
+    scraper = cloudscraper.create_scraper()
+
     try:
         print(f"\n🔄 Processing {len(TARGET_FEEDS)} RSS feeds...")
         print(f"💰 AI Budget: {ai_budget.remaining} articles\n")
@@ -934,7 +941,6 @@ def process_feeds():
                     print("   AI budget exhausted for this run; skipping remaining curated feeds.")
                     continue
 
-                scraper = cloudscraper.create_scraper()
                 resp = scraper.get(config["url"], timeout=20)
                 if resp.status_code != 200:
                     print(f"   ❌ Status {resp.status_code}")
@@ -1089,6 +1095,7 @@ def process_feeds():
         print(f"🔥 Critical Scraper Error: {e}")
 
     finally:
+        scraper.close()
         # Wait for worker to finish saving everything
         print("⏳ Waiting for DB writer to finish...")
         persist_queue.join()
