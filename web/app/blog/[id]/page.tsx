@@ -9,6 +9,7 @@ import { CategoryNav, NavBar } from "../../_components/navigation";
 import { ShareButton } from "../../_components/share-button";
 import { ReadingProgress } from "../../_components/reading-progress";
 import { RecordRead } from "./record-read";
+import { AdminEditButton } from "./admin-edit-button";
 
 // Revalidate every 2 minutes
 export const revalidate = 120;
@@ -99,7 +100,7 @@ export default async function BlogPostPage({
   const teaserText = post?.teaser ? String(post.teaser).toUpperCase() : "";
   const coverImageUrl = normalizeImageUrl(post?.image_url ? String(post.image_url) : "");
 
-  // The blog "source" column holds the author/byline (see api/blog/create).
+  // The blog "source" column holds the author/byline (see api/blog/drafts/[id]/publish).
   const rawAuthor = typeof post?.source === "string" ? post.source.trim() : "";
   const author = rawAuthor && rawAuthor.toLowerCase() !== "blog" ? rawAuthor : "";
 
@@ -165,8 +166,9 @@ export default async function BlogPostPage({
           </p>
         ) : null}
 
-        <div className="mb-8 flex justify-center">
+        <div className="mb-8 flex justify-center gap-3">
           <ShareButton url={sharePath} title={shareTitle} variant="pill" context="blog_reader" align="left" />
+          <AdminEditButton postId={postId} />
         </div>
 
         {coverImageUrl ? (

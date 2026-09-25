@@ -358,6 +358,9 @@ text-black shadow-[6px_6px_0_var(--shadow)] -translate-y-0.5` with a mono
 ### Save button (article card bookmark toggle)
 Icon-button toggle for bookmarking articles, rendered in the top-right corner of feed cards. Shape: `h-9 w-9 rounded-full border border-line`. Idle state: `bg-surface/90 text-ink` with `hover:bg-ink hover:text-paper` transition. Saved state: `bg-accent text-black`. Uses `aria-pressed` for toggle state and `aria-label` for screen readers. **Must call `preventDefault` and `stopPropagation`** on click — the card is wrapped in an `ArticleLink`, and saving must never navigate.
 
+### Admin editor (focus mode, mobile-first)
+The blog editor (`app/admin/blog/[id]/editor.tsx`) drops the site nav for a **focus-mode action bar**: `sticky top-0 z-50 h-14 border-b border-line bg-paper` holding a round back button, the mono save status (`Зачувано ✓` / `Се зачувува…`), a GHOST «Прегледај» and a PRIMARY ink «Објави» — all `h-10`+ tap targets that fit at 360px. The formatting toolbar sits **sticky under it** (`top-14 z-40`, ≥40px buttons, glyph labels + `aria-label`s, inline-SVG icons) rather than above the keyboard (iOS hides fixed-bottom bars). The writing surface *is* `.blog-body`, so what you type is what readers get. Tabs (`Уреди · Преглед · Предлог`) are an ink-filled active chip over a `border-b-4 border-line` rule; the Claude-suggestion tab carries a small `bg-accent` dot. Errors/notices use an ink left rule (`border-l-4 border-l-line`) — **not** coral, which stays reserved for ВАЖНО.
+
 ---
 
 ## 8. Layout & grid
