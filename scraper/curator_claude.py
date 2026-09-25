@@ -67,7 +67,7 @@ def _article_summary_for_log(article: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _generate_with_claude(prompt: str) -> str:
+def _generate_with_claude(prompt: str, timeout_s: int = CLAUDE_TIMEOUT_S) -> str:
     """Run one one-shot Claude Code CLI call and return the model's text (.result)."""
     # Prompt is passed as the trailing positional arg. subprocess (no shell) handles
     # quoting/Cyrillic/newlines safely; a single argv element is fine well past our size.
@@ -87,7 +87,7 @@ def _generate_with_claude(prompt: str) -> str:
         cmd,
         capture_output=True,
         text=True,
-        timeout=CLAUDE_TIMEOUT_S,
+        timeout=timeout_s,
     )
 
     if proc.returncode != 0:

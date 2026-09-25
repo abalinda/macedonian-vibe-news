@@ -11,6 +11,14 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "r2_buckets": [
+    {
+      // Admin-uploaded blog images, served publicly at https://img.vibes.mk.
+      // `next dev` uses a local simulated bucket, so uploads there won't resolve on img.vibes.mk.
+      "binding": "BLOG_IMAGES",
+      "bucket_name": "vibes-blog-images"
+    }
+  ],
   "observability": {
     "enabled": true
   }

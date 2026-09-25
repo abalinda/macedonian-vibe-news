@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
@@ -43,6 +44,9 @@ export default async function AdminPage() {
           <p className="text-base font-serif text-neutral-700 leading-relaxed">
             Видливи се тековните hero приказни, нивната возраст и заклучен статус. Ако не се поминати 4 часа, ќе добиеш предупредување пред да препишеш.
           </p>
+          <Link href="/admin/blog" className="inline-flex items-center gap-2 border border-line bg-surface px-4 py-2 text-[11px] font-bold uppercase tracking-[0.3em] shadow-[6px_6px_0_var(--shadow)] transition-all hover:bg-ink hover:text-paper">
+            Блог објави →
+          </Link>
         </header>
 
         <AdminHeroManager isLocal={isLocal} />

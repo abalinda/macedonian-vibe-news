@@ -5,6 +5,7 @@ import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime
 from scraper_local import process_feeds
+from blog_reviewer import blog_review_loop
 
 # Force unbuffered output so HuggingFace sees logs immediately
 sys.stdout.reconfigure(line_buffering=True)
@@ -72,6 +73,9 @@ def run_daemon():
     server_thread = threading.Thread(target=start_server, daemon=True)
     server_thread.start()
     time.sleep(3)
+
+    # 1b. Admin blog reviews run on their own thread so they never wait on a scrape.
+    threading.Thread(target=blog_review_loop, daemon=True).start()
 
     # 2. Run scraper immediately on startup
     job()

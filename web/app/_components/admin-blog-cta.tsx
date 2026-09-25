@@ -34,10 +34,10 @@ export const AdminBlogCTA = () => {
   return (
     <div className="max-w-[1400px] mx-auto px-4 md:px-8 mt-4">
       <Link
-        href="/blog/new"
+        href="/admin/blog"
         className="inline-flex items-center gap-2 border border-line px-4 py-2 text-[11px] font-bold uppercase tracking-[0.3em] bg-surface hover:bg-ink hover:text-paper transition-all shadow-[6px_6px_0_var(--shadow)]"
       >
-        + Додај блог објава
+        Блог објави →
       </Link>
     </div>
   );
